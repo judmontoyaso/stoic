@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { STOIC_QUOTES } from '@/lib/quotes'
 import { dailyReflectionEmail, sendEmail } from '@/lib/email'
 import { getPhaseLabel } from '@/lib/utils'
+import { generateDailyReflection } from '@/lib/ai'
 
 // Endpoint de Cron diario para enviar preparación estoica
 // GET /api/cron/daily-email?secret=...&to=...&day=...
@@ -99,6 +100,16 @@ export async function GET(request: Request) {
       const challenge = challenges && challenges[0] ? challenges[0] : null
       const quote = STOIC_QUOTES[(dayNumber - 1) % STOIC_QUOTES.length]
 
+      // Generar reflexión inteligente usando IA (Gemini) si hay API Key
+      const aiReflection = await generateDailyReflection({
+        dayNumber,
+        phase,
+        phaseLabel: getPhaseLabel(phase),
+        quote,
+        habits: habits || [],
+        challenge,
+      })
+
       const emailContent = dailyReflectionEmail({
         name: recipient.name,
         dayNumber,
@@ -108,6 +119,7 @@ export async function GET(request: Request) {
         habits: habits || [],
         challenge,
         appUrl,
+        aiReflection,
       })
 
       const success = await sendEmail(recipient.email, emailContent)

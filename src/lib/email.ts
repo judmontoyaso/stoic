@@ -88,6 +88,7 @@ export function dailyReflectionEmail(opts: {
   habits: { name: string; description: string }[]
   challenge: { title: string; description: string } | null
   appUrl: string
+  aiReflection?: { reflection: string; actionableTip: string } | null
 }): EmailContent {
   const habitsList = opts.habits
     .map(
@@ -106,13 +107,25 @@ export function dailyReflectionEmail(opts: {
     </div>`
     : ''
 
+  const introHtml = opts.aiReflection
+    ? `<p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:${TEXT_LIGHT};font-weight:500;">${opts.aiReflection.reflection}</p>`
+    : paragraph(`Estás en la <strong>Fase ${opts.phase}: ${opts.phaseLabel}</strong>. Recuerda abordar cada conversación del día con plena conciencia racional.`)
+
+  const aiTipHtml = opts.aiReflection
+    ? `
+    <div style="margin:20px 0 16px;padding:16px;background:#f3f4f6;border:1px solid ${BORDER_LIGHT};border-radius:4px;">
+      <h3 style="margin:0 0 8px;font-size:13px;font-weight:800;color:#111116;text-transform:uppercase;letter-spacing:0.5px;">Consejo del Mentor Estoico</h3>
+      <p style="margin:0;font-size:13px;line-height:1.6;color:${MUTED_LIGHT};">${opts.aiReflection.actionableTip}</p>
+    </div>`
+    : ''
+
   return {
     subject: `Día ${opts.dayNumber} · Preparación Estoica y Comunicación`,
     html: baseLayout({
       preheader: `Tu preparación para hoy: "${opts.quote.text.substring(0, 50)}..."`,
       heading: `Hola ${opts.name}, este es tu entrenamiento para el Día ${opts.dayNumber}`,
       body:
-        paragraph(`Estás en la <strong>Fase ${opts.phase}: ${opts.phaseLabel}</strong>. Recuerda abordar cada conversación del día con plena conciencia racional.`) +
+        introHtml +
         `
         <!-- Cita del día -->
         <div style="margin:20px 0;padding:20px;background:#f5f5f4;border-left:4px solid ${ACCENT};border-radius:0 4px 4px 0;">
@@ -127,6 +140,7 @@ export function dailyReflectionEmail(opts: {
         </ul>
         
         ${challengeHtml}
+        ${aiTipHtml}
         
         ` +
         button('Registrar Progreso en la App', `${opts.appUrl}`),
