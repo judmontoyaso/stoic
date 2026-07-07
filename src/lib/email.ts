@@ -1,0 +1,151 @@
+// Server-only. Plantillas de correo + envío vía Resend.
+// No importar desde componentes cliente.
+
+const BRAND = 'StoiCom'
+const ACCENT = '#c9a84c' // Gold/Amber
+const TEXT_LIGHT = '#1c1917'
+const MUTED_LIGHT = '#57534e'
+const BORDER_LIGHT = '#e7e5e4'
+const BG_LIGHT = '#fafaf9'
+const CARD_LIGHT = '#ffffff'
+
+export type EmailContent = { subject: string; html: string }
+
+// Layout HTML responsivo compatible con clientes de correo
+function baseLayout(opts: { preheader?: string; heading: string; body: string }): string {
+  const { preheader = '', heading, body } = opts
+  return `<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+</head>
+<body style="margin:0;padding:0;background:${BG_LIGHT};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<span style="display:none!important;opacity:0;color:transparent;height:0;width:0;overflow:hidden">${preheader}</span>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BG_LIGHT};padding:32px 16px;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:${CARD_LIGHT};border:1px solid ${BORDER_LIGHT};border-radius:6px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+        <!-- Header -->
+        <tr>
+          <td style="padding:20px 32px;border-bottom:1px solid ${BORDER_LIGHT};background:#111116;">
+            <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+              <tr>
+                <td style="vertical-align:middle;font-size:18px;font-weight:800;color:#f8fafc;letter-spacing:1px;">
+                  Stoi<span style="color:${ACCENT};">Com</span>
+                </td>
+                <td align="right" style="vertical-align:middle;font-size:10px;text-transform:uppercase;color:${ACCENT};font-weight:700;letter-spacing:1.5px;">
+                  Memento Mori
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <!-- Content -->
+        <tr>
+          <td style="padding:32px;color:${TEXT_LIGHT};">
+            <h1 style="margin:0 0 16px;font-size:18px;line-height:1.4;color:#111116;font-weight:800;border-left:3px solid ${ACCENT};padding-left:12px;">${heading}</h1>
+            ${body}
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style="padding:20px 32px;border-top:1px solid ${BORDER_LIGHT};font-size:11px;color:${MUTED_LIGHT};line-height:1.6;background:#f5f5f4;">
+            Enviado por ${BRAND}. Este es un correo automatizado para tu preparación diaria del entrenamiento de 90 días.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>`
+}
+
+function paragraph(html: string): string {
+  return `<p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:${MUTED_LIGHT};">${html}</p>`
+}
+
+function button(label: string, url: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0 8px;">
+    <tr><td style="border-radius:4px;background:#111116;">
+      <a href="${url}" style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:4px;border:1px solid ${ACCENT};">${label}</a>
+    </td></tr>
+  </table>`
+}
+
+export function dailyReflectionEmail(opts: {
+  name: string
+  dayNumber: number
+  phase: number
+  phaseLabel: string
+  quote: { text: string; author: string }
+  habits: { name: string; description: string }[]
+  challenge: { title: string; description: string } | null
+  appUrl: string
+}): EmailContent {
+  const habitsList = opts.habits
+    .map(
+      (h) => `
+    <li style="margin-bottom:12px;font-size:13px;line-height:1.5;color:${TEXT_LIGHT};">
+      <strong style="color:#ab841d;">${h.name}:</strong> ${h.description}
+    </li>`
+    )
+    .join('')
+
+  const challengeHtml = opts.challenge
+    ? `
+    <div style="margin-top:20px;padding:16px;background:#fcfaf2;border:1px dashed #d6c38a;border-radius:4px;">
+      <h3 style="margin:0 0 8px;font-size:14px;font-weight:700;color:#8e6d15;">Desafío de la Semana: ${opts.challenge.title}</h3>
+      <p style="margin:0;font-size:13px;line-height:1.5;color:${MUTED_LIGHT};">${opts.challenge.description}</p>
+    </div>`
+    : ''
+
+  return {
+    subject: `Día ${opts.dayNumber} · Preparación Estoica y Comunicación`,
+    html: baseLayout({
+      preheader: `Tu preparación para hoy: "${opts.quote.text.substring(0, 50)}..."`,
+      heading: `Hola ${opts.name}, este es tu entrenamiento para el Día ${opts.dayNumber}`,
+      body:
+        paragraph(`Estás en la <strong>Fase ${opts.phase}: ${opts.phaseLabel}</strong>. Recuerda abordar cada conversación del día con plena conciencia racional.`) +
+        `
+        <!-- Cita del día -->
+        <div style="margin:20px 0;padding:20px;background:#f5f5f4;border-left:4px solid ${ACCENT};border-radius:0 4px 4px 0;">
+          <p style="margin:0 0 8px;font-size:15px;font-style:italic;line-height:1.6;color:${TEXT_LIGHT};">&ldquo;${opts.quote.text}&rdquo;</p>
+          <p style="margin:0;font-size:12px;font-weight:700;color:#ab841d;text-align:right;">— ${opts.quote.author}</p>
+        </div>
+        
+        <!-- Hábitos diarios -->
+        <h2 style="margin:24px 0 12px;font-size:15px;font-weight:700;color:#111116;text-transform:uppercase;letter-spacing:0.5px;">Hábitos a entrenar hoy:</h2>
+        <ul style="margin:0 0 20px;padding-left:20px;">
+          ${habitsList}
+        </ul>
+        
+        ${challengeHtml}
+        
+        ` +
+        button('Registrar Progreso en la App', `${opts.appUrl}`),
+    }),
+  }
+}
+
+export async function sendEmail(to: string, content: EmailContent): Promise<boolean> {
+  const key = process.env.RESEND_API_KEY
+  if (!key) {
+    console.error('RESEND_API_KEY no configurada en las variables de entorno.')
+    return false
+  }
+  const from = process.env.EMAIL_FROM || `StoiCom <no-reply@notifications.juanmontoya.me>`
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from, to: [to], subject: content.subject, html: content.html }),
+    })
+    return res.ok
+  } catch (error) {
+    console.error('Error al enviar el correo vía Resend:', error)
+    return false
+  }
+}
