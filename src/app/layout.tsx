@@ -5,6 +5,8 @@ import Sidebar from "@/components/Sidebar"
 import RegisterSW from "@/components/RegisterSW"
 import { Toaster } from "react-hot-toast"
 
+import { headers } from "next/headers"
+
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
@@ -33,11 +35,15 @@ export const viewport: Viewport = {
   viewportFit: "cover"
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || ''
+  const isLoginPage = pathname === '/login'
+
   return (
     <html lang="es" className="scroll-smooth">
       <head>
@@ -73,8 +79,8 @@ export default function RootLayout({
             },
           }}
         />
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto h-screen md:h-auto pb-16 md:pb-0">
+        {!isLoginPage && <Sidebar />}
+        <main className={`flex-1 overflow-y-auto h-screen md:h-auto ${isLoginPage ? '' : 'pb-16 md:pb-0'}`}>
           {children}
         </main>
       </body>

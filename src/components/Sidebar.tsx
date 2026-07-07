@@ -34,6 +34,11 @@ export default function Sidebar() {
     document.documentElement.classList.toggle('dark', nextTheme === 'dark')
   }
 
+  const handleLogout = () => {
+    document.cookie = 'stoic_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC'
+    window.location.href = '/login'
+  }
+
   const menuItems = [
     { label: 'Dashboard', path: '/', icon: '/icons/time.png' },
     { label: 'Calendario', path: '/calendar', icon: '/icons/earth.png' },
@@ -151,6 +156,13 @@ export default function Sidebar() {
                     </>
                   )}
                 </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center justify-center gap-2 p-2 rounded-lg bg-red-950/10 dark:bg-red-950/20 text-red-650 dark:text-red-400 hover:bg-red-900/10 transition-colors w-full"
+                >
+                  <i className="pi pi-sign-out text-sm" />
+                  <span className="text-xs font-medium">Cerrar Sesión</span>
+                </button>
                 <div className="text-center">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Memento Mori</p>
                 </div>
@@ -194,7 +206,7 @@ export default function Sidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="pt-4 border-t border-[var(--border-color)] flex flex-col gap-3 items-center">
+        <div className="pt-4 border-t border-[var(--border-color)] flex flex-col gap-2 items-center">
           <button
             onClick={toggleTheme}
             className="p-2 rounded-lg bg-slate-800/10 dark:bg-slate-800/20 text-slate-500 hover:text-[var(--primary-gold)] hover:bg-slate-850/20 transition-colors flex items-center justify-center w-full"
@@ -211,6 +223,14 @@ export default function Sidebar() {
                 {!collapsed && <span className="text-xs text-slate-650 ml-2">Modo Oscuro</span>}
               </>
             )}
+          </button>
+          <button
+            onClick={handleLogout}
+            className="p-2 rounded-lg bg-red-950/10 dark:bg-red-950/20 text-red-650 dark:text-red-400 hover:bg-red-900/10 transition-colors flex items-center justify-center w-full"
+            title="Cerrar sesión"
+          >
+            <i className="pi pi-sign-out text-sm" />
+            {!collapsed && <span className="text-xs ml-2">Cerrar Sesión</span>}
           </button>
           {!collapsed ? (
             <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Memento Mori</p>
