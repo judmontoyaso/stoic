@@ -1,0 +1,188 @@
+@import "tailwindcss";
+@import "primeicons/primeicons.css";
+@import "primereact/resources/themes/lara-dark-amber/theme.css";
+@import "primereact/resources/primereact.min.css";
+
+/* Base styles and theme overrides */
+:root {
+  --background: #0a0a0f;
+  --foreground: #f8fafc;
+  --primary-gold: #c9a84c;
+  --primary-gold-hover: #b8973b;
+  --card-bg: #111116;
+  --border-color: #1e1e28;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0f;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e1e28;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c9a84c50;
+}
+
+/* PrimeReact Theme overrides to match the Dark Gold theme */
+.p-component {
+  font-family: var(--font-inter), sans-serif !important;
+}
+
+.p-progressbar {
+  background: #1e1e28 !important;
+}
+
+.p-progressbar .p-progressbar-value {
+  background: var(--primary-gold) !important;
+}
+
+.p-tabview-nav {
+  background: transparent !important;
+  border-color: var(--border-color) !important;
+}
+
+.p-tabview-nav li .p-tabview-nav-link {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: #94a3b8 !important;
+  padding: 1rem !important;
+  transition: all 0.2s !important;
+}
+
+.p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  border-color: var(--primary-gold) !important;
+  color: var(--primary-gold) !important;
+}
+
+.p-tabview-nav li:not(.p-highlight):not(.p-disabled):hover .p-tabview-nav-link {
+  color: var(--foreground) !important;
+  border-color: rgba(201, 168, 76, 0.3) !important;
+}
+
+.p-tabview-panels {
+  background: transparent !important;
+  color: var(--foreground) !important;
+  padding: 1.5rem 0 0 0 !important;
+}
+
+/* PrimeReact Dialog override */
+.p-dialog {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+.p-dialog-header {
+  background: transparent !important;
+  color: var(--foreground) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 1.25rem !important;
+}
+
+.p-dialog-content {
+  background: transparent !important;
+  color: var(--foreground) !important;
+  padding: 1.25rem !important;
+}
+
+.p-dialog-footer {
+  background: transparent !important;
+  border-top: 1px solid var(--border-color) !important;
+  padding: 1rem 1.25rem !important;
+}
+
+.p-dialog-header-icon {
+  color: #94a3b8 !important;
+  border-radius: 50% !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  transition: all 0.2s !important;
+}
+
+.p-dialog-header-icon:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--primary-gold) !important;
+}
+
+/* PrimeReact Dropdown override */
+.p-dropdown {
+  background: #0a0a0f !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--foreground) !important;
+  border-radius: 8px !important;
+}
+
+.p-dropdown-label {
+  color: var(--foreground) !important;
+}
+
+.p-dropdown-panel {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
+}
+
+.p-dropdown-item {
+  color: #cbd5e1 !important;
+  padding: 0.75rem 1rem !important;
+  transition: all 0.2s !important;
+}
+
+.p-dropdown-item.p-highlight {
+  background: rgba(201, 168, 76, 0.1) !important;
+  color: var(--primary-gold) !important;
+}
+
+.p-dropdown-item:not(.p-highlight):not(.p-disabled):hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--foreground) !important;
+}
+
+/* Inputs override */
+.p-inputtext {
+  background: #0a0a0f !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--foreground) !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 8px !important;
+  transition: all 0.2s !important;
+}
+
+.p-inputtext:focus {
+  border-color: var(--primary-gold) !important;
+  box-shadow: 0 0 0 1px var(--primary-gold) !important;
+  outline: none !important;
+}
+
+/* Sidebar transition classes */
+.sidebar-expanded {
+  width: 240px;
+}
+
+.sidebar-collapsed {
+  width: 70px;
+}
+
+@media (max-width: 768px) {
+  .sidebar-expanded,
+  .sidebar-collapsed {
+    width: 240px;
+  }
+}
