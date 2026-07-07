@@ -13,8 +13,7 @@ import {
   Menu, 
   X, 
   ChevronLeft, 
-  ChevronRight,
-  Compass
+  ChevronRight
 } from 'lucide-react'
 
 export default function Sidebar() {
@@ -75,7 +74,7 @@ export default function Sidebar() {
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#111116] border-b border-[#1e1e28] sticky top-0 z-50">
         <Link href="/" className="flex items-center gap-2">
-          <Compass className="w-6 h-6 text-[#c9a84c]" />
+          <img src="/sculpture.png" className="w-8 h-8 rounded-full object-cover border border-[#c9a84c]/30" alt="StoiCom Logo" />
           <span className="font-bold text-slate-100 tracking-wider">StoiCom</span>
         </Link>
         <button
@@ -108,7 +107,7 @@ export default function Sidebar() {
               className="relative w-64 max-w-xs bg-[#111116] border-r border-[#1e1e28] h-full flex flex-col p-4 z-50"
             >
               <div className="flex items-center gap-2 mb-8 mt-2">
-                <Compass className="w-6 h-6 text-[#c9a84c]" />
+                <img src="/sculpture.png" className="w-8 h-8 rounded-full object-cover border border-[#c9a84c]/30" alt="StoiCom Logo" />
                 <span className="font-bold text-slate-100 tracking-wider">StoiCom</span>
               </div>
               <nav className="flex-1 space-y-2">
@@ -133,12 +132,12 @@ export default function Sidebar() {
         <div className="flex items-center justify-between mb-8 mt-2">
           {(!collapsed) ? (
             <Link href="/" className="flex items-center gap-2">
-              <Compass className="w-6 h-6 text-[#c9a84c]" />
+              <img src="/sculpture.png" className="w-8 h-8 rounded-full object-cover border border-[#c9a84c]/30" alt="StoiCom Logo" />
               <span className="font-bold text-slate-100 tracking-wider">StoiCom</span>
             </Link>
           ) : (
             <Link href="/" className="mx-auto">
-              <Compass className="w-6 h-6 text-[#c9a84c]" />
+              <img src="/sculpture.png" className="w-8 h-8 rounded-full object-cover border border-[#c9a84c]/30" alt="StoiCom Logo" />
             </Link>
           )}
 
