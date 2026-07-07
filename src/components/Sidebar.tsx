@@ -5,11 +5,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
-  LayoutDashboard, 
-  Flame, 
-  Target, 
-  BookOpen, 
-  PenSquare, 
   Menu, 
   X, 
   ChevronLeft, 
@@ -40,11 +35,11 @@ export default function Sidebar() {
   }
 
   const menuItems = [
-    { label: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { label: 'Habitos', path: '/habits', icon: Flame },
-    { label: 'Retos', path: '/challenges', icon: Target },
-    { label: 'Recursos', path: '/resources', icon: BookOpen },
-    { label: 'Diario', path: '/journal', icon: PenSquare },
+    { label: 'Dashboard', path: '/', icon: '/icons/time.png' },
+    { label: 'Habitos', path: '/habits', icon: '/icons/skull.png' },
+    { label: 'Retos', path: '/challenges', icon: '/icons/armour.png' },
+    { label: 'Recursos', path: '/resources', icon: '/icons/history-book.png' },
+    { label: 'Diario', path: '/journal', icon: '/icons/papyrus.png' },
   ]
 
   const toggleCollapsed = () => setCollapsed(!collapsed)
@@ -58,19 +53,26 @@ export default function Sidebar() {
   const renderNavItems = (isMobile = false) => {
     return menuItems.map((item) => {
       const active = pathname === item.path
-      const Icon = item.icon
       return (
         <Link
           key={item.path}
           href={item.path}
           onClick={() => isMobile && setMobileOpen(false)}
-          className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+          className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 group ${
             active
-              ? 'bg-[#c9a84c]/10 text-[#c9a84c]'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
+              ? 'bg-[var(--primary-gold)]/10 text-[var(--primary-gold)]'
+              : 'text-slate-450 dark:text-slate-400 hover:text-[var(--foreground)] hover:bg-slate-800/10'
           }`}
         >
-          <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-[#c9a84c]' : 'text-slate-400'}`} />
+          <img
+            src={item.icon}
+            className={`w-5 h-5 object-contain transition-all duration-200 flex-shrink-0 ${
+              active
+                ? 'scale-115 filter drop-shadow-[0_0_3px_rgba(201,168,76,0.4)]'
+                : 'opacity-60 group-hover:opacity-90 dark:invert dark:opacity-50 dark:group-hover:opacity-80'
+            }`}
+            alt={item.label}
+          />
           {(!collapsed || isMobile) && (
             <motion.span
               initial={{ opacity: 0 }}

@@ -6,7 +6,7 @@ import { InputTextarea } from 'primereact/inputtextarea'
 import { Dropdown } from 'primereact/dropdown'
 import { Button } from 'primereact/button'
 import { Card } from 'primereact/card'
-import { PenSquare, Calendar, ChevronRight, BookOpen, Heart, Award } from 'lucide-react'
+import { Calendar, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
 import { formatDate, getPhaseLabel } from '@/lib/utils'
@@ -100,6 +100,7 @@ export default function JournalPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)] flex items-center gap-2">
+            <img src="/icons/papyrus.png" className="w-8 h-8 object-contain" alt="Papyrus" />
             Diario de Revision
           </h1>
           <p className="text-slate-400 text-sm mt-1">
@@ -128,7 +129,7 @@ export default function JournalPage() {
           <h2 className="text-sm font-semibold text-slate-450 dark:text-slate-400 uppercase tracking-widest mb-2">Historial</h2>
           {reviews.length === 0 ? (
             <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-8 text-center text-slate-500">
-              <BookOpen className="w-8 h-8 mx-auto mb-3 text-slate-600" />
+              <img src="/icons/history-book.png" className="w-8 h-8 mx-auto mb-3 object-contain opacity-55" alt="Historial vacio" />
               <p className="text-sm">Aun no has creado ninguna revision.</p>
             </div>
           ) : (
@@ -178,7 +179,7 @@ export default function JournalPage() {
               {activeReview.bad_habits_resisted && (
                 <div>
                   <h4 className="text-sm font-semibold text-[var(--primary-gold)] mb-1 flex items-center gap-2">
-                    <Award className="w-4 h-4" />
+                    <img src="/icons/skull.png" className="w-4 h-4 object-contain" alt="Habitos resistidos" />
                     Que malos habitos resististe o evitaste?
                   </h4>
                   <p className="text-sm text-[var(--foreground)] leading-relaxed bg-[var(--background)] p-3 rounded-lg border border-[var(--border-color)]">
@@ -190,7 +191,7 @@ export default function JournalPage() {
               {activeReview.progress_made && (
                 <div>
                   <h4 className="text-sm font-semibold text-[var(--primary-gold)] mb-1 flex items-center gap-2">
-                    <PenSquare className="w-4 h-4" />
+                    <img src="/icons/armour.png" className="w-4 h-4 object-contain" alt="Progreso" />
                     Que progreso lograste esta semana?
                   </h4>
                   <p className="text-sm text-[var(--foreground)] leading-relaxed bg-[var(--background)] p-3 rounded-lg border border-[var(--border-color)]">
@@ -202,7 +203,7 @@ export default function JournalPage() {
               {activeReview.next_week_plan && (
                 <div>
                   <h4 className="text-sm font-semibold text-[var(--primary-gold)] mb-1 flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
+                    <img src="/icons/earth.png" className="w-4 h-4 object-contain" alt="Planificacion" />
                     Como sera mejor la proxima semana?
                   </h4>
                   <p className="text-sm text-[var(--foreground)] leading-relaxed bg-[var(--background)] p-3 rounded-lg border border-[var(--border-color)]">
@@ -214,7 +215,7 @@ export default function JournalPage() {
               {activeReview.gratitude && (
                 <div>
                   <h4 className="text-sm font-semibold text-[var(--primary-gold)] mb-1 flex items-center gap-2">
-                    <Heart className="w-4 h-4" />
+                    <img src="/icons/harp.png" className="w-4 h-4 object-contain" alt="Agradecimiento" />
                     Agradecimiento
                   </h4>
                   <p className="text-sm text-[var(--foreground)] leading-relaxed bg-[var(--background)] p-3 rounded-lg border border-[var(--border-color)]">
@@ -232,8 +233,8 @@ export default function JournalPage() {
             </div>
           ) : (
             <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-12 text-center text-slate-500 h-64 flex flex-col items-center justify-center">
-              <PenSquare className="w-10 h-10 mb-3 text-slate-600" />
-              <h3 className="text-base font-semibold text-slate-400">Detalles de la revision</h3>
+              <img src="/icons/papyrus.png" className="w-10 h-10 mb-3 object-contain opacity-55" alt="Detalle vacio" />
+              <h3 className="text-base font-semibold text-slate-450 dark:text-slate-400">Detalles de la revision</h3>
               <p className="text-xs mt-1">Selecciona una revision del historial para ver los detalles.</p>
             </div>
           )}

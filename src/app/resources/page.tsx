@@ -7,7 +7,7 @@ import { InputText } from 'primereact/inputtext'
 import { InputTextarea } from 'primereact/inputtextarea'
 import { Dropdown } from 'primereact/dropdown'
 import { Button } from 'primereact/button'
-import { BookOpen, Video, GraduationCap, Plus, ExternalLink, Award } from 'lucide-react'
+import { Plus, ExternalLink, Award } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
 import { getResourceTypeLabel, getPhaseLabel } from '@/lib/utils'
@@ -81,11 +81,11 @@ export default function ResourcesPage() {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'book': return <BookOpen className="w-5 h-5 text-amber-400" />
-      case 'youtube': return <Video className="w-5 h-5 text-red-400" />
+      case 'book': return <img src="/icons/history-book.png" className="w-5 h-5 object-contain" alt="Libro" />
+      case 'youtube': return <img src="/icons/time.png" className="w-5 h-5 object-contain dark:invert dark:opacity-60" alt="YouTube" />
       case 'course':
-      case 'diplomado': return <GraduationCap className="w-5 h-5 text-blue-400" />
-      default: return <BookOpen className="w-5 h-5 text-slate-400" />
+      case 'diplomado': return <img src="/icons/papyrus.png" className="w-5 h-5 object-contain" alt="Curso" />
+      default: return <img src="/icons/history-book.png" className="w-5 h-5 object-contain" alt="Recurso" />
     }
   }
 

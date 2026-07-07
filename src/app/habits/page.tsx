@@ -8,7 +8,7 @@ import { InputTextarea } from 'primereact/inputtextarea'
 import { Dropdown } from 'primereact/dropdown'
 import { Button } from 'primereact/button'
 import { ProgressBar } from 'primereact/progressbar'
-import { Plus, Flame, MessageSquare, Users } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
 import { getToday, getPhaseLabel } from '@/lib/utils'
@@ -86,12 +86,12 @@ export default function HabitsPage() {
     return logs.some(l => l.habit_id === habitId && l.completed)
   }
 
-  const getCategoryIcon = (category: string) => {
+  const getCategoryIconPath = (category: string) => {
     switch (category) {
-      case 'communication': return <MessageSquare className="w-4 h-4" />
-      case 'stoic': return <Flame className="w-4 h-4" />
-      case 'social': return <Users className="w-4 h-4" />
-      default: return <Flame className="w-4 h-4" />
+      case 'communication': return '/icons/harp.png'
+      case 'stoic': return '/icons/skull.png'
+      case 'social': return '/icons/amphora.png'
+      default: return '/icons/skull.png'
     }
   }
 
@@ -132,9 +132,17 @@ export default function HabitsPage() {
               {habit.description && (
                 <p className="text-xs text-slate-500 mt-1">{habit.description}</p>
               )}
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--primary-gold)]/10 text-[var(--primary-gold)] font-semibold flex items-center gap-1">
+                  <img
+                    src={getCategoryIconPath(habit.category)}
+                    className="w-3.5 h-3.5 object-contain dark:invert dark:opacity-75"
+                    alt={habit.category}
+                  />
+                  {habit.category === 'communication' ? 'Comunicación' : habit.category === 'stoic' ? 'Estoico' : 'Social'}
+                </span>
                 {habit.phase && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--primary-gold)]/10 text-[var(--primary-gold)] font-medium">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 font-medium">
                     Fase {habit.phase}: {getPhaseLabel(habit.phase)}
                   </span>
                 )}

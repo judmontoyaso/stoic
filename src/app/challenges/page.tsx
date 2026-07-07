@@ -6,7 +6,6 @@ import { InputText } from 'primereact/inputtext'
 import { InputTextarea } from 'primereact/inputtextarea'
 import { Button } from 'primereact/button'
 import { Dropdown } from 'primereact/dropdown'
-import { Shield, ArrowUpRight, MessageCircle, Footprints } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
 import { getToday, getLevelLabel } from '@/lib/utils'
@@ -98,11 +97,11 @@ export default function ChallengesPage() {
 
   const getLevelIcon = (level: number) => {
     switch (level) {
-      case 1: return <Footprints className="w-4 h-4" />
-      case 2: return <ArrowUpRight className="w-4 h-4" />
-      case 3: return <MessageCircle className="w-4 h-4" />
-      case 4: return <Shield className="w-4 h-4" />
-      default: return <Footprints className="w-4 h-4" />
+      case 1: return <img src="/icons/earth.png" className="w-4 h-4 object-contain" alt="Level 1" />
+      case 2: return <img src="/icons/amphora.png" className="w-4 h-4 object-contain" alt="Level 2" />
+      case 3: return <img src="/icons/harp.png" className="w-4 h-4 object-contain" alt="Level 3" />
+      case 4: return <img src="/icons/armour.png" className="w-4 h-4 object-contain" alt="Level 4" />
+      default: return <img src="/icons/earth.png" className="w-4 h-4 object-contain" alt="Level" />
     }
   }
 
