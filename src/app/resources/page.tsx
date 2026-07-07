@@ -102,8 +102,8 @@ export default function ResourcesPage() {
             key={res.id}
             className={`p-5 rounded-xl border transition-all duration-200 flex flex-col justify-between ${
               res.completed 
-                ? 'bg-slate-800/10 border-slate-800' 
-                : 'bg-[#111116] border-[#1e1e28] hover:border-[#c9a84c]/20'
+                ? 'bg-[var(--primary-gold)]/5 border-[var(--border-color)]' 
+                : 'bg-[var(--card-bg)] border border-[var(--border-color)] hover:border-[var(--primary-gold)]/20'
             }`}
           >
             <div>
@@ -129,11 +129,11 @@ export default function ResourcesPage() {
                 </button>
               </div>
 
-              <h3 className={`text-base font-bold text-slate-100 ${res.completed ? 'line-through text-slate-500' : ''}`}>
+              <h3 className={`text-base font-bold text-[var(--foreground)] ${res.completed ? 'line-through text-slate-450 dark:text-slate-500' : ''}`}>
                 {res.title}
               </h3>
               {res.author && (
-                <p className="text-xs text-slate-400 mt-1">Autor: {res.author}</p>
+                <p className="text-xs text-slate-450 dark:text-slate-400 mt-1">Autor: {res.author}</p>
               )}
               {res.description && (
                 <p className="text-xs text-slate-500 mt-3 line-clamp-3 leading-relaxed">
@@ -142,11 +142,11 @@ export default function ResourcesPage() {
               )}
             </div>
 
-            <div className="flex items-center justify-between mt-5 pt-3 border-t border-slate-800/50">
-              <span className="text-[10px] text-slate-400 flex items-center gap-1 font-medium">
+            <div className="flex items-center justify-between mt-5 pt-3 border-t border-[var(--border-color)]">
+              <span className="text-[10px] text-slate-450 dark:text-slate-400 flex items-center gap-1 font-medium">
                 {res.phase ? (
                   <>
-                    <Award className="w-3.5 h-3.5 text-[#c9a84c]" />
+                    <Award className="w-3.5 h-3.5 text-[var(--primary-gold)]" />
                     Fase {res.phase}: {getPhaseLabel(res.phase)}
                   </>
                 ) : (
@@ -159,7 +159,7 @@ export default function ResourcesPage() {
                   href={res.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-[#c9a84c] hover:underline flex items-center gap-1"
+                  className="text-xs text-[var(--primary-gold)] hover:underline flex items-center gap-1"
                 >
                   Ver enlace
                   <ExternalLink className="w-3 h-3" />
@@ -175,7 +175,7 @@ export default function ResourcesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <i className="pi pi-spin pi-spinner text-4xl text-[#c9a84c]" />
+        <i className="pi pi-spin pi-spinner text-4xl text-[var(--primary-gold)]" />
       </div>
     )
   }
@@ -199,7 +199,7 @@ export default function ResourcesPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-100">Recursos</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)]">Recursos</h1>
           <p className="text-slate-400 text-sm mt-1">
             Libros, canales y diplomados recomendados para tu estudio
           </p>
@@ -209,7 +209,7 @@ export default function ResourcesPage() {
           label="Nuevo"
           className="p-button-sm"
           onClick={() => setShowDialog(true)}
-          style={{ backgroundColor: '#c9a84c', borderColor: '#c9a84c', color: '#0a0a0f' }}
+          style={{ backgroundColor: 'var(--primary-gold)', borderColor: 'var(--primary-gold)', color: 'var(--background)' }}
         />
       </div>
 
@@ -306,7 +306,7 @@ export default function ResourcesPage() {
               icon="pi pi-check"
               className="p-button-sm"
               onClick={handleAddResource}
-              style={{ backgroundColor: '#c9a84c', borderColor: '#c9a84c', color: '#0a0a0f' }}
+              style={{ backgroundColor: 'var(--primary-gold)', borderColor: 'var(--primary-gold)', color: 'var(--background)' }}
             />
           </div>
         </div>

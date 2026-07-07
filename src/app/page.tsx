@@ -132,55 +132,55 @@ export default function DashboardPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-[#111116] border border-[#1e1e28] rounded-xl p-4 hover:border-[#c9a84c]/30 transition-colors">
+        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-4 hover:border-[var(--primary-gold)]/30 transition-colors">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-[#c9a84c]/10 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5 text-[#c9a84c]" />
+            <div className="w-10 h-10 rounded-lg bg-[var(--primary-gold)]/10 flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5 text-[var(--primary-gold)]" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-slate-100">{stats.completedToday}/{stats.totalHabits}</p>
+          <p className="text-2xl font-bold text-[var(--foreground)]">{stats.completedToday}/{stats.totalHabits}</p>
           <p className="text-xs text-slate-400 mt-1">Habitos hoy</p>
         </div>
 
-        <div className="bg-[#111116] border border-[#1e1e28] rounded-xl p-4 hover:border-[#c9a84c]/30 transition-colors">
+        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-4 hover:border-[var(--primary-gold)]/30 transition-colors">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
               <Zap className="w-5 h-5 text-emerald-400" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-slate-100">{stats.completionRate}%</p>
+          <p className="text-2xl font-bold text-[var(--foreground)]">{stats.completionRate}%</p>
           <p className="text-xs text-slate-400 mt-1">Cumplimiento</p>
         </div>
 
-        <div className="bg-[#111116] border border-[#1e1e28] rounded-xl p-4 hover:border-[#c9a84c]/30 transition-colors">
+        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-4 hover:border-[var(--primary-gold)]/30 transition-colors">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
               <Flame className="w-5 h-5 text-orange-400" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-slate-100">{stats.currentStreak}</p>
+          <p className="text-2xl font-bold text-[var(--foreground)]">{stats.currentStreak}</p>
           <p className="text-xs text-slate-400 mt-1">Racha actual</p>
         </div>
 
-        <div className="bg-[#111116] border border-[#1e1e28] rounded-xl p-4 hover:border-[#c9a84c]/30 transition-colors">
+        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-4 hover:border-[var(--primary-gold)]/30 transition-colors">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
               <Target className="w-5 h-5 text-blue-400" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-slate-100">{stats.totalChallengesCompleted}</p>
+          <p className="text-2xl font-bold text-[var(--foreground)]">{stats.totalChallengesCompleted}</p>
           <p className="text-xs text-slate-400 mt-1">Retos completados</p>
         </div>
       </div>
 
       {/* Today's Progress */}
-      <div className="bg-[#111116] border border-[#1e1e28] rounded-xl p-5">
+      <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-[#c9a84c]" />
+          <h2 className="text-lg font-semibold text-[var(--foreground)] flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-[var(--primary-gold)]" />
             Progreso del dia
           </h2>
-          <span className="text-sm text-[#c9a84c] font-medium">{stats.completionRate}%</span>
+          <span className="text-sm text-[var(--primary-gold)] font-medium">{stats.completionRate}%</span>
         </div>
         <ProgressBar
           value={stats.completionRate}
@@ -193,9 +193,9 @@ export default function DashboardPage() {
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Today's Habits */}
-        <div className="bg-[#111116] border border-[#1e1e28] rounded-xl p-5">
-          <h2 className="text-lg font-semibold text-slate-100 flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-[#c9a84c]" />
+        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-5">
+          <h2 className="text-lg font-semibold text-[var(--foreground)] flex items-center gap-2 mb-4">
+            <TrendingUp className="w-5 h-5 text-[var(--primary-gold)]" />
             Habitos de hoy
           </h2>
           <div className="space-y-3">
@@ -208,22 +208,22 @@ export default function DashboardPage() {
                   onClick={() => handleToggleHabit(habit.id)}
                   className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 text-left ${
                     habit.todayLog?.completed
-                      ? 'bg-[#c9a84c]/10 border-[#c9a84c]/30'
-                      : 'bg-[#0a0a0f] border-[#1e1e28] hover:border-[#c9a84c]/20'
+                      ? 'bg-[var(--primary-gold)]/10 border-[var(--primary-gold)]/30'
+                      : 'bg-[var(--background)] border-[var(--border-color)] hover:border-[var(--primary-gold)]/20'
                   }`}
                 >
                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
                     habit.todayLog?.completed
-                      ? 'border-[#c9a84c] bg-[#c9a84c]'
-                      : 'border-slate-600'
+                      ? 'border-[var(--primary-gold)] bg-[var(--primary-gold)]'
+                      : 'border-slate-400 dark:border-slate-600'
                   }`}>
                     {habit.todayLog?.completed && (
-                      <i className="pi pi-check text-xs text-[#0a0a0f]" />
+                      <i className="pi pi-check text-xs text-white dark:text-[#0a0a0f]" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-medium truncate ${
-                      habit.todayLog?.completed ? 'text-[#c9a84c] line-through' : 'text-slate-200'
+                      habit.todayLog?.completed ? 'text-[var(--primary-gold)] line-through' : 'text-[var(--foreground)]'
                     }`}>
                       {habit.name}
                     </p>
@@ -232,7 +232,7 @@ export default function DashboardPage() {
                     )}
                   </div>
                   {habit.phase && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#c9a84c]/10 text-[#c9a84c] font-medium flex-shrink-0">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--primary-gold)]/10 text-[var(--primary-gold)] font-medium flex-shrink-0">
                       F{habit.phase}
                     </span>
                   )}
@@ -243,9 +243,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Social Challenges */}
-        <div className="bg-[#111116] border border-[#1e1e28] rounded-xl p-5">
-          <h2 className="text-lg font-semibold text-slate-100 flex items-center gap-2 mb-4">
-            <Target className="w-5 h-5 text-[#c9a84c]" />
+        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-5">
+          <h2 className="text-lg font-semibold text-[var(--foreground)] flex items-center gap-2 mb-4">
+            <Target className="w-5 h-5 text-[var(--primary-gold)]" />
             Retos sociales de hoy
           </h2>
           <div className="space-y-3">
@@ -259,13 +259,13 @@ export default function DashboardPage() {
                   className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 text-left ${
                     challenge.todayLog?.completed
                       ? 'bg-emerald-500/10 border-emerald-500/30'
-                      : 'bg-[#0a0a0f] border-[#1e1e28] hover:border-emerald-500/20'
+                      : 'bg-[var(--background)] border-[var(--border-color)] hover:border-emerald-500/20'
                   }`}
                 >
                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
                     challenge.todayLog?.completed
                       ? 'border-emerald-500 bg-emerald-500'
-                      : 'border-slate-600'
+                      : 'border-slate-400 dark:border-slate-600'
                   }`}>
                     {challenge.todayLog?.completed && (
                       <i className="pi pi-check text-xs text-white" />
@@ -273,7 +273,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-medium truncate ${
-                      challenge.todayLog?.completed ? 'text-emerald-400 line-through' : 'text-slate-200'
+                      challenge.todayLog?.completed ? 'text-emerald-500 dark:text-emerald-400 line-through' : 'text-[var(--foreground)]'
                     }`}>
                       {challenge.title}
                     </p>
@@ -282,7 +282,7 @@ export default function DashboardPage() {
                     )}
                   </div>
                   <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
-                    challenge.level <= 2 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-orange-500/10 text-orange-400'
+                    challenge.level <= 2 ? 'bg-emerald-500/10 text-emerald-650 dark:text-emerald-400' : 'bg-orange-500/10 text-orange-650 dark:text-orange-400'
                   }`}>
                     Nv.{challenge.level}
                   </span>

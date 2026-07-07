@@ -40,16 +40,34 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="scroll-smooth">
-      <body className={`${inter.variable} antialiased bg-[#0a0a0f] text-slate-100 flex flex-col md:flex-row min-h-screen`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const saved = localStorage.getItem('theme');
+                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDark = saved === 'dark' || (!saved && systemDark);
+                if (isDark) {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+              })()
+            `,
+          }}
+        />
+      </head>
+      <body className={`${inter.variable} antialiased bg-[var(--background)] text-[var(--foreground)] flex flex-col md:flex-row min-h-screen transition-colors duration-200`}>
         <RegisterSW />
         <Toaster 
           position="top-right"
           toastOptions={{
             duration: 4000,
             style: {
-              background: '#111116',
-              color: '#f8fafc',
-              border: '1px solid #1e1e28',
+              background: 'var(--card-bg)',
+              color: 'var(--foreground)',
+              border: '1px solid var(--border-color)',
               fontSize: '14px',
               fontFamily: 'var(--font-inter), sans-serif'
             },

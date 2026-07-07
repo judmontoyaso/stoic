@@ -108,25 +108,25 @@ export default function HabitsPage() {
             key={habit.id}
             className={`flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 group ${
               isCompleted(habit.id)
-                ? 'bg-[#c9a84c]/10 border-[#c9a84c]/30'
-                : 'bg-[#0a0a0f] border-[#1e1e28] hover:border-[#c9a84c]/20'
+                ? 'bg-[var(--primary-gold)]/10 border-[var(--primary-gold)]/30'
+                : 'bg-[var(--background)] border-[var(--border-color)] hover:border-[var(--primary-gold)]/20'
             }`}
           >
             <button
               onClick={() => handleToggle(habit.id)}
               className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
                 isCompleted(habit.id)
-                  ? 'border-[#c9a84c] bg-[#c9a84c] scale-110'
-                  : 'border-slate-600 hover:border-[#c9a84c]/50'
+                  ? 'border-[var(--primary-gold)] bg-[var(--primary-gold)] scale-110'
+                  : 'border-slate-400 dark:border-slate-600 hover:border-[var(--primary-gold)]/50'
               }`}
             >
               {isCompleted(habit.id) && (
-                <i className="pi pi-check text-xs text-[#0a0a0f] font-bold" />
+                <i className="pi pi-check text-xs text-white dark:text-[#0a0a0f] font-bold" />
               )}
             </button>
 
             <div className="flex-1 min-w-0">
-              <p className={`font-medium ${isCompleted(habit.id) ? 'text-[#c9a84c] line-through' : 'text-slate-200'}`}>
+              <p className={`font-medium ${isCompleted(habit.id) ? 'text-[var(--primary-gold)] line-through' : 'text-[var(--foreground)]'}`}>
                 {habit.name}
               </p>
               {habit.description && (
@@ -134,12 +134,12 @@ export default function HabitsPage() {
               )}
               <div className="flex items-center gap-2 mt-2">
                 {habit.phase && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#c9a84c]/10 text-[#c9a84c]">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--primary-gold)]/10 text-[var(--primary-gold)] font-medium">
                     Fase {habit.phase}: {getPhaseLabel(habit.phase)}
                   </span>
                 )}
                 {habit.week && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-700/50 text-slate-400">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700/50 text-slate-700 dark:text-slate-400 font-medium">
                     Semana {habit.week}
                   </span>
                 )}
@@ -181,7 +181,7 @@ export default function HabitsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-100">Habitos</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)]">Habitos</h1>
           <p className="text-slate-400 text-sm mt-1">
             {completedCount} de {habits.length} completados hoy
           </p>
@@ -191,15 +191,15 @@ export default function HabitsPage() {
           label="Nuevo"
           className="p-button-sm"
           onClick={() => setShowDialog(true)}
-          style={{ backgroundColor: '#c9a84c', borderColor: '#c9a84c', color: '#0a0a0f' }}
+          style={{ backgroundColor: 'var(--primary-gold)', borderColor: 'var(--primary-gold)', color: 'var(--background)' }}
         />
       </div>
 
       {/* Progress */}
-      <div className="mb-6 bg-[#111116] border border-[#1e1e28] rounded-xl p-4">
+      <div className="mb-6 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-4">
         <div className="flex justify-between text-sm mb-2">
           <span className="text-slate-400">Progreso de hoy</span>
-          <span className="text-[#c9a84c] font-medium">
+          <span className="text-[var(--primary-gold)] font-medium">
             {habits.length > 0 ? Math.round((completedCount / habits.length) * 100) : 0}%
           </span>
         </div>

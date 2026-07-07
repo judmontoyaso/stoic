@@ -108,18 +108,18 @@ export default function ChallengesPage() {
 
   const getLevelColor = (level: number) => {
     switch (level) {
-      case 1: return { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' }
-      case 2: return { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20' }
-      case 3: return { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/20' }
-      case 4: return { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/20' }
-      default: return { bg: 'bg-slate-500/10', text: 'text-slate-400', border: 'border-slate-500/20' }
+      case 1: return { bg: 'bg-emerald-500/10', text: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-500/20' }
+      case 2: return { bg: 'bg-blue-500/10', text: 'text-blue-700 dark:text-blue-400', border: 'border-blue-500/20' }
+      case 3: return { bg: 'bg-orange-500/10', text: 'text-orange-700 dark:text-orange-400', border: 'border-orange-500/20' }
+      case 4: return { bg: 'bg-red-500/10', text: 'text-red-700 dark:text-red-400', border: 'border-red-500/20' }
+      default: return { bg: 'bg-slate-500/10', text: 'text-slate-700 dark:text-slate-400', border: 'border-slate-500/20' }
     }
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <i className="pi pi-spin pi-spinner text-4xl text-[#c9a84c]" />
+        <i className="pi pi-spin pi-spinner text-4xl text-[var(--primary-gold)]" />
       </div>
     )
   }
@@ -136,7 +136,7 @@ export default function ChallengesPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-100">Retos</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)]">Retos</h1>
           <p className="text-slate-400 text-sm mt-1">Escalera de exposicion social</p>
         </div>
         <Button
@@ -144,7 +144,7 @@ export default function ChallengesPage() {
           label="Nuevo"
           className="p-button-sm"
           onClick={() => setShowDialog(true)}
-          style={{ backgroundColor: '#c9a84c', borderColor: '#c9a84c', color: '#0a0a0f' }}
+          style={{ backgroundColor: 'var(--primary-gold)', borderColor: 'var(--primary-gold)', color: 'var(--background)' }}
         />
       </div>
 
@@ -154,8 +154,8 @@ export default function ChallengesPage() {
           onClick={() => setActiveLevel(null)}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             activeLevel === null
-              ? 'bg-[#c9a84c] text-[#0a0a0f]'
-              : 'bg-[#111116] text-slate-400 border border-[#1e1e28] hover:border-[#c9a84c]/30'
+              ? 'bg-[var(--primary-gold)] text-white dark:text-[#0a0a0f]'
+              : 'bg-[var(--card-bg)] text-slate-450 dark:text-slate-400 border border-[var(--border-color)] hover:border-[var(--primary-gold)]/35'
           }`}
         >
           <i className="pi pi-list mr-2" />
@@ -172,7 +172,7 @@ export default function ChallengesPage() {
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
                 activeLevel === level
                   ? `${colors.bg} ${colors.text} border ${colors.border}`
-                  : 'bg-[#111116] text-slate-400 border border-[#1e1e28] hover:border-[#c9a84c]/30'
+                  : 'bg-[var(--card-bg)] text-slate-450 dark:text-slate-400 border border-[var(--border-color)] hover:border-[var(--primary-gold)]/35'
               }`}
             >
               {getLevelIcon(level)}
@@ -184,10 +184,10 @@ export default function ChallengesPage() {
       </div>
 
       {/* Summary bar */}
-      <div className="bg-[#111116] border border-[#1e1e28] rounded-xl p-4 mb-6">
+      <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-4 mb-6">
         <div className="flex justify-between text-sm mb-2">
           <span className="text-slate-400">Completados hoy</span>
-          <span className="text-[#c9a84c] font-medium">{completedCount}/{filteredChallenges.length}</span>
+          <span className="text-[var(--primary-gold)] font-medium">{completedCount}/{filteredChallenges.length}</span>
         </div>
       </div>
 
@@ -204,7 +204,7 @@ export default function ChallengesPage() {
               className={`flex items-start gap-3 p-4 rounded-xl border transition-all duration-200 group ${
                 completed
                   ? `${colors.bg} ${colors.border}`
-                  : 'bg-[#0a0a0f] border-[#1e1e28] hover:border-[#c9a84c]/20'
+                  : 'bg-[var(--background)] border-[var(--border-color)] hover:border-[var(--primary-gold)]/20'
               }`}
             >
               <button
@@ -212,15 +212,15 @@ export default function ChallengesPage() {
                 className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
                   completed
                     ? `border-current bg-current ${colors.text}`
-                    : 'border-slate-600 hover:border-[#c9a84c]/50'
+                    : 'border-slate-400 dark:border-slate-600 hover:border-[var(--primary-gold)]/50'
                 }`}
               >
-                {completed && <i className="pi pi-check text-xs text-[#0a0a0f] font-bold" />}
+                {completed && <i className="pi pi-check text-xs text-white dark:text-[#0a0a0f] font-bold" />}
               </button>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className={`font-medium ${completed ? `${colors.text} line-through` : 'text-slate-200'}`}>
+                  <p className={`font-medium ${completed ? `${colors.text} line-through` : 'text-[var(--foreground)]'}`}>
                     {challenge.title}
                   </p>
                   <span className={`text-[10px] px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} font-medium`}>
@@ -231,7 +231,7 @@ export default function ChallengesPage() {
                   <p className="text-xs text-slate-500 mt-1">{challenge.description}</p>
                 )}
                 {log?.notes && (
-                  <div className="mt-2 p-2 rounded-lg bg-[#111116] border border-[#1e1e28]">
+                  <div className="mt-2 p-2 rounded-lg bg-[var(--card-bg)] border border-[var(--border-color)]">
                     <p className="text-xs text-slate-400"><i className="pi pi-pencil mr-1" />{log.notes}</p>
                   </div>
                 )}
@@ -245,10 +245,10 @@ export default function ChallengesPage() {
                     setReflectionText(existingLog?.reflection || '')
                     setNoteDialog({ id: challenge.id, open: true })
                   }}
-                  className="p-1.5 rounded-lg hover:bg-[#c9a84c]/10"
+                  className="p-1.5 rounded-lg hover:bg-[var(--primary-gold)]/10"
                   title="Agregar nota"
                 >
-                  <i className="pi pi-pencil text-xs text-[#c9a84c]" />
+                  <i className="pi pi-pencil text-xs text-[var(--primary-gold)]" />
                 </button>
                 {challenge.is_custom && (
                   <button

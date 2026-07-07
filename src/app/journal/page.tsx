@@ -78,7 +78,7 @@ export default function JournalPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <i className="pi pi-spin pi-spinner text-4xl text-[#c9a84c]" />
+        <i className="pi pi-spin pi-spinner text-4xl text-[var(--primary-gold)]" />
       </div>
     )
   }
@@ -99,7 +99,7 @@ export default function JournalPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-100 flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)] flex items-center gap-2">
             Diario de Revision
           </h1>
           <p className="text-slate-400 text-sm mt-1">
@@ -118,16 +118,16 @@ export default function JournalPage() {
             }))
             setShowDialog(true)}
           }
-          style={{ backgroundColor: '#c9a84c', borderColor: '#c9a84c', color: '#0a0a0f' }}
+          style={{ backgroundColor: 'var(--primary-gold)', borderColor: 'var(--primary-gold)', color: 'var(--background)' }}
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left/Main Column - Past Reviews list */}
         <div className="lg:col-span-1 space-y-3">
-          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-2">Historial</h2>
+          <h2 className="text-sm font-semibold text-slate-450 dark:text-slate-400 uppercase tracking-widest mb-2">Historial</h2>
           {reviews.length === 0 ? (
-            <div className="bg-[#111116] border border-[#1e1e28] rounded-xl p-8 text-center text-slate-500">
+            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-8 text-center text-slate-500">
               <BookOpen className="w-8 h-8 mx-auto mb-3 text-slate-600" />
               <p className="text-sm">Aun no has creado ninguna revision.</p>
             </div>
@@ -138,12 +138,12 @@ export default function JournalPage() {
                 onClick={() => setActiveReview(rev)}
                 className={`w-full p-4 rounded-xl border text-left transition-all flex items-center justify-between ${
                   activeReview?.id === rev.id
-                    ? 'bg-[#c9a84c]/10 border-[#c9a84c]/30 text-[#c9a84c]'
-                    : 'bg-[#111116] border-[#1e1e28] text-slate-300 hover:border-[#c9a84c]/20'
+                    ? 'bg-[var(--primary-gold)]/10 border-[var(--primary-gold)]/30 text-[var(--primary-gold)]'
+                    : 'bg-[var(--card-bg)] border-[var(--border-color)] text-slate-450 dark:text-slate-300 hover:border-[var(--primary-gold)]/20'
                 }`}
               >
                 <div>
-                  <h3 className="font-bold text-sm text-slate-200">
+                  <h3 className="font-bold text-sm text-[var(--foreground)]">
                     Semana {rev.week_number} -- Fase {rev.phase}
                   </h3>
                   <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
@@ -160,28 +160,28 @@ export default function JournalPage() {
         {/* Right Column - Active Review Details */}
         <div className="lg:col-span-2">
           {activeReview ? (
-            <div className="bg-[#111116] border border-[#1e1e28] rounded-xl p-6 space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-6 space-y-6">
+              <div className="flex items-center justify-between pb-4 border-b border-[var(--border-color)]">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-100">
+                  <h2 className="text-xl font-bold text-[var(--foreground)]">
                     Semana {activeReview.week_number}
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-slate-550 dark:text-slate-550 mt-0.5">
                     Fase {activeReview.phase}: {getPhaseLabel(activeReview.phase)}
                   </p>
                 </div>
-                <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full">
+                <span className="text-xs text-slate-700 dark:text-slate-400 bg-slate-200 dark:bg-slate-800 px-3 py-1 rounded-full font-medium">
                   {formatDate(activeReview.date.split('T')[0])}
                 </span>
               </div>
 
               {activeReview.bad_habits_resisted && (
                 <div>
-                  <h4 className="text-sm font-semibold text-[#c9a84c] mb-1 flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-[var(--primary-gold)] mb-1 flex items-center gap-2">
                     <Award className="w-4 h-4" />
                     Que malos habitos resististe o evitaste?
                   </h4>
-                  <p className="text-sm text-slate-300 leading-relaxed bg-[#0a0a0f] p-3 rounded-lg border border-slate-800">
+                  <p className="text-sm text-[var(--foreground)] leading-relaxed bg-[var(--background)] p-3 rounded-lg border border-[var(--border-color)]">
                     {activeReview.bad_habits_resisted}
                   </p>
                 </div>
@@ -189,11 +189,11 @@ export default function JournalPage() {
 
               {activeReview.progress_made && (
                 <div>
-                  <h4 className="text-sm font-semibold text-[#c9a84c] mb-1 flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-[var(--primary-gold)] mb-1 flex items-center gap-2">
                     <PenSquare className="w-4 h-4" />
                     Que progreso lograste esta semana?
                   </h4>
-                  <p className="text-sm text-slate-300 leading-relaxed bg-[#0a0a0f] p-3 rounded-lg border border-slate-800">
+                  <p className="text-sm text-[var(--foreground)] leading-relaxed bg-[var(--background)] p-3 rounded-lg border border-[var(--border-color)]">
                     {activeReview.progress_made}
                   </p>
                 </div>
@@ -201,11 +201,11 @@ export default function JournalPage() {
 
               {activeReview.next_week_plan && (
                 <div>
-                  <h4 className="text-sm font-semibold text-[#c9a84c] mb-1 flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-[var(--primary-gold)] mb-1 flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
                     Como sera mejor la proxima semana?
                   </h4>
-                  <p className="text-sm text-slate-300 leading-relaxed bg-[#0a0a0f] p-3 rounded-lg border border-slate-800">
+                  <p className="text-sm text-[var(--foreground)] leading-relaxed bg-[var(--background)] p-3 rounded-lg border border-[var(--border-color)]">
                     {activeReview.next_week_plan}
                   </p>
                 </div>
@@ -213,25 +213,25 @@ export default function JournalPage() {
 
               {activeReview.gratitude && (
                 <div>
-                  <h4 className="text-sm font-semibold text-[#c9a84c] mb-1 flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-[var(--primary-gold)] mb-1 flex items-center gap-2">
                     <Heart className="w-4 h-4" />
                     Agradecimiento
                   </h4>
-                  <p className="text-sm text-slate-300 leading-relaxed bg-[#0a0a0f] p-3 rounded-lg border border-slate-800">
+                  <p className="text-sm text-[var(--foreground)] leading-relaxed bg-[var(--background)] p-3 rounded-lg border border-[var(--border-color)]">
                     {activeReview.gratitude}
                   </p>
                 </div>
               )}
 
               {activeReview.stoic_quote && (
-                <div className="p-4 rounded-xl bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] border border-[#c9a84c]/20 text-center">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-[var(--background)] to-[var(--card-bg)] border border-[var(--primary-gold)]/20 text-center">
                   <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-2">Cita de la semana</p>
-                  <p className="text-sm text-slate-200 italic">&ldquo;{activeReview.stoic_quote}&rdquo;</p>
+                  <p className="text-sm text-[var(--foreground)] italic">&ldquo;{activeReview.stoic_quote}&rdquo;</p>
                 </div>
               )}
             </div>
           ) : (
-            <div className="bg-[#111116] border border-[#1e1e28] rounded-xl p-12 text-center text-slate-500 h-64 flex flex-col items-center justify-center">
+            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-12 text-center text-slate-500 h-64 flex flex-col items-center justify-center">
               <PenSquare className="w-10 h-10 mb-3 text-slate-600" />
               <h3 className="text-base font-semibold text-slate-400">Detalles de la revision</h3>
               <p className="text-xs mt-1">Selecciona una revision del historial para ver los detalles.</p>
@@ -319,7 +319,7 @@ export default function JournalPage() {
               className="w-full"
             />
           </div>
-          <div className="flex justify-end gap-2 pt-4 border-t border-slate-800">
+          <div className="flex justify-end gap-2 pt-4 border-t border-[var(--border-color)]">
             <Button
               label="Cancelar"
               icon="pi pi-times"
@@ -331,7 +331,7 @@ export default function JournalPage() {
               icon="pi pi-check"
               className="p-button-sm"
               onClick={handleSaveReview}
-              style={{ backgroundColor: '#c9a84c', borderColor: '#c9a84c', color: '#0a0a0f' }}
+              style={{ backgroundColor: 'var(--primary-gold)', borderColor: 'var(--primary-gold)', color: 'var(--background)' }}
             />
           </div>
         </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -13,13 +13,31 @@ import {
   Menu, 
   X, 
   ChevronLeft, 
-  ChevronRight
+  ChevronRight,
+  Sun,
+  Moon
 } from 'lucide-react'
 
 export default function Sidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+
+  useEffect(() => {
+    const saved = localStorage.getItem('theme') as 'dark' | 'light' | null
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const initialTheme = saved || (systemDark ? 'dark' : 'light')
+    setTheme(initialTheme)
+    document.documentElement.classList.toggle('dark', initialTheme === 'dark')
+  }, [])
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark'
+    setTheme(nextTheme)
+    localStorage.setItem('theme', nextTheme)
+    document.documentElement.classList.toggle('dark', nextTheme === 'dark')
+  }
 
   const menuItems = [
     { label: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -72,7 +90,7 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#111116] border-b border-[#1e1e28] sticky top-0 z-50">
+      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[var(--sidebar-bg)] border-b border-[var(--border-color)] sticky top-0 z-50">
         <Link href="/" className="flex items-center gap-2">
           <img src="/sculpture.png" className="w-8 h-8 rounded-full object-cover border border-[#c9a84c]/30" alt="StoiCom Logo" />
           <span className="font-bold text-slate-100 tracking-wider">StoiCom</span>
@@ -104,7 +122,7 @@ export default function Sidebar() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
-              className="relative w-64 max-w-xs bg-[#111116] border-r border-[#1e1e28] h-full flex flex-col p-4 z-50"
+              className="relative w-64 max-w-xs bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] h-full flex flex-col p-4 z-50"
             >
               <div className="flex items-center gap-2 mb-8 mt-2">
                 <img src="/sculpture.png" className="w-8 h-8 rounded-full object-cover border border-[#c9a84c]/30" alt="StoiCom Logo" />
@@ -113,8 +131,26 @@ export default function Sidebar() {
               <nav className="flex-1 space-y-2">
                 {renderNavItems(true)}
               </nav>
-              <div className="pt-4 border-t border-[#1e1e28] text-center">
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Memento Mori</p>
+              <div className="pt-4 border-t border-[var(--border-color)] flex flex-col gap-3">
+                <button
+                  onClick={toggleTheme}
+                  className="flex items-center justify-center gap-2 p-2 rounded-lg bg-slate-800/10 dark:bg-slate-800/30 text-[var(--foreground)] hover:text-[var(--primary-gold)] transition-colors w-full"
+                >
+                  {theme === 'dark' ? (
+                    <>
+                      <Sun className="w-4 h-4 text-[#c9a84c]" />
+                      <span className="text-xs font-medium">Modo Claro</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="w-4 h-4 text-[#ab841d]" />
+                      <span className="text-xs font-medium">Modo Oscuro</span>
+                    </>
+                  )}
+                </button>
+                <div className="text-center">
+                  <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Memento Mori</p>
+                </div>
               </div>
             </motion.div>
           </div>
@@ -126,7 +162,7 @@ export default function Sidebar() {
         animate={collapsed ? 'collapsed' : 'expanded'}
         variants={sidebarVariants}
         transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
-        className="hidden md:flex flex-col bg-[#111116] border-r border-[#1e1e28] h-screen sticky top-0 p-4 flex-shrink-0"
+        className="hidden md:flex flex-col bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] h-screen sticky top-0 p-4 flex-shrink-0"
       >
         {/* Logo */}
         <div className="flex items-center justify-between mb-8 mt-2">
@@ -155,11 +191,28 @@ export default function Sidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="pt-4 border-t border-[#1e1e28] text-center">
+        <div className="pt-4 border-t border-[var(--border-color)] flex flex-col gap-3 items-center">
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg bg-slate-800/10 dark:bg-slate-800/20 text-slate-500 hover:text-[var(--primary-gold)] hover:bg-slate-850/20 transition-colors flex items-center justify-center w-full"
+            title="Cambiar tema"
+          >
+            {theme === 'dark' ? (
+              <>
+                <Sun className="w-4 h-4 text-[#c9a84c]" />
+                {!collapsed && <span className="text-xs text-slate-400 ml-2">Modo Claro</span>}
+              </>
+            ) : (
+              <>
+                <Moon className="w-4 h-4 text-[#ab841d]" />
+                {!collapsed && <span className="text-xs text-slate-650 ml-2">Modo Oscuro</span>}
+              </>
+            )}
+          </button>
           {!collapsed ? (
             <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Memento Mori</p>
           ) : (
-            <span className="text-xs text-slate-600 font-bold">M</span>
+            <span className="text-[10px] text-slate-500 font-bold">M</span>
           )}
         </div>
       </motion.div>
