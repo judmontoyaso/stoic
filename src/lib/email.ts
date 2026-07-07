@@ -14,6 +14,9 @@ export type EmailContent = { subject: string; html: string }
 // Layout HTML responsivo compatible con clientes de correo
 function baseLayout(opts: { preheader?: string; heading: string; body: string }): string {
   const { preheader = '', heading, body } = opts
+  const appUrl = (process.env.APP_URL || 'https://stoic-mu.vercel.app').replace(/\/$/, '')
+  const logoUrl = `${appUrl}/sculpture.png`
+
   return `<!doctype html>
 <html lang="es">
 <head>
@@ -33,7 +36,8 @@ function baseLayout(opts: { preheader?: string; heading: string; body: string })
             <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
               <tr>
                 <td style="vertical-align:middle;font-size:18px;font-weight:800;color:#f8fafc;letter-spacing:1px;">
-                  Stoi<span style="color:${ACCENT};">Com</span>
+                  <img src="${logoUrl}" width="30" height="30" style="vertical-align:middle;margin-right:10px;border-radius:50%;display:inline-block;" alt="Logo" />
+                  <span style="vertical-align:middle;display:inline-block;">Stoi<span style="color:${ACCENT};">Com</span></span>
                 </td>
                 <td align="right" style="vertical-align:middle;font-size:10px;text-transform:uppercase;color:${ACCENT};font-weight:700;letter-spacing:1.5px;">
                   Memento Mori
