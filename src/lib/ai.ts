@@ -4,8 +4,58 @@ export interface AIDailyReflection {
 }
 
 /**
- * Genera una reflexión estoica y de comunicación personalizada usando Gemini 2.5 Flash.
- * Retorna null si no hay API Key configurada o si ocurre algún error, permitiendo fallback silencioso.
+ * Llama a una API compatible con OpenAI para generar contenido JSON.
+ */
+async function callOpenAICompatible(
+  apiKey: string,
+  baseUrl: string,
+  model: string,
+  prompt: string
+): Promise<AIDailyReflection | null> {
+  try {
+    const res = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: 'Eres un tutor estoico y mentor de comunicación estratégica moderna. Debes responder estrictamente con un objeto JSON que contenga las claves "reflection" (texto en español, de 1 o 2 párrafos profundos conectando la cita estoica con el día del entrenamiento, sin emojis) y "actionableTip" (un consejo práctico directo en español para el día, sin emojis).'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        response_format: { type: 'json_object' }
+      })
+    })
+
+    if (!res.ok) {
+      const errorText = await res.text()
+      console.error(`Error en API compatible con OpenAI (${model}):`, errorText)
+      return null
+    }
+
+    const data = await res.json()
+    const content = data.choices?.[0]?.message?.content
+    if (!content) return null
+
+    return JSON.parse(content) as AIDailyReflection
+  } catch (error) {
+    console.error(`Fallo llamando al modelo ${model}:`, error)
+    return null
+  }
+}
+
+/**
+ * Genera una reflexión estoica y de comunicación personalizada.
+ * Prioriza DeepSeek (deepseek-chat) y usa OpenAI (gpt-4o-mini) como fallback.
+ * Si ambos fallan o no están configurados, retorna null para usar la plantilla estática.
  */
 export async function generateDailyReflection(opts: {
   dayNumber: number
@@ -15,13 +65,7 @@ export async function generateDailyReflection(opts: {
   habits: { name: string; description: string }[]
   challenge: { title: string; description: string } | null
 }): Promise<AIDailyReflection | null> {
-  const key = process.env.GEMINI_API_KEY
-  if (!key) {
-    return null
-  }
-
   const prompt = `
-Eres un tutor estoico y mentor de comunicación estratégica moderna (inspirado en Marco Aurelio, Séneca, Chris Voss y Julian Treasure). Redacta una reflexión matutina diaria para el usuario.
 Datos del día:
 - Día del programa: ${opts.dayNumber}
 - Fase: ${opts.phase} (${opts.phaseLabel})
@@ -30,43 +74,23 @@ Datos del día:
 - Reto semanal de exposición social: ${opts.challenge ? `${opts.challenge.title} (${opts.challenge.description})` : 'Ninguno'}
 
 Instrucciones:
-1. Escribe la "reflection" en español, de 1 o 2 párrafos. Debe ser profunda, inspiradora, directa y al estilo de Séneca y Chris Voss, conectando la cita estoica con la importancia de la comunicación racional de hoy.
-2. Escribe un "actionableTip" (consejo práctico) sobre cómo afrontar las conversaciones de hoy y aplicar el reto y los hábitos de forma natural.
-3. No uses emojis. Mantén un tono sumamente profesional, sobrio y estoico.
+Escribe una reflexión estoica inspiradora sobre la comunicación de hoy y un consejo práctico accionable. No uses emojis.
 `
 
-  try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: 'OBJECT',
-            properties: {
-              reflection: { type: 'STRING' },
-              actionableTip: { type: 'STRING' }
-            },
-            required: ['reflection', 'actionableTip']
-          }
-        }
-      })
-    })
-
-    if (!res.ok) {
-      console.error('Error llamando a la API de Gemini:', res.statusText)
-      return null
-    }
-
-    const data = await res.json()
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text
-    if (!text) return null
-
-    return JSON.parse(text) as AIDailyReflection
-  } catch (error) {
-    console.error('Error al generar la reflexión con IA:', error)
-    return null
+  // 1. Intentar con DeepSeek primero
+  const deepseekKey = process.env.DEEPSEEK_API_KEY
+  if (deepseekKey) {
+    const model = process.env.DEEPSEEK_MODEL || 'deepseek-chat'
+    const result = await callOpenAICompatible(deepseekKey, 'https://api.deepseek.com', model, prompt)
+    if (result) return result
   }
+
+  // 2. Fallback a OpenAI (gpt-4o-mini)
+  const openaiKey = process.env.OPENAI_API_KEY
+  if (openaiKey) {
+    const result = await callOpenAICompatible(openaiKey, 'https://api.openai.com/v1', 'gpt-4o-mini', prompt)
+    if (result) return result
+  }
+
+  return null
 }
