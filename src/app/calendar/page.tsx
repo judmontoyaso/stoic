@@ -1,182 +1,106 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
 import { Sidebar as PrimeSidebar } from 'primereact/sidebar'
-import { Button } from 'primereact/button'
-import { ProgressBar } from 'primereact/progressbar'
-import { Calendar as CalendarIcon, CheckCircle2, ChevronRight, Award, HelpCircle } from 'lucide-react'
+import { InputTextarea } from 'primereact/inputtextarea'
+import { Calendar as CalendarIcon, CheckCircle2, XCircle, Flame } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
-import { STOIC_QUOTES } from '@/lib/quotes'
-import { getPhaseLabel, getToday } from '@/lib/utils'
-import type { Habit, Challenge, HabitLog, ChallengeLog } from '@/types'
-
-interface CalendarDay {
-  dayNum: number
-  dateStr: string
-  phase: number
-  week: number
-  completedHabitsCount: number
-  totalHabitsCount: number
-  completedChallengesCount: number
-  isFullyCompleted: boolean
-}
+import { getToday, formatDate } from '@/lib/utils'
+import {
+  dateForDayNumber,
+  dayStatus,
+  currentStreak,
+  getModuleLabel,
+  getModuleColor,
+} from '@/lib/program'
+import type { Track, ProgramDay, ProgramWeek, DayLog, DayStatus } from '@/types'
 
 export default function CalendarPage() {
-  const [habits, setHabits] = useState<Habit[]>([])
-  const [challenges, setChallenges] = useState<Challenge[]>([])
-  const [habitLogs, setHabitLogs] = useState<HabitLog[]>([])
-  const [challengeLogs, setChallengeLogs] = useState<ChallengeLog[]>([])
-  const [weeklyReviews, setWeeklyReviews] = useState<any[]>([])
-  
+  const [tracks, setTracks] = useState<Track[]>([])
+  const [activeTrackId, setActiveTrackId] = useState<string | null>(null)
+  const [programDays, setProgramDays] = useState<ProgramDay[]>([])
+  const [programWeeks, setProgramWeeks] = useState<ProgramWeek[]>([])
+  const [dayLogs, setDayLogs] = useState<DayLog[]>([])
   const [loading, setLoading] = useState(true)
-  const [startDate, setStartDate] = useState<string>('')
-  
-  // Drawer state
-  const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null)
+
+  const [selectedDayNumber, setSelectedDayNumber] = useState<number | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [notesDraft, setNotesDraft] = useState('')
 
   const todayStr = getToday()
 
-  const loadData = useCallback(async () => {
+  const loadTracks = useCallback(async () => {
     try {
-      const [allHabits, allChallenges, allHabitLogs, allChallengeLogs, reviews] = await Promise.all([
-        StoicDB.getHabits(),
-        StoicDB.getChallenges(),
-        // Get all logs to populate the calendar
-        StoicDB.getHabitLogsRange('1970-01-01', '2099-12-31'),
-        StoicDB.getChallengeLogsRange('1970-01-01', '2099-12-31'),
-        StoicDB.getWeeklyReviews(),
-      ])
-
-      setHabits(allHabits)
-      setChallenges(allChallenges)
-      setHabitLogs(allHabitLogs)
-      setChallengeLogs(allChallengeLogs)
-      setWeeklyReviews(reviews)
-
-      // Resolve start date
-      // Use the earliest log date, or default to 30 days ago if no logs exist
-      let resolvedStartDate = ''
-      if (allHabitLogs.length > 0 || allChallengeLogs.length > 0) {
-        const dates = [
-          ...allHabitLogs.map(l => l.date),
-          ...allChallengeLogs.map(l => l.date)
-        ].sort()
-        resolvedStartDate = dates[0]
-      } else {
-        const d = new Date()
-        d.setDate(d.getDate() - 30) // Default start 30 days ago
-        resolvedStartDate = d.toISOString().split('T')[0]
-      }
-      setStartDate(resolvedStartDate)
+      const all = await StoicDB.getTracks()
+      setTracks(all)
+      setActiveTrackId(prev => prev ?? all[0]?.id ?? null)
     } catch (err) {
-      console.error('Error loading calendar data:', err)
-      toast.error('Error al cargar datos del planificador')
+      console.error('Error loading tracks:', err)
+      toast.error('Error al cargar los tracks')
     } finally {
       setLoading(false)
     }
   }, [])
 
+  const loadTrackData = useCallback(async () => {
+    if (!activeTrackId) return
+    try {
+      const [days, weeks, logs] = await Promise.all([
+        StoicDB.getProgramDays(activeTrackId),
+        StoicDB.getProgramWeeks(activeTrackId),
+        StoicDB.getDayLogs(activeTrackId),
+      ])
+      setProgramDays(days)
+      setProgramWeeks(weeks)
+      setDayLogs(logs)
+    } catch (err) {
+      console.error('Error loading track data:', err)
+      toast.error('Error al cargar el calendario')
+    }
+  }, [activeTrackId])
+
   useEffect(() => {
-    loadData()
-    const handler = () => loadData()
+    loadTracks()
+  }, [loadTracks])
+
+  useEffect(() => {
+    loadTrackData()
+    const handler = () => {
+      loadTracks()
+      loadTrackData()
+    }
     window.addEventListener('stoic_data_changed', handler)
     return () => window.removeEventListener('stoic_data_changed', handler)
-  }, [loadData])
+  }, [loadTrackData, loadTracks])
 
-  // Generate 90 days array
-  const getCalendarDays = (): CalendarDay[] => {
-    if (!startDate) return []
-    const start = new Date(startDate)
-    
-    return Array.from({ length: 90 }, (_, i) => {
-      const dayNum = i + 1
-      const dateObj = new Date(start)
-      dateObj.setDate(start.getDate() + i)
-      const dateStr = dateObj.toISOString().split('T')[0]
+  const activeTrack = tracks.find(t => t.id === activeTrackId) || null
 
-      const phase = Math.min(3, Math.max(1, Math.ceil(dayNum / 30)))
-      const week = Math.min(12, Math.max(1, Math.ceil(dayNum / 7)))
-
-      // Habits active for this phase
-      const phaseHabits = habits.filter(h => h.phase === phase)
-      const completedHabits = habitLogs.filter(l => l.date === dateStr && l.completed && phaseHabits.some(h => h.id === l.habit_id))
-
-      // Challenges active for this week
-      const weekChallenges = challenges.filter(c => c.week === week)
-      const completedChallenges = challengeLogs.filter(l => l.date === dateStr && l.completed && weekChallenges.some(c => c.id === l.challenge_id))
-
-      const isFullyCompleted = phaseHabits.length > 0 && completedHabits.length === phaseHabits.length
-
-      return {
-        dayNum,
-        dateStr,
-        phase,
-        week,
-        completedHabitsCount: completedHabits.length,
-        totalHabitsCount: phaseHabits.length,
-        completedChallengesCount: completedChallenges.length,
-        isFullyCompleted,
-      }
-    })
-  };
-
-  const calendarDays = getCalendarDays()
-
-  // Toggle habit completed for past date
-  const handleToggleHabit = async (habitId: string, dateStr: string) => {
+  const handleToggleDay = async (dayNumber: number) => {
+    if (!activeTrack?.start_date) return
+    const dateStr = dateForDayNumber(activeTrack.start_date, dayNumber)
+    if (dateStr > todayStr) {
+      toast('Ese día aún no llega. Sin trampas.', { icon: '🏛️' })
+      return
+    }
     try {
-      await StoicDB.toggleHabitLog(habitId, dateStr)
-      // Reload and update drawer state
-      const [allHabitLogs, allChallengeLogs] = await Promise.all([
-        StoicDB.getHabitLogsRange('1970-01-01', '2099-12-31'),
-        StoicDB.getChallengeLogsRange('1970-01-01', '2099-12-31'),
-      ])
-      setHabitLogs(allHabitLogs)
-      setChallengeLogs(allChallengeLogs)
-      
-      // Update active day state
-      if (selectedDay) {
-        const phaseHabits = habits.filter(h => h.phase === selectedDay.phase)
-        const completedHabits = allHabitLogs.filter(l => l.date === dateStr && l.completed && phaseHabits.some(h => h.id === l.habit_id))
-        setSelectedDay(prev => prev ? {
-          ...prev,
-          completedHabitsCount: completedHabits.length,
-          isFullyCompleted: phaseHabits.length > 0 && completedHabits.length === phaseHabits.length,
-        } : null)
-      }
-      toast.success('Hábito actualizado')
+      await StoicDB.toggleDayLog(activeTrack.id, dateStr, dayNumber)
     } catch (err) {
       console.error(err)
-      toast.error('Error al actualizar hábito')
+      toast.error('Error al actualizar el día')
     }
   }
 
-  // Toggle challenge completed for past date
-  const handleToggleChallenge = async (challengeId: string, dateStr: string) => {
+  const handleSaveNotes = async (dayNumber: number) => {
+    if (!activeTrack?.start_date) return
+    const dateStr = dateForDayNumber(activeTrack.start_date, dayNumber)
     try {
-      await StoicDB.toggleChallengeLog(challengeId, dateStr)
-      // Reload and update drawer state
-      const [allHabitLogs, allChallengeLogs] = await Promise.all([
-        StoicDB.getHabitLogsRange('1970-01-01', '2099-12-31'),
-        StoicDB.getChallengeLogsRange('1970-01-01', '2099-12-31'),
-      ])
-      setHabitLogs(allHabitLogs)
-      setChallengeLogs(allChallengeLogs)
-
-      if (selectedDay) {
-        const weekChallenges = challenges.filter(c => c.week === selectedDay.week)
-        const completedChallenges = allChallengeLogs.filter(l => l.date === dateStr && l.completed && weekChallenges.some(c => c.id === l.challenge_id))
-        setSelectedDay(prev => prev ? {
-          ...prev,
-          completedChallengesCount: completedChallenges.length,
-        } : null)
-      }
-      toast.success('Reto actualizado')
+      await StoicDB.updateDayLogNotes(activeTrack.id, dateStr, dayNumber, notesDraft || null)
+      toast.success('Nota guardada')
     } catch (err) {
       console.error(err)
-      toast.error('Error al actualizar reto')
+      toast.error('Error al guardar la nota')
     }
   }
 
@@ -188,294 +112,248 @@ export default function CalendarPage() {
     )
   }
 
-  const completedDaysCount = calendarDays.filter(d => d.isFullyCompleted).length
-  const totalCompletionPercent = calendarDays.length > 0 ? Math.round((completedDaysCount / calendarDays.length) * 100) : 0
+  const logByDate = new Map(dayLogs.map(l => [l.date, l]))
 
-  // Group days by week
-  const weeks = Array.from({ length: 12 }, (_, w) => {
+  const statusFor = (dayNumber: number): { status: DayStatus; dateStr: string; log: DayLog | undefined } | null => {
+    if (!activeTrack?.start_date) return null
+    const dateStr = dateForDayNumber(activeTrack.start_date, dayNumber)
+    const log = logByDate.get(dateStr)
+    return { status: dayStatus(dateStr, log, todayStr), dateStr, log }
+  }
+
+  const completedCount = dayLogs.filter(l => l.completed).length
+  const missedCount = activeTrack?.start_date
+    ? programDays.filter(d => {
+        const s = statusFor(d.day_number)
+        return s?.status === 'missed'
+      }).length
+    : 0
+  const streak = activeTrack ? currentStreak(activeTrack, dayLogs, todayStr) : 0
+
+  // Agrupar por semanas (1-13)
+  const weeks = Array.from({ length: 13 }, (_, w) => {
     const weekNum = w + 1
     return {
       weekNum,
-      phase: Math.ceil(weekNum / 4),
-      days: calendarDays.filter(d => d.week === weekNum),
+      programWeek: programWeeks.find(pw => pw.week_number === weekNum),
+      days: programDays.filter(d => d.week === weekNum),
     }
-  })
+  }).filter(w => w.days.length > 0)
 
-  // Selected day items for detail sidebar
-  const dayQuote = selectedDay ? STOIC_QUOTES[(selectedDay.dayNum - 1) % STOIC_QUOTES.length] : null
-  const dayHabits = selectedDay ? habits.filter(h => h.phase === selectedDay.phase) : []
-  const dayChallenges = selectedDay ? challenges.filter(c => c.week === selectedDay.week) : []
-  const dayReview = selectedDay ? weeklyReviews.find(r => r.week_number === selectedDay.week) : null
+  const selectedProgramDay = selectedDayNumber !== null
+    ? programDays.find(d => d.day_number === selectedDayNumber) || null
+    : null
+  const selectedInfo = selectedDayNumber !== null ? statusFor(selectedDayNumber) : null
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)]">Planificador de 90 Días</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)]">Calendario de 90 Días</h1>
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-          Sigue el mapa completo de tu entrenamiento de comunicación y disciplina estoica.
+          Fechas reales. Si pierdes un día, se marca como perdido y sigues: el calendario nunca se reorganiza.
         </p>
       </div>
 
-      {/* Progress Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-4 flex flex-col justify-between shadow-sm">
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">Días al 100%</p>
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-black text-[var(--foreground)]">{completedDaysCount}</span>
-            <span className="text-sm text-slate-400">/ 90 días</span>
-          </div>
-          <p className="text-[10px] text-slate-500 mt-2">Días con todos los hábitos de la fase completados.</p>
-        </div>
-
-        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-4 flex flex-col justify-between shadow-sm">
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">Tasa de Consistencia</p>
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-black text-[var(--foreground)]">{totalCompletionPercent}%</span>
-          </div>
-          <div className="mt-3">
-            <ProgressBar value={totalCompletionPercent} showValue={false} style={{ height: '6px', borderRadius: '3px' }} />
-          </div>
-        </div>
-
-        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-4 flex flex-col justify-between shadow-sm">
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">Fase Actual</p>
-          <div className="flex items-baseline gap-2 mt-2">
-            {calendarDays.length > 0 ? (
-              (() => {
-                const todayIndex = calendarDays.findIndex(d => d.dateStr === todayStr)
-                const currentDay = todayIndex !== -1 ? todayIndex + 1 : 1
-                const currentPhase = Math.ceil(currentDay / 30)
-                return (
-                  <>
-                    <span className="text-3xl font-black text-[var(--foreground)]">Fase {currentPhase}</span>
-                    <span className="text-xs text-slate-450 dark:text-slate-400 font-medium">Día {currentDay}</span>
-                  </>
-                )
-              })()
-            ) : (
-              <span className="text-3xl font-black text-[var(--foreground)]">Fase 1</span>
-            )}
-          </div>
-          <p className="text-[10px] text-slate-500 mt-2">Cada fase introduce hábitos y retos progresivos.</p>
-        </div>
+      {/* Track selector */}
+      <div className="flex gap-2 flex-wrap">
+        {tracks.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setActiveTrackId(t.id)}
+            className={`px-4 py-2 rounded-lg text-sm font-bold border transition-all ${
+              t.id === activeTrackId
+                ? 'bg-[var(--primary-gold)]/15 border-[var(--primary-gold)]/40 text-[var(--primary-gold)]'
+                : 'bg-[var(--card-bg)] border-[var(--border-color)] text-slate-500 hover:text-[var(--foreground)]'
+            }`}
+          >
+            {t.name}
+          </button>
+        ))}
       </div>
 
-      {/* Grid of Weeks */}
-      <div className="space-y-4">
-        <h2 className="text-sm font-semibold text-slate-550 dark:text-slate-400 uppercase tracking-widest border-b border-[var(--border-color)] pb-2 flex items-center gap-2">
-          <CalendarIcon className="w-4 h-4 text-[var(--primary-gold)]" />
-          Calendario del Programa
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {weeks.map((week) => (
-            <div 
-              key={week.weekNum}
-              className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-4 shadow-sm"
-            >
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-bold text-sm text-[var(--foreground)] flex items-center gap-1">
-                  Semana {week.weekNum}
-                  <span className="text-[9px] font-normal px-1.5 py-0.5 rounded-sm bg-[var(--primary-gold)]/10 text-[var(--primary-gold)] uppercase tracking-wider">
-                    Fase {week.phase}
-                  </span>
-                </h3>
-                {weeklyReviews.some(r => r.week_number === week.weekNum) && (
-                  <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
-                    <CheckCircle2 className="w-3 h-3" />
-                    Revisión hecha
-                  </span>
-                )}
-              </div>
-
-              {/* Days of this week */}
-              <div className="grid grid-cols-7 gap-2">
-                {week.days.map((day) => {
-                  const isToday = day.dateStr === todayStr
-                  let borderClass = 'border-[var(--border-color)]'
-                  if (isToday) borderClass = 'border-[var(--primary-gold)] ring-1 ring-[var(--primary-gold)]/30'
-                  
-                  let bgClass = 'bg-[var(--background)] hover:bg-[var(--border-color)]/20'
-                  if (day.isFullyCompleted) bgClass = 'bg-[var(--primary-gold)]/15 border-[var(--primary-gold)]/35 text-[var(--primary-gold)]'
-                  
-                  return (
-                    <button
-                      key={day.dayNum}
-                      onClick={() => {
-                        setSelectedDay(day)
-                        setDrawerOpen(true)
-                      }}
-                      className={`h-11 rounded-sm border ${borderClass} ${bgClass} transition-all duration-150 flex flex-col items-center justify-between p-1.5 cursor-pointer relative group`}
-                    >
-                      <span className="text-xs font-bold">{day.dayNum}</span>
-                      <div className="flex gap-0.5 mt-0.5">
-                        {/* Habit bullet dot indicator */}
-                        <span 
-                          className={`w-1 h-1 rounded-full ${
-                            day.completedHabitsCount === day.totalHabitsCount && day.totalHabitsCount > 0
-                              ? 'bg-[var(--primary-gold)]' 
-                              : day.completedHabitsCount > 0 
-                                ? 'bg-amber-500/50' 
-                                : 'bg-slate-400/30'
-                          }`}
-                        />
-                        {/* Challenge bullet dot indicator */}
-                        {day.completedChallengesCount > 0 && (
-                          <span className="w-1 h-1 rounded-full bg-emerald-500" />
-                        )}
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
+      {!activeTrack ? (
+        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-10 text-center text-slate-500">
+          <p className="text-sm">No hay tracks. Ejecuta el esquema y los seeds V2 en Supabase.</p>
         </div>
-      </div>
-
-      {/* Slideout Detail Panel */}
-      <PrimeSidebar
-        visible={drawerOpen}
-        position="right"
-        onHide={() => {
-          setDrawerOpen(false)
-          setSelectedDay(null)
-        }}
-        style={{ width: '100%', maxWidth: '460px', background: 'var(--card-bg)', borderLeft: '1px solid var(--border-color)', padding: 0 }}
-        className="stoic-sidebar-drawer"
-      >
-        {selectedDay && (
-          <div className="h-full flex flex-col text-[var(--foreground)]">
-            {/* Header */}
-            <div className="p-5 border-b border-[var(--border-color)]">
-              <span className="text-[10px] font-bold text-[var(--primary-gold)] uppercase tracking-widest block mb-1">
-                Día {selectedDay.dayNum} · Fase {selectedDay.phase}
-              </span>
-              <h2 className="text-lg font-black text-[var(--foreground)]">
-                {new Date(selectedDay.dateStr + 'T00:00:00').toLocaleDateString('es-CO', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </h2>
-              {selectedDay.dateStr === todayStr && (
-                <span className="text-[9px] px-2 py-0.5 rounded-sm bg-[var(--primary-gold)]/20 text-[var(--primary-gold)] font-bold mt-2 inline-block">
-                  Hoy
-                </span>
-              )}
+      ) : !activeTrack.start_date ? (
+        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-10 text-center text-slate-500 space-y-3">
+          <CalendarIcon className="w-8 h-8 mx-auto text-[var(--primary-gold)] opacity-60" />
+          <p className="text-sm">Este track aún no tiene fecha de inicio.</p>
+          <Link href="/" className="inline-block text-sm font-bold text-[var(--primary-gold)] hover:underline">
+            Iniciarlo desde el Panel de Control
+          </Link>
+        </div>
+      ) : (
+        <>
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-4">
+              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Completados</p>
+              <p className="text-2xl font-black text-[var(--primary-gold)] mt-1">{completedCount}<span className="text-sm text-slate-400 font-normal"> / 90</span></p>
             </div>
+            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-4">
+              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Perdidos</p>
+              <p className="text-2xl font-black text-red-500 mt-1">{missedCount}</p>
+            </div>
+            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-4">
+              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Racha actual</p>
+              <p className="text-2xl font-black text-orange-400 mt-1 flex items-center gap-1"><Flame className="w-5 h-5" />{streak}</p>
+            </div>
+            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-4">
+              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Inicio</p>
+              <p className="text-sm font-bold text-[var(--foreground)] mt-2">{formatDate(activeTrack.start_date)}</p>
+            </div>
+          </div>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-6">
-              {/* Quote */}
-              {dayQuote && (
-                <div className="p-4 rounded-md bg-[var(--background)] border border-[var(--border-color)] border-l-4 border-l-[var(--primary-gold)]">
-                  <p className="text-xs font-semibold text-slate-450 dark:text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
-                    <img src="/icons/papyrus.png" className="w-3.5 h-3.5 object-contain dark:invert dark:opacity-60" alt="Scroll" />
-                    Reflexión del día
-                  </p>
-                  <p className="text-sm text-[var(--foreground)] italic leading-relaxed">&ldquo;{dayQuote.text}&rdquo;</p>
-                  <p className="text-xs text-[var(--primary-gold)] font-bold text-right mt-2">— {dayQuote.author}</p>
+          {/* Leyenda */}
+          <div className="flex flex-wrap gap-4 text-[11px] text-slate-500">
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[var(--primary-gold)]/60 border border-[var(--primary-gold)]" /> Completado</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-red-500/20 border border-red-500/50" /> Perdido</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[var(--background)] border border-[var(--primary-gold)] ring-1 ring-[var(--primary-gold)]/40" /> Hoy</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[var(--background)] border border-[var(--border-color)] opacity-50" /> Futuro</span>
+          </div>
+
+          {/* Grid de semanas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {weeks.map((week) => (
+              <div key={week.weekNum} className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-4">
+                <div className="mb-3">
+                  <h3 className="font-bold text-sm text-[var(--foreground)]">
+                    Semana {week.weekNum}
+                    {week.programWeek && (
+                      <span className="ml-2 text-[10px] font-normal px-1.5 py-0.5 rounded-sm bg-[var(--primary-gold)]/10 text-[var(--primary-gold)] uppercase tracking-wider">
+                        {week.programWeek.theme}
+                      </span>
+                    )}
+                  </h3>
                 </div>
-              )}
+                <div className="grid grid-cols-7 gap-2">
+                  {week.days.map((pd) => {
+                    const info = statusFor(pd.day_number)
+                    if (!info) return null
+                    let cellClass = 'bg-[var(--background)] border-[var(--border-color)]'
+                    if (info.status === 'completed') cellClass = 'bg-[var(--primary-gold)]/20 border-[var(--primary-gold)]/50 text-[var(--primary-gold)]'
+                    if (info.status === 'missed') cellClass = 'bg-red-500/10 border-red-500/40 text-red-500'
+                    if (info.status === 'today') cellClass = 'bg-[var(--background)] border-[var(--primary-gold)] ring-1 ring-[var(--primary-gold)]/40'
+                    if (info.status === 'future') cellClass = 'bg-[var(--background)] border-[var(--border-color)] opacity-50'
 
-              {/* Habits checklist */}
-              <div className="space-y-3">
-                <h3 className="text-xs font-bold text-slate-550 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                  <img src="/icons/skull.png" className="w-3.5 h-3.5 object-contain dark:invert dark:opacity-60" alt="Skull" />
-                  Hábitos diarios ({selectedDay.completedHabitsCount}/{selectedDay.totalHabitsCount})
-                </h3>
-                <div className="space-y-2">
-                  {dayHabits.map((habit) => {
-                    const isDone = habitLogs.some(l => l.date === selectedDay.dateStr && l.habit_id === habit.id && l.completed)
                     return (
                       <button
-                        key={habit.id}
-                        onClick={() => handleToggleHabit(habit.id, selectedDay.dateStr)}
-                        className={`w-full flex items-center gap-3 p-3 rounded-md border text-left transition-all ${
-                          isDone 
-                            ? 'bg-[var(--primary-gold)]/10 border-[var(--primary-gold)]/30' 
-                            : 'bg-[var(--background)] border-[var(--border-color)] hover:border-[var(--primary-gold)]/20'
-                        }`}
+                        key={pd.day_number}
+                        onClick={() => {
+                          setSelectedDayNumber(pd.day_number)
+                          setNotesDraft(info.log?.notes || '')
+                          setDrawerOpen(true)
+                        }}
+                        title={`Día ${pd.day_number} · ${info.dateStr} · ${pd.title}`}
+                        className={`h-11 rounded-sm border ${cellClass} transition-all duration-150 flex flex-col items-center justify-center p-1 cursor-pointer`}
                       >
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                          isDone ? 'border-[var(--primary-gold)] bg-[var(--primary-gold)]' : 'border-slate-400 dark:border-slate-600'
-                        }`}>
-                          {isDone && <i className="pi pi-check text-[10px] text-white dark:text-[#0a0a0f] font-bold" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-xs font-bold ${isDone ? 'text-[var(--primary-gold)] line-through' : 'text-[var(--foreground)]'}`}>
-                            {habit.name}
-                          </p>
-                        </div>
+                        <span className="text-xs font-bold">{pd.day_number}</span>
+                        <span className="text-[8px] opacity-70">{info.dateStr.slice(5)}</span>
                       </button>
                     )
                   })}
                 </div>
               </div>
+            ))}
+          </div>
+        </>
+      )}
 
-              {/* Challenge */}
-              <div className="space-y-3">
-                <h3 className="text-xs font-bold text-slate-550 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                  <img src="/icons/armour.png" className="w-3.5 h-3.5 object-contain dark:invert dark:opacity-60" alt="Shield" />
-                  Desafío de la semana
-                </h3>
-                {dayChallenges.length === 0 ? (
-                  <p className="text-xs text-slate-500 italic">No hay retos configurados para esta semana</p>
-                ) : (
-                  dayChallenges.map((challenge) => {
-                    const isDone = challengeLogs.some(l => l.date === selectedDay.dateStr && l.challenge_id === challenge.id && l.completed)
-                    return (
-                      <button
-                        key={challenge.id}
-                        onClick={() => handleToggleChallenge(challenge.id, selectedDay.dateStr)}
-                        className={`w-full flex items-start gap-3 p-3 rounded-md border text-left transition-all ${
-                          isDone 
-                            ? 'bg-emerald-500/10 border-emerald-500/30' 
-                            : 'bg-[var(--background)] border-[var(--border-color)] hover:border-emerald-500/20'
-                        }`}
-                      >
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
-                          isDone ? 'border-emerald-500 bg-emerald-500' : 'border-slate-400 dark:border-slate-600'
-                        }`}>
-                          {isDone && <i className="pi pi-check text-[10px] text-white font-bold" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-xs font-bold ${isDone ? 'text-emerald-500 dark:text-emerald-400 line-through' : 'text-[var(--foreground)]'}`}>
-                            {challenge.title}
-                          </p>
-                          <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">{challenge.description}</p>
-                        </div>
-                      </button>
-                    )
-                  })
+      {/* Drawer de detalle */}
+      <PrimeSidebar
+        visible={drawerOpen}
+        position="right"
+        onHide={() => {
+          setDrawerOpen(false)
+          setSelectedDayNumber(null)
+        }}
+        style={{ width: '100%', maxWidth: '460px', background: 'var(--card-bg)', borderLeft: '1px solid var(--border-color)', padding: 0 }}
+        className="stoic-sidebar-drawer"
+      >
+        {selectedProgramDay && selectedInfo && activeTrack && (
+          <div className="h-full flex flex-col text-[var(--foreground)]">
+            <div className="p-5 border-b border-[var(--border-color)]">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] font-bold text-[var(--primary-gold)] uppercase tracking-widest">
+                  Día {selectedProgramDay.day_number} · Semana {selectedProgramDay.week} · Fase {selectedProgramDay.phase}
+                </span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${getModuleColor(selectedProgramDay.module).bg} ${getModuleColor(selectedProgramDay.module).text}`}>
+                  {getModuleLabel(selectedProgramDay.module)}
+                </span>
+              </div>
+              <h2 className="text-lg font-black">
+                {new Date(selectedInfo.dateStr + 'T00:00:00').toLocaleDateString('es-CO', {
+                  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                })}
+              </h2>
+              <div className="mt-2 flex gap-2">
+                {selectedInfo.status === 'today' && (
+                  <span className="text-[9px] px-2 py-0.5 rounded-sm bg-[var(--primary-gold)]/20 text-[var(--primary-gold)] font-bold">Hoy</span>
+                )}
+                {selectedInfo.status === 'missed' && (
+                  <span className="text-[9px] px-2 py-0.5 rounded-sm bg-red-500/15 text-red-500 font-bold flex items-center gap-1">
+                    <XCircle className="w-3 h-3" /> Día perdido
+                  </span>
+                )}
+                {selectedInfo.status === 'completed' && (
+                  <span className="text-[9px] px-2 py-0.5 rounded-sm bg-emerald-500/15 text-emerald-500 font-bold flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Completado
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 space-y-5">
+              <div>
+                <h3 className="text-base font-bold text-[var(--foreground)]">{selectedProgramDay.title}</h3>
+                {selectedProgramDay.source_author && (
+                  <p className="text-[11px] text-slate-500 mt-0.5">Fuente: {selectedProgramDay.source_author}</p>
+                )}
+                <p className="text-sm text-slate-600 dark:text-slate-300 mt-3 leading-relaxed">
+                  {selectedProgramDay.instructions}
+                </p>
+                {selectedProgramDay.rationale && (
+                  <div className="mt-3 p-3 rounded-md bg-[var(--background)] border border-[var(--border-color)] border-l-4 border-l-[var(--primary-gold)]">
+                    <p className="text-[10px] font-bold text-[var(--primary-gold)] uppercase tracking-widest mb-1">Por qué funciona</p>
+                    <p className="text-xs text-slate-500 italic leading-relaxed">{selectedProgramDay.rationale}</p>
+                  </div>
                 )}
               </div>
 
-              {/* Weekly review if available */}
-              {dayReview && (
-                <div className="space-y-2 pt-2 border-t border-[var(--border-color)]">
-                  <h3 className="text-xs font-bold text-slate-550 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                    <img src="/icons/history-book.png" className="w-3.5 h-3.5 object-contain" alt="Book" />
-                    Bitácora semanal
-                  </h3>
-                  <div className="p-3 bg-[var(--background)] border border-[var(--border-color)] rounded-md space-y-3">
-                    {dayReview.bad_habits_resisted && (
-                      <div>
-                        <p className="text-[10px] font-bold text-[var(--primary-gold)]">Malos hábitos resistidos</p>
-                        <p className="text-xs text-slate-650 dark:text-slate-300 mt-0.5">{dayReview.bad_habits_resisted}</p>
-                      </div>
-                    )}
-                    {dayReview.progress_made && (
-                      <div>
-                        <p className="text-[10px] font-bold text-[var(--primary-gold)]">Progreso semanal</p>
-                        <p className="text-xs text-slate-650 dark:text-slate-300 mt-0.5">{dayReview.progress_made}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
+              {/* Toggle (solo hoy o pasado) */}
+              {selectedInfo.status !== 'future' && (
+                <button
+                  onClick={() => handleToggleDay(selectedProgramDay.day_number)}
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${
+                    selectedInfo.log?.completed
+                      ? 'bg-[var(--primary-gold)]/15 text-[var(--primary-gold)] border border-[var(--primary-gold)]/40'
+                      : 'bg-[var(--primary-gold)] text-[#0a0a0f] hover:opacity-90'
+                  }`}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  {selectedInfo.log?.completed ? 'Completado — tocar para deshacer' : 'Marcar como completado'}
+                </button>
               )}
+
+              {/* Notas */}
+              <div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Notas del día</p>
+                <InputTextarea
+                  value={notesDraft}
+                  onChange={(e) => setNotesDraft(e.target.value)}
+                  rows={4}
+                  placeholder="Qué intenté, qué pasó, qué ajusto la próxima vez..."
+                  className="w-full"
+                />
+                <button
+                  onClick={() => handleSaveNotes(selectedProgramDay.day_number)}
+                  className="mt-2 px-4 py-2 rounded-lg bg-[var(--background)] border border-[var(--border-color)] text-xs font-bold text-[var(--foreground)] hover:border-[var(--primary-gold)]/40 transition-all"
+                >
+                  Guardar nota
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -1,16 +1,25 @@
 'use client'
 
 import { createClient } from '@/utils/supabase/client'
-import type { 
-  Habit, 
-  HabitLog, 
-  Challenge, 
-  ChallengeLog, 
-  WeeklyReview, 
-  Resource, 
+import type {
+  Habit,
+  HabitLog,
+  Challenge,
+  ChallengeLog,
+  WeeklyReview,
+  Resource,
   HabitCategory,
   ChallengeCategory,
-  ResourceType
+  ResourceType,
+  Track,
+  ProgramDay,
+  ProgramWeek,
+  ProgramMonth,
+  DayLog,
+  WeekLog,
+  MonthLog,
+  JournalEntry,
+  JournalEntryType
 } from '@/types'
 
 const supabase = createClient()
@@ -432,6 +441,291 @@ export const StoicDB = {
     if (error) throw error
     this.dispatchEvent()
     return data[0] as WeeklyReview
+  },
+
+  // ============================================================
+  // V2 - PROGRAMA DE 90 DIAS (tracks, fechas reales)
+  // ============================================================
+
+  // --- TRACKS ---
+  async getTracks(): Promise<Track[]> {
+    const { data, error } = await supabase
+      .from('tracks')
+      .select('*')
+      .order('created_at', { ascending: true })
+
+    if (error) throw error
+    return (data || []) as Track[]
+  },
+
+  async setTrackStartDate(trackId: string, startDate: string | null): Promise<Track> {
+    const { data, error } = await supabase
+      .from('tracks')
+      .update({ start_date: startDate })
+      .eq('id', trackId)
+      .select()
+
+    if (error) throw error
+    this.dispatchEvent()
+    return data[0] as Track
+  },
+
+  // --- PROGRAM CONTENT (estatico) ---
+  async getProgramDays(trackId: string): Promise<ProgramDay[]> {
+    const { data, error } = await supabase
+      .from('program_days')
+      .select('*')
+      .eq('track_id', trackId)
+      .order('day_number', { ascending: true })
+
+    if (error) throw error
+    return (data || []) as ProgramDay[]
+  },
+
+  async getProgramWeeks(trackId: string): Promise<ProgramWeek[]> {
+    const { data, error } = await supabase
+      .from('program_weeks')
+      .select('*')
+      .eq('track_id', trackId)
+      .order('week_number', { ascending: true })
+
+    if (error) throw error
+    return (data || []) as ProgramWeek[]
+  },
+
+  async getProgramMonths(trackId: string): Promise<ProgramMonth[]> {
+    const { data, error } = await supabase
+      .from('program_months')
+      .select('*')
+      .eq('track_id', trackId)
+      .order('month_number', { ascending: true })
+
+    if (error) throw error
+    return (data || []) as ProgramMonth[]
+  },
+
+  // --- DAY LOGS (fechas reales) ---
+  async getDayLogs(trackId: string): Promise<DayLog[]> {
+    const { data, error } = await supabase
+      .from('day_logs')
+      .select('*')
+      .eq('track_id', trackId)
+
+    if (error) throw error
+    return (data || []) as DayLog[]
+  },
+
+  async toggleDayLog(trackId: string, date: string, dayNumber: number): Promise<DayLog> {
+    const { data: existing, error: fetchError } = await supabase
+      .from('day_logs')
+      .select('*')
+      .eq('track_id', trackId)
+      .eq('date', date)
+      .maybeSingle()
+
+    if (fetchError) throw fetchError
+
+    let result
+    if (existing) {
+      const { data, error } = await supabase
+        .from('day_logs')
+        .update({ completed: !existing.completed })
+        .eq('id', existing.id)
+        .select()
+      if (error) throw error
+      result = data[0]
+    } else {
+      const { data, error } = await supabase
+        .from('day_logs')
+        .insert({ track_id: trackId, date, day_number: dayNumber, completed: true })
+        .select()
+      if (error) throw error
+      result = data[0]
+    }
+
+    this.dispatchEvent()
+    return result as DayLog
+  },
+
+  async updateDayLogNotes(trackId: string, date: string, dayNumber: number, notes: string | null): Promise<DayLog> {
+    const { data: existing, error: fetchError } = await supabase
+      .from('day_logs')
+      .select('*')
+      .eq('track_id', trackId)
+      .eq('date', date)
+      .maybeSingle()
+
+    if (fetchError) throw fetchError
+
+    let result
+    if (existing) {
+      const { data, error } = await supabase
+        .from('day_logs')
+        .update({ notes })
+        .eq('id', existing.id)
+        .select()
+      if (error) throw error
+      result = data[0]
+    } else {
+      const { data, error } = await supabase
+        .from('day_logs')
+        .insert({ track_id: trackId, date, day_number: dayNumber, completed: false, notes })
+        .select()
+      if (error) throw error
+      result = data[0]
+    }
+
+    this.dispatchEvent()
+    return result as DayLog
+  },
+
+  // --- WEEK LOGS ---
+  async getWeekLogs(trackId: string): Promise<WeekLog[]> {
+    const { data, error } = await supabase
+      .from('week_logs')
+      .select('*')
+      .eq('track_id', trackId)
+
+    if (error) throw error
+    return (data || []) as WeekLog[]
+  },
+
+  async toggleWeekLog(trackId: string, weekNumber: number, reflection?: string | null): Promise<WeekLog> {
+    const { data: existing, error: fetchError } = await supabase
+      .from('week_logs')
+      .select('*')
+      .eq('track_id', trackId)
+      .eq('week_number', weekNumber)
+      .maybeSingle()
+
+    if (fetchError) throw fetchError
+
+    let result
+    if (existing) {
+      const { data, error } = await supabase
+        .from('week_logs')
+        .update({ completed: !existing.completed, reflection: reflection ?? existing.reflection })
+        .eq('id', existing.id)
+        .select()
+      if (error) throw error
+      result = data[0]
+    } else {
+      const { data, error } = await supabase
+        .from('week_logs')
+        .insert({ track_id: trackId, week_number: weekNumber, completed: true, reflection: reflection || null })
+        .select()
+      if (error) throw error
+      result = data[0]
+    }
+
+    this.dispatchEvent()
+    return result as WeekLog
+  },
+
+  // --- MONTH LOGS ---
+  async getMonthLogs(trackId: string): Promise<MonthLog[]> {
+    const { data, error } = await supabase
+      .from('month_logs')
+      .select('*')
+      .eq('track_id', trackId)
+
+    if (error) throw error
+    return (data || []) as MonthLog[]
+  },
+
+  async toggleMonthLog(trackId: string, monthNumber: number, reflection?: string | null): Promise<MonthLog> {
+    const { data: existing, error: fetchError } = await supabase
+      .from('month_logs')
+      .select('*')
+      .eq('track_id', trackId)
+      .eq('month_number', monthNumber)
+      .maybeSingle()
+
+    if (fetchError) throw fetchError
+
+    let result
+    if (existing) {
+      const { data, error } = await supabase
+        .from('month_logs')
+        .update({ completed: !existing.completed, reflection: reflection ?? existing.reflection })
+        .eq('id', existing.id)
+        .select()
+      if (error) throw error
+      result = data[0]
+    } else {
+      const { data, error } = await supabase
+        .from('month_logs')
+        .insert({ track_id: trackId, month_number: monthNumber, completed: true, reflection: reflection || null })
+        .select()
+      if (error) throw error
+      result = data[0]
+    }
+
+    this.dispatchEvent()
+    return result as MonthLog
+  },
+
+  // --- JOURNAL ENTRIES (plantillas manana / noche / semanal / libre) ---
+  async getJournalEntries(startDate?: string, endDate?: string): Promise<JournalEntry[]> {
+    let query = supabase
+      .from('journal_entries')
+      .select('*')
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false })
+
+    if (startDate) query = query.gte('date', startDate)
+    if (endDate) query = query.lte('date', endDate)
+
+    const { data, error } = await query
+    if (error) throw error
+    return (data || []) as JournalEntry[]
+  },
+
+  async upsertJournalEntry(
+    date: string,
+    entryType: JournalEntryType,
+    content: Record<string, string>,
+    mood?: number | null
+  ): Promise<JournalEntry> {
+    const { data: existing, error: fetchError } = await supabase
+      .from('journal_entries')
+      .select('*')
+      .eq('date', date)
+      .eq('entry_type', entryType)
+      .maybeSingle()
+
+    if (fetchError) throw fetchError
+
+    let result
+    if (existing) {
+      const { data, error } = await supabase
+        .from('journal_entries')
+        .update({ content, mood: mood ?? existing.mood })
+        .eq('id', existing.id)
+        .select()
+      if (error) throw error
+      result = data[0]
+    } else {
+      const { data, error } = await supabase
+        .from('journal_entries')
+        .insert({ date, entry_type: entryType, content, mood: mood || null })
+        .select()
+      if (error) throw error
+      result = data[0]
+    }
+
+    this.dispatchEvent()
+    return result as JournalEntry
+  },
+
+  async deleteJournalEntry(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('journal_entries')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+    this.dispatchEvent()
   },
 
   // --- EVENTS ---

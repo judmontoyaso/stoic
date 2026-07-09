@@ -1,39 +1,89 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Dialog } from 'primereact/dialog'
 import { InputTextarea } from 'primereact/inputtextarea'
-import { Dropdown } from 'primereact/dropdown'
-import { Button } from 'primereact/button'
-import { Card } from 'primereact/card'
-import { Calendar, ChevronRight } from 'lucide-react'
+import { Calendar, Sun, Moon, BookOpen, Feather, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
-import { formatDate, getPhaseLabel } from '@/lib/utils'
-import type { WeeklyReview } from '@/types'
+import { getToday, formatDate } from '@/lib/utils'
+import type { JournalEntry, JournalEntryType } from '@/types'
+
+// Plantillas basadas en el plan de cambio de identidad (Frankl / Séneca / Marco Aurelio)
+const TEMPLATES: Record<JournalEntryType, { label: string; icon: 'sun' | 'moon' | 'book' | 'feather'; fields: { key: string; label: string; placeholder: string }[] }> = {
+  morning: {
+    label: 'Examen matutino',
+    icon: 'sun',
+    fields: [
+      { key: 'identity', label: 'Hoy soy... (identidad deseada)', placeholder: 'Soy disciplinado, tranquilo, claro al hablar...' },
+      { key: 'goals', label: 'Mis metas para hoy (1-2 tareas alineadas)', placeholder: 'Qué haré hoy que confirme esa identidad...' },
+      { key: 'triggers', label: 'Obstáculos y gatillos probables de hoy', placeholder: 'Personas difíciles, retrasos, críticas... ¿qué depende de mí y qué no?' },
+      { key: 'pattern_to_break', label: '¿Qué patrón limitante intento romper hoy?', placeholder: 'El hábito viejo que hoy no me gobernará...' },
+    ],
+  },
+  evening: {
+    label: 'Examen nocturno',
+    icon: 'moon',
+    fields: [
+      { key: 'did_well', label: '¿Qué hice bien hoy?', placeholder: 'Al menos 2 decisiones alineadas con la nueva identidad...' },
+      { key: 'to_improve', label: '¿Qué puedo mejorar?', placeholder: 'Sin juzgarte: un error o dificultad y su ajuste...' },
+      { key: 'learned', label: '¿Qué aprendí hoy?', placeholder: 'El punto clave del día...' },
+      { key: 'gratitude', label: 'Gratitud y avance de propósito', placeholder: 'Algo específico de hoy, conectado a tu porqué...' },
+    ],
+  },
+  weekly: {
+    label: 'Revisión semanal',
+    icon: 'book',
+    fields: [
+      { key: 'why_wake_up', label: '¿Por qué me levanto cada día?', placeholder: 'El propósito de esta semana en tus palabras...' },
+      { key: 'praise_self', label: 'Elogios a la persona en que me estoy convirtiendo', placeholder: 'Cualidades demostradas esta semana, con ejemplos...' },
+      { key: 'sacrifice', label: 'Sacrificio asumido con valor', placeholder: 'Una renuncia o esfuerzo hecho conscientemente...' },
+      { key: 'next_week', label: 'Proyección de la próxima semana', placeholder: 'Objetivos concretos alineados al propósito...' },
+    ],
+  },
+  free: {
+    label: 'Escritura libre',
+    icon: 'feather',
+    fields: [
+      { key: 'text', label: 'Lo que necesites sacar', placeholder: 'Escribe sin filtro...' },
+    ],
+  },
+}
+
+const MOODS = [
+  { value: 1, emoji: '😞', label: 'Muy bajo' },
+  { value: 2, emoji: '😕', label: 'Bajo' },
+  { value: 3, emoji: '😐', label: 'Neutro' },
+  { value: 4, emoji: '🙂', label: 'Bien' },
+  { value: 5, emoji: '💪', label: 'Fuerte' },
+]
+
+function TemplateIcon({ icon, className }: { icon: 'sun' | 'moon' | 'book' | 'feather'; className?: string }) {
+  switch (icon) {
+    case 'sun': return <Sun className={className} />
+    case 'moon': return <Moon className={className} />
+    case 'book': return <BookOpen className={className} />
+    case 'feather': return <Feather className={className} />
+  }
+}
 
 export default function JournalPage() {
-  const [reviews, setReviews] = useState<WeeklyReview[]>([])
+  const [entries, setEntries] = useState<JournalEntry[]>([])
   const [loading, setLoading] = useState(true)
-  const [showDialog, setShowDialog] = useState(false)
-  const [activeReview, setActiveReview] = useState<WeeklyReview | null>(null)
-  
-  const [newReview, setNewReview] = useState({
-    weekNumber: 1,
-    phase: 1,
-    badHabitsResisted: '',
-    progressMade: '',
-    nextWeekPlan: '',
-    gratitude: '',
-    stoicQuote: '',
-  })
+  const [activeType, setActiveType] = useState<JournalEntryType>('morning')
+  const [draft, setDraft] = useState<Record<string, string>>({})
+  const [mood, setMood] = useState<number | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [viewEntry, setViewEntry] = useState<JournalEntry | null>(null)
+
+  const today = getToday()
 
   const loadData = useCallback(async () => {
     try {
-      const data = await StoicDB.getWeeklyReviews()
-      setReviews(data)
+      const data = await StoicDB.getJournalEntries()
+      setEntries(data)
     } catch (err) {
-      console.error('Error loading reviews:', err)
+      console.error('Error loading journal:', err)
+      toast.error('Error al cargar el diario')
     } finally {
       setLoading(false)
     }
@@ -46,32 +96,40 @@ export default function JournalPage() {
     return () => window.removeEventListener('stoic_data_changed', handler)
   }, [loadData])
 
-  const handleSaveReview = async () => {
+  // Pre-cargar el borrador si ya existe entrada de hoy para el tipo activo
+  useEffect(() => {
+    const existing = entries.find(e => e.date === today && e.entry_type === activeType)
+    setDraft(existing?.content || {})
+    setMood(existing?.mood ?? null)
+  }, [activeType, entries, today])
+
+  const handleSave = async () => {
+    const template = TEMPLATES[activeType]
+    const hasContent = template.fields.some(f => (draft[f.key] || '').trim().length > 0)
+    if (!hasContent) {
+      toast('Escribe algo antes de guardar', { icon: '✍️' })
+      return
+    }
+    setSaving(true)
     try {
-      await StoicDB.addWeeklyReview(
-        newReview.weekNumber,
-        newReview.phase,
-        newReview.badHabitsResisted || null,
-        newReview.progressMade || null,
-        newReview.nextWeekPlan || null,
-        newReview.gratitude || null,
-        newReview.stoicQuote || null
-      )
-      setShowDialog(false)
-      setNewReview({
-        weekNumber: reviews.length + 2,
-        phase: 1,
-        badHabitsResisted: '',
-        progressMade: '',
-        nextWeekPlan: '',
-        gratitude: '',
-        stoicQuote: '',
-      })
-      toast.success('Revision semanal guardada')
-      await loadData()
+      await StoicDB.upsertJournalEntry(today, activeType, draft, mood)
+      toast.success(`${template.label} guardado`)
     } catch (err) {
       console.error(err)
-      toast.error('Error al guardar revision')
+      toast.error('Error al guardar')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (entry: JournalEntry) => {
+    try {
+      await StoicDB.deleteJournalEntry(entry.id)
+      if (viewEntry?.id === entry.id) setViewEntry(null)
+      toast.success('Entrada eliminada')
+    } catch (err) {
+      console.error(err)
+      toast.error('Error al eliminar')
     }
   }
 
@@ -83,260 +141,155 @@ export default function JournalPage() {
     )
   }
 
-  const phaseOptions = [
-    { label: 'Fase 1: Fundamentos', value: 1 },
-    { label: 'Fase 2: Persuasion', value: 2 },
-    { label: 'Fase 3: Liderazgo', value: 3 },
-  ]
-
-  const weekOptions = Array.from({ length: 12 }, (_, i) => ({
-    label: `Semana ${i + 1}`,
-    value: i + 1,
-  }))
+  const template = TEMPLATES[activeType]
+  const todayHas = (type: JournalEntryType) => entries.some(e => e.date === today && e.entry_type === type)
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)] flex items-center gap-2">
-            <img src="/icons/papyrus.png" className="w-8 h-8 object-contain" alt="Papyrus" />
-            Diario de Revision
-          </h1>
-          <p className="text-slate-400 text-sm mt-1">
-            Reflexiones semanales estructuradas al estilo de Seneca
-          </p>
-        </div>
-        <Button
-          icon="pi pi-pencil"
-          label="Nueva revision"
-          className="p-button-sm"
-          onClick={() => {
-            setNewReview(prev => ({
-              ...prev,
-              weekNumber: reviews.length > 0 ? Math.min(12, reviews[0].week_number + 1) : 1,
-              phase: reviews.length > 0 ? reviews[0].phase : 1,
-            }))
-            setShowDialog(true)}
-          }
-          style={{ backgroundColor: 'var(--primary-gold)', borderColor: 'var(--primary-gold)', color: 'var(--background)' }}
-        />
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)] flex items-center gap-2">
+          <img src="/icons/papyrus.png" className="w-8 h-8 object-contain" alt="Papiro" />
+          Diario Estoico
+        </h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+          Examen matutino (Marco Aurelio), examen nocturno (Séneca) y revisión semanal. Lo que se escribe, se integra.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left/Main Column - Past Reviews list */}
-        <div className="lg:col-span-1 space-y-3">
-          <h2 className="text-sm font-semibold text-slate-450 dark:text-slate-400 uppercase tracking-widest mb-2">Historial</h2>
-          {reviews.length === 0 ? (
-            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-8 text-center text-slate-500">
-              <img src="/icons/history-book.png" className="w-8 h-8 mx-auto mb-3 object-contain opacity-55" alt="Historial vacio" />
-              <p className="text-sm">Aun no has creado ninguna revision.</p>
-            </div>
-          ) : (
-            reviews.map((rev) => (
+        {/* Editor */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* Type tabs */}
+          <div className="flex gap-2 flex-wrap">
+            {(Object.keys(TEMPLATES) as JournalEntryType[]).map(type => (
               <button
-                key={rev.id}
-                onClick={() => setActiveReview(rev)}
-                className={`w-full p-4 rounded-xl border text-left transition-all flex items-center justify-between ${
-                  activeReview?.id === rev.id
-                    ? 'bg-[var(--primary-gold)]/10 border-[var(--primary-gold)]/30 text-[var(--primary-gold)]'
-                    : 'bg-[var(--card-bg)] border-[var(--border-color)] text-slate-450 dark:text-slate-300 hover:border-[var(--primary-gold)]/20'
+                key={type}
+                onClick={() => setActiveType(type)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
+                  activeType === type
+                    ? 'bg-[var(--primary-gold)]/15 border-[var(--primary-gold)]/40 text-[var(--primary-gold)]'
+                    : 'bg-[var(--card-bg)] border-[var(--border-color)] text-slate-500 hover:text-[var(--foreground)]'
                 }`}
               >
-                <div>
-                  <h3 className="font-bold text-sm text-[var(--foreground)]">
-                    Semana {rev.week_number} -- Fase {rev.phase}
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" />
-                    {formatDate(rev.date.split('T')[0])}
-                  </p>
-                </div>
-                <ChevronRight className="w-4 h-4" />
+                <TemplateIcon icon={TEMPLATES[type].icon} className="w-3.5 h-3.5" />
+                {TEMPLATES[type].label}
+                {todayHas(type) && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
               </button>
-            ))
-          )}
+            ))}
+          </div>
+
+          <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-5 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+              <h2 className="text-base font-bold text-[var(--foreground)] flex items-center gap-2">
+                <TemplateIcon icon={template.icon} className="w-4 h-4 text-[var(--primary-gold)]" />
+                {template.label} — hoy
+              </h2>
+              <span className="text-xs text-slate-500">{formatDate(today)}</span>
+            </div>
+
+            {template.fields.map(field => (
+              <div key={field.key}>
+                <label className="text-sm text-slate-600 dark:text-slate-400 font-medium block mb-1">{field.label}</label>
+                <InputTextarea
+                  value={draft[field.key] || ''}
+                  onChange={(e) => setDraft(prev => ({ ...prev, [field.key]: e.target.value }))}
+                  placeholder={field.placeholder}
+                  rows={activeType === 'free' ? 8 : 3}
+                  className="w-full"
+                />
+              </div>
+            ))}
+
+            {/* Mood */}
+            <div>
+              <label className="text-sm text-slate-600 dark:text-slate-400 font-medium block mb-2">Estado de ánimo</label>
+              <div className="flex gap-2">
+                {MOODS.map(m => (
+                  <button
+                    key={m.value}
+                    onClick={() => setMood(mood === m.value ? null : m.value)}
+                    title={m.label}
+                    className={`w-10 h-10 rounded-lg border text-lg transition-all ${
+                      mood === m.value
+                        ? 'bg-[var(--primary-gold)]/15 border-[var(--primary-gold)]/50 scale-110'
+                        : 'bg-[var(--background)] border-[var(--border-color)] opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    {m.emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full py-2.5 rounded-lg bg-[var(--primary-gold)] text-[#0a0a0f] text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {saving ? 'Guardando...' : todayHas(activeType) ? 'Actualizar entrada de hoy' : 'Guardar entrada'}
+            </button>
+          </div>
         </div>
 
-        {/* Right Column - Active Review Details */}
-        <div className="lg:col-span-2">
-          {activeReview ? (
-            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-6 space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-[var(--border-color)]">
-                <div>
-                  <h2 className="text-xl font-bold text-[var(--foreground)]">
-                    Semana {activeReview.week_number}
-                  </h2>
-                  <p className="text-xs text-slate-550 dark:text-slate-550 mt-0.5">
-                    Fase {activeReview.phase}: {getPhaseLabel(activeReview.phase)}
-                  </p>
-                </div>
-                <span className="text-xs text-slate-700 dark:text-slate-400 bg-slate-200 dark:bg-slate-800 px-3 py-1 rounded-full font-medium">
-                  {formatDate(activeReview.date.split('T')[0])}
-                </span>
-              </div>
-
-              {activeReview.bad_habits_resisted && (
-                <div>
-                  <h4 className="text-sm font-semibold text-[var(--primary-gold)] mb-1 flex items-center gap-2">
-                    <img src="/icons/skull.png" className="w-4 h-4 object-contain" alt="Habitos resistidos" />
-                    Que malos habitos resististe o evitaste?
-                  </h4>
-                  <p className="text-sm text-[var(--foreground)] leading-relaxed bg-[var(--background)] p-3 rounded-lg border border-[var(--border-color)]">
-                    {activeReview.bad_habits_resisted}
-                  </p>
-                </div>
-              )}
-
-              {activeReview.progress_made && (
-                <div>
-                  <h4 className="text-sm font-semibold text-[var(--primary-gold)] mb-1 flex items-center gap-2">
-                    <img src="/icons/armour.png" className="w-4 h-4 object-contain" alt="Progreso" />
-                    Que progreso lograste esta semana?
-                  </h4>
-                  <p className="text-sm text-[var(--foreground)] leading-relaxed bg-[var(--background)] p-3 rounded-lg border border-[var(--border-color)]">
-                    {activeReview.progress_made}
-                  </p>
-                </div>
-              )}
-
-              {activeReview.next_week_plan && (
-                <div>
-                  <h4 className="text-sm font-semibold text-[var(--primary-gold)] mb-1 flex items-center gap-2">
-                    <img src="/icons/earth.png" className="w-4 h-4 object-contain" alt="Planificacion" />
-                    Como sera mejor la proxima semana?
-                  </h4>
-                  <p className="text-sm text-[var(--foreground)] leading-relaxed bg-[var(--background)] p-3 rounded-lg border border-[var(--border-color)]">
-                    {activeReview.next_week_plan}
-                  </p>
-                </div>
-              )}
-
-              {activeReview.gratitude && (
-                <div>
-                  <h4 className="text-sm font-semibold text-[var(--primary-gold)] mb-1 flex items-center gap-2">
-                    <img src="/icons/harp.png" className="w-4 h-4 object-contain" alt="Agradecimiento" />
-                    Agradecimiento
-                  </h4>
-                  <p className="text-sm text-[var(--foreground)] leading-relaxed bg-[var(--background)] p-3 rounded-lg border border-[var(--border-color)]">
-                    {activeReview.gratitude}
-                  </p>
-                </div>
-              )}
-
-              {activeReview.stoic_quote && (
-                <div className="p-4 rounded-xl bg-gradient-to-br from-[var(--background)] to-[var(--card-bg)] border border-[var(--primary-gold)]/20 text-center">
-                  <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-2">Cita de la semana</p>
-                  <p className="text-sm text-[var(--foreground)] italic">&ldquo;{activeReview.stoic_quote}&rdquo;</p>
-                </div>
-              )}
+        {/* Historial */}
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Historial</h2>
+          {entries.length === 0 ? (
+            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-8 text-center text-slate-500">
+              <img src="/icons/history-book.png" className="w-8 h-8 mx-auto mb-3 object-contain opacity-55" alt="Vacío" />
+              <p className="text-sm">Aún no hay entradas.</p>
             </div>
           ) : (
-            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-12 text-center text-slate-500 h-64 flex flex-col items-center justify-center">
-              <img src="/icons/papyrus.png" className="w-10 h-10 mb-3 object-contain opacity-55" alt="Detalle vacio" />
-              <h3 className="text-base font-semibold text-slate-450 dark:text-slate-400">Detalles de la revision</h3>
-              <p className="text-xs mt-1">Selecciona una revision del historial para ver los detalles.</p>
+            <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
+              {entries.map(entry => {
+                const t = TEMPLATES[entry.entry_type]
+                const moodEmoji = MOODS.find(m => m.value === entry.mood)?.emoji
+                const isOpen = viewEntry?.id === entry.id
+                return (
+                  <div key={entry.id} className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => setViewEntry(isOpen ? null : entry)}
+                      className="w-full p-3 text-left flex items-center justify-between gap-2"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <TemplateIcon icon={t.icon} className="w-3.5 h-3.5 text-[var(--primary-gold)] flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-[var(--foreground)] truncate">{t.label}</p>
+                          <p className="text-[10px] text-slate-500 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" /> {formatDate(entry.date)}
+                          </p>
+                        </div>
+                      </div>
+                      {moodEmoji && <span className="text-sm flex-shrink-0">{moodEmoji}</span>}
+                    </button>
+                    {isOpen && (
+                      <div className="px-3 pb-3 space-y-2 border-t border-[var(--border-color)] pt-2">
+                        {t.fields.map(f => {
+                          const value = entry.content[f.key]
+                          if (!value) return null
+                          return (
+                            <div key={f.key}>
+                              <p className="text-[10px] font-bold text-[var(--primary-gold)]">{f.label}</p>
+                              <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 whitespace-pre-wrap">{value}</p>
+                            </div>
+                          )
+                        })}
+                        <button
+                          onClick={() => handleDelete(entry)}
+                          className="flex items-center gap-1 text-[10px] text-red-500 hover:text-red-400 mt-1"
+                        >
+                          <Trash2 className="w-3 h-3" /> Eliminar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
       </div>
-
-      {/* Add Review Dialog */}
-      <Dialog
-        header="Nueva Revision Semanal"
-        visible={showDialog}
-        style={{ width: '95vw', maxWidth: '640px' }}
-        onHide={() => setShowDialog(false)}
-        className="stoic-dialog"
-      >
-        <div className="space-y-4 pt-2 max-h-[70vh] overflow-y-auto pr-1">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm text-slate-400 block mb-1">Numero de Semana</label>
-              <Dropdown
-                value={newReview.weekNumber}
-                onChange={(e) => setNewReview({ ...newReview, weekNumber: e.value })}
-                options={weekOptions}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-slate-400 block mb-1">Fase del plan</label>
-              <Dropdown
-                value={newReview.phase}
-                onChange={(e) => setNewReview({ ...newReview, phase: e.value })}
-                options={phaseOptions}
-                className="w-full"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="text-sm text-slate-400 block mb-1">Que malos habitos resististe o evitaste?</label>
-            <InputTextarea
-              value={newReview.badHabitsResisted}
-              onChange={(e) => setNewReview({ ...newReview, badHabitsResisted: e.target.value })}
-              placeholder="Reflexiona sobre lo que superaste..."
-              rows={3}
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-slate-400 block mb-1">Que progreso lograste esta semana?</label>
-            <InputTextarea
-              value={newReview.progressMade}
-              onChange={(e) => setNewReview({ ...newReview, progressMade: e.target.value })}
-              placeholder="Habitos consolidados, retos completados..."
-              rows={3}
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-slate-400 block mb-1">Como sera mejor la proxima semana?</label>
-            <InputTextarea
-              value={newReview.nextWeekPlan}
-              onChange={(e) => setNewReview({ ...newReview, nextWeekPlan: e.target.value })}
-              placeholder="Que ajustes haras en tus habitos o retos?"
-              rows={3}
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-slate-400 block mb-1">Agradecimiento</label>
-            <InputTextarea
-              value={newReview.gratitude}
-              onChange={(e) => setNewReview({ ...newReview, gratitude: e.target.value })}
-              placeholder="De que estas agradecido esta semana?"
-              rows={2}
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-slate-400 block mb-1">Cita estoica de la semana (opcional)</label>
-            <InputTextarea
-              value={newReview.stoicQuote}
-              onChange={(e) => setNewReview({ ...newReview, stoicQuote: e.target.value })}
-              placeholder="Alguna frase que te haya servido de guia..."
-              rows={2}
-              className="w-full"
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-4 border-t border-[var(--border-color)]">
-            <Button
-              label="Cancelar"
-              icon="pi pi-times"
-              className="p-button-text p-button-sm"
-              onClick={() => setShowDialog(false)}
-            />
-            <Button
-              label="Guardar revision"
-              icon="pi pi-check"
-              className="p-button-sm"
-              onClick={handleSaveReview}
-              style={{ backgroundColor: 'var(--primary-gold)', borderColor: 'var(--primary-gold)', color: 'var(--background)' }}
-            />
-          </div>
-        </div>
-      </Dialog>
     </div>
   )
 }
