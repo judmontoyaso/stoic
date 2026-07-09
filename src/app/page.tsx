@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Flame, Target, CheckCircle2, Zap, Play, BookOpen, Award, ChevronDown, ChevronUp } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
-import { getTodayQuote } from '@/lib/quotes'
+import { getTodayQuote, getQuoteForDay } from '@/lib/quotes'
 import { getToday } from '@/lib/utils'
 import {
   currentDayNumber,
@@ -30,7 +30,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [startDateDraft, setStartDateDraft] = useState<Record<string, string>>({})
   const [expandedRationale, setExpandedRationale] = useState<Record<string, boolean>>({})
-  const quote = getTodayQuote()
   const today = getToday()
 
   const loadData = useCallback(async () => {
@@ -104,6 +103,12 @@ export default function DashboardPage() {
 
   // Stats globales (vista unificada del PairingEngine: solo lectura de ambos tracks)
   const activeStates = trackStates.filter(s => s.track.start_date)
+
+  // Cita alineada al dia del programa; si no hay track activo, rota por fecha
+  const firstDayNumber = activeStates
+    .map(s => currentDayNumber(s.track))
+    .find((n): n is number => n !== null)
+  const quote = firstDayNumber ? getQuoteForDay(firstDayNumber) : getTodayQuote()
   const todayTotal = activeStates.filter(s => currentDayNumber(s.track) !== null).length
   const todayDone = activeStates.filter(s => {
     return s.dayLogs.some(l => l.date === today && l.completed)
