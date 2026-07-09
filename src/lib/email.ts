@@ -148,6 +148,84 @@ export function dailyReflectionEmail(opts: {
   }
 }
 
+// --- V2: correo del programa de 90 días (un bloque por track activo) ---
+export interface TrackEmailBlock {
+  trackName: string
+  dayNumber: number
+  moduleLabel: string
+  title: string
+  instructions: string
+  rationale: string | null
+  sourceAuthor: string | null
+  weeklyChallenge: { title: string; description: string } | null
+}
+
+export function dailyProgramEmail(opts: {
+  name: string
+  quote: { text: string; author: string }
+  blocks: TrackEmailBlock[]
+  appUrl: string
+  aiReflection?: { reflection: string; actionableTip: string } | null
+}): EmailContent {
+  const blocksHtml = opts.blocks
+    .map(
+      (b) => `
+      <div style="margin:20px 0;padding:20px;background:${CARD_LIGHT};border:1px solid ${BORDER_LIGHT};border-radius:6px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#ab841d;">
+              ${b.trackName} · Día ${b.dayNumber} · ${b.moduleLabel}
+            </td>
+            ${b.sourceAuthor ? `<td align="right" style="font-size:10px;color:${MUTED_LIGHT};">${b.sourceAuthor}</td>` : ''}
+          </tr>
+        </table>
+        <h3 style="margin:8px 0 10px;font-size:16px;font-weight:800;color:#111116;">${b.title}</h3>
+        <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};">${b.instructions}</p>
+        ${b.rationale ? `
+        <div style="padding:10px 14px;background:#fcfaf2;border-left:3px solid ${ACCENT};border-radius:0 4px 4px 0;">
+          <p style="margin:0;font-size:12px;line-height:1.5;font-style:italic;color:${MUTED_LIGHT};"><strong style="color:#8e6d15;font-style:normal;">Por qué funciona:</strong> ${b.rationale}</p>
+        </div>` : ''}
+        ${b.weeklyChallenge ? `
+        <div style="margin-top:12px;padding:12px 14px;background:#f0fdf4;border:1px dashed #86efac;border-radius:4px;">
+          <p style="margin:0 0 4px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:#15803d;">Reto de la semana: ${b.weeklyChallenge.title}</p>
+          <p style="margin:0;font-size:12px;line-height:1.5;color:${MUTED_LIGHT};">${b.weeklyChallenge.description}</p>
+        </div>` : ''}
+      </div>`
+    )
+    .join('')
+
+  const aiHtml = opts.aiReflection
+    ? `
+    <div style="margin:20px 0;padding:16px;background:#f3f4f6;border:1px solid ${BORDER_LIGHT};border-radius:4px;">
+      <h3 style="margin:0 0 8px;font-size:13px;font-weight:800;color:#111116;text-transform:uppercase;letter-spacing:0.5px;">Reflexión del Mentor</h3>
+      <p style="margin:0 0 10px;font-size:13px;line-height:1.6;color:${MUTED_LIGHT};">${opts.aiReflection.reflection}</p>
+      <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};"><strong style="color:#8e6d15;">Consejo accionable:</strong> ${opts.aiReflection.actionableTip}</p>
+    </div>`
+    : ''
+
+  const primary = opts.blocks[0]
+  return {
+    subject: primary
+      ? `Día ${primary.dayNumber} · ${primary.title}`
+      : 'Tu entrenamiento estoico de hoy',
+    html: baseLayout({
+      preheader: `"${opts.quote.text.substring(0, 60)}..."`,
+      heading: `Hola ${opts.name}, esto es lo que toca hoy`,
+      body:
+        `
+        <!-- Cita del día -->
+        <div style="margin:0 0 8px;padding:20px;background:#f5f5f4;border-left:4px solid ${ACCENT};border-radius:0 4px 4px 0;">
+          <p style="margin:0 0 8px;font-size:15px;font-style:italic;line-height:1.6;color:${TEXT_LIGHT};">&ldquo;${opts.quote.text}&rdquo;</p>
+          <p style="margin:0;font-size:12px;font-weight:700;color:#ab841d;text-align:right;">— ${opts.quote.author}</p>
+        </div>
+        ${blocksHtml}
+        ${aiHtml}
+        ` +
+        button('Registrar el día en la App', `${opts.appUrl}`),
+    }),
+  }
+}
+
 export async function sendEmail(to: string, content: EmailContent): Promise<boolean> {
   const key = process.env.RESEND_API_KEY
   if (!key) {

@@ -1,17 +1,38 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { STOIC_QUOTES } from '@/lib/quotes'
-import { dailyReflectionEmail, sendEmail } from '@/lib/email'
-import { getPhaseLabel } from '@/lib/utils'
+import { getQuoteForDay, getTodayQuote } from '@/lib/quotes'
+import { dailyProgramEmail, sendEmail, type TrackEmailBlock } from '@/lib/email'
 import { generateDailyReflection } from '@/lib/ai'
 
-// Endpoint de Cron diario para enviar preparación estoica
-// GET /api/cron/daily-email?secret=...&to=...&day=...
+// Endpoint de Cron diario: envía el ejercicio del día de cada track activo
+// GET /api/cron/daily-email?secret=...&to=...&date=YYYY-MM-DD
+
+const MODULE_LABELS: Record<string, string> = {
+  perception: 'Percepción',
+  action: 'Acción',
+  will: 'Voluntad',
+  evaluation: 'Evaluación',
+}
+
+/** Fecha YYYY-MM-DD en la zona horaria del usuario (Colombia) */
+function todayInBogota(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })
+}
+
+/** Día del programa (1-90) para una fecha real, o null si está fuera */
+function dayNumberFor(startDate: string, dateStr: string, durationDays: number): number | null {
+  const start = new Date(startDate + 'T00:00:00Z')
+  const date = new Date(dateStr + 'T00:00:00Z')
+  const dayNumber = Math.round((date.getTime() - start.getTime()) / 86400000) + 1
+  if (dayNumber < 1 || dayNumber > durationDays) return null
+  return dayNumber
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const secret = searchParams.get('secret')
   const forceTo = searchParams.get('to')
-  const forceDay = searchParams.get('day')
+  const forceDate = searchParams.get('date')
 
   const cronSecret = process.env.CRON_SECRET
   if (cronSecret && secret !== cronSecret) {
@@ -26,118 +47,102 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Falta SUPABASE_SERVICE_ROLE_KEY' }, { status: 500 })
   }
 
-  // Cliente con privilegios de administrador para leer auth.users y hacer bypass de RLS si es necesario
   const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     db: { schema: 'stoic' },
   })
 
-  let recipients: { email: string; name: string; dayNumber: number }[] = []
+  const dateStr = forceDate || todayInBogota()
 
-  // 1. Caso de prueba manual o correo directo
-  if (forceTo) {
-    const day = forceDay ? parseInt(forceDay, 10) : 1
-    recipients.push({
-      email: forceTo,
-      name: forceTo.split('@')[0],
-      dayNumber: isNaN(day) ? 1 : day,
+  // 1. Tracks activos (con fecha de inicio)
+  const { data: tracks, error: tracksError } = await supabase
+    .from('tracks')
+    .select('*')
+    .not('start_date', 'is', null)
+
+  if (tracksError) {
+    return NextResponse.json({ error: `Error leyendo tracks: ${tracksError.message}` }, { status: 500 })
+  }
+
+  // 2. Construir un bloque por track que tenga día del programa en esta fecha
+  const blocks: TrackEmailBlock[] = []
+  for (const track of tracks || []) {
+    const dayNumber = dayNumberFor(track.start_date, dateStr, track.duration_days || 90)
+    if (!dayNumber) continue
+
+    const weekNumber = Math.min(13, Math.ceil(dayNumber / 7))
+    const [{ data: days }, { data: weeks }] = await Promise.all([
+      supabase
+        .from('program_days')
+        .select('title, instructions, rationale, source_author, module')
+        .eq('track_id', track.id)
+        .eq('day_number', dayNumber)
+        .limit(1),
+      supabase
+        .from('program_weeks')
+        .select('challenge_title, challenge_description')
+        .eq('track_id', track.id)
+        .eq('week_number', weekNumber)
+        .limit(1),
+    ])
+
+    const day = days?.[0]
+    if (!day) continue
+
+    blocks.push({
+      trackName: track.name,
+      dayNumber,
+      moduleLabel: MODULE_LABELS[day.module] || day.module,
+      title: day.title,
+      instructions: day.instructions,
+      rationale: day.rationale,
+      sourceAuthor: day.source_author,
+      weeklyChallenge: weeks?.[0]
+        ? { title: weeks[0].challenge_title, description: weeks[0].challenge_description }
+        : null,
     })
-  } else {
-    // 2. Resolver desde la base de datos de usuarios
-    try {
-      const { data: authData, error: authError } = await supabase.auth.admin.listUsers()
-      if (authError) throw authError
-
-      const now = new Date()
-      authData.users.forEach((user) => {
-        if (user.email) {
-          const createdAt = new Date(user.created_at)
-          const diffTime = Math.abs(now.getTime() - createdAt.getTime())
-          const dayNumber = Math.min(90, Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1)
-          
-          recipients.push({
-            email: user.email,
-            name: user.user_metadata?.full_name?.split(' ')[0] || user.email.split('@')[0],
-            dayNumber,
-          })
-        }
-      })
-    } catch (dbError: any) {
-      console.error('Error cargando usuarios de auth:', dbError.message)
-      // Fallback a NOTIFICATION_EMAIL si no hay usuarios o falla
-      const fallbackEmail = process.env.NOTIFICATION_EMAIL || 'no-reply@notifications.juanmontoya.me'
-      const day = forceDay ? parseInt(forceDay, 10) : 1
-      recipients.push({
-        email: fallbackEmail,
-        name: 'Practicante',
-        dayNumber: isNaN(day) ? 1 : day,
-      })
-    }
   }
 
-  let sent = 0
-  let failed = 0
-
-  for (const recipient of recipients) {
-    try {
-      const dayNumber = recipient.dayNumber
-      const phase = Math.min(3, Math.max(1, Math.ceil(dayNumber / 30)))
-      const week = Math.min(12, Math.max(1, Math.ceil(dayNumber / 7)))
-      
-      // Obtener hábitos de la fase actual
-      const { data: habits } = await supabase
-        .from('habits')
-        .select('name, description')
-        .eq('phase', phase)
-        .order('sort_order')
-
-      // Obtener el reto de la semana actual
-      const { data: challenges } = await supabase
-        .from('challenges')
-        .select('title, description')
-        .eq('week', week)
-        .limit(1)
-
-      const challenge = challenges && challenges[0] ? challenges[0] : null
-      const quote = STOIC_QUOTES[(dayNumber - 1) % STOIC_QUOTES.length]
-
-      // Generar reflexión inteligente usando IA (Gemini) si hay API Key
-      const aiReflection = await generateDailyReflection({
-        dayNumber,
-        phase,
-        phaseLabel: getPhaseLabel(phase),
-        quote,
-        habits: habits || [],
-        challenge,
-      })
-
-      const emailContent = dailyReflectionEmail({
-        name: recipient.name,
-        dayNumber,
-        phase,
-        phaseLabel: getPhaseLabel(phase),
-        quote,
-        habits: habits || [],
-        challenge,
-        appUrl,
-        aiReflection,
-      })
-
-      const success = await sendEmail(recipient.email, emailContent)
-      if (success) {
-        sent++
-      } else {
-        failed++
-      }
-    } catch (err) {
-      console.error(`Error enviando correo a ${recipient.email}:`, err)
-      failed++
-    }
+  if (blocks.length === 0) {
+    return NextResponse.json({ ok: true, sent: 0, message: 'Ningún track activo tiene día de programa en esta fecha' })
   }
+
+  // 3. Cita alineada al día del programa del primer track
+  const quote = blocks[0] ? getQuoteForDay(blocks[0].dayNumber) : getTodayQuote()
+
+  // 4. Reflexión IA (opcional) alimentada con los ejercicios reales del día
+  const aiReflection = await generateDailyReflection({
+    dayNumber: blocks[0].dayNumber,
+    phase: Math.min(3, Math.ceil(blocks[0].dayNumber / 30)),
+    phaseLabel: blocks.map(b => `${b.trackName}: ${b.title}`).join(' | '),
+    quote,
+    habits: blocks.map(b => ({ name: `${b.trackName} — ${b.title}`, description: b.instructions })),
+    challenge: blocks[0].weeklyChallenge
+      ? { title: blocks[0].weeklyChallenge.title, description: blocks[0].weeklyChallenge.description }
+      : null,
+  })
+
+  // 5. Enviar
+  const to = forceTo || process.env.NOTIFICATION_EMAIL
+  if (!to) {
+    return NextResponse.json({ error: 'Falta NOTIFICATION_EMAIL' }, { status: 500 })
+  }
+  const name = to.split('@')[0]
+
+  const emailContent = dailyProgramEmail({
+    name,
+    quote,
+    blocks,
+    appUrl,
+    aiReflection,
+  })
+
+  const success = await sendEmail(to, emailContent)
 
   return NextResponse.json({
     ok: true,
-    totalProcessed: recipients.length,
-    sent,
-    failed,
+    date: dateStr,
+    tracks: blocks.map(b => ({ track: b.trackName, day: b.dayNumber, title: b.title })),
+    sent: success ? 1 : 0,
+    failed: success ? 0 : 1,
   })
 }

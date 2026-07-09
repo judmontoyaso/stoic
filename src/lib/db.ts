@@ -622,6 +622,38 @@ export const StoicDB = {
     return result as WeekLog
   },
 
+  async updateWeekLogReflection(trackId: string, weekNumber: number, reflection: string | null): Promise<WeekLog> {
+    const { data: existing, error: fetchError } = await supabase
+      .from('week_logs')
+      .select('*')
+      .eq('track_id', trackId)
+      .eq('week_number', weekNumber)
+      .maybeSingle()
+
+    if (fetchError) throw fetchError
+
+    let result
+    if (existing) {
+      const { data, error } = await supabase
+        .from('week_logs')
+        .update({ reflection })
+        .eq('id', existing.id)
+        .select()
+      if (error) throw error
+      result = data[0]
+    } else {
+      const { data, error } = await supabase
+        .from('week_logs')
+        .insert({ track_id: trackId, week_number: weekNumber, completed: false, reflection })
+        .select()
+      if (error) throw error
+      result = data[0]
+    }
+
+    this.dispatchEvent()
+    return result as WeekLog
+  },
+
   // --- MONTH LOGS ---
   async getMonthLogs(trackId: string): Promise<MonthLog[]> {
     const { data, error } = await supabase

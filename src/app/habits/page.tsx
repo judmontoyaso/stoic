@@ -1,293 +1,241 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { TabView, TabPanel } from 'primereact/tabview'
-import { Dialog } from 'primereact/dialog'
-import { InputText } from 'primereact/inputtext'
-import { InputTextarea } from 'primereact/inputtextarea'
-import { Dropdown } from 'primereact/dropdown'
-import { Button } from 'primereact/button'
-import { ProgressBar } from 'primereact/progressbar'
-import { Plus } from 'lucide-react'
+import Link from 'next/link'
+import { ChevronDown, ChevronUp, CheckCircle2, XCircle, Filter } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
-import { getToday, getPhaseLabel } from '@/lib/utils'
-import type { Habit, HabitLog, HabitCategory } from '@/types'
+import { getToday } from '@/lib/utils'
+import { dateForDayNumber, dayStatus, getModuleLabel, getModuleColor } from '@/lib/program'
+import type { Track, ProgramDay, ProgramWeek, DayLog, ProgramModule, DayStatus } from '@/types'
 
-export default function HabitsPage() {
-  const [habits, setHabits] = useState<Habit[]>([])
-  const [logs, setLogs] = useState<HabitLog[]>([])
+const MODULE_FILTERS: { value: ProgramModule | 'all'; label: string }[] = [
+  { value: 'all', label: 'Todos' },
+  { value: 'perception', label: 'Percepción' },
+  { value: 'action', label: 'Acción' },
+  { value: 'will', label: 'Voluntad' },
+  { value: 'evaluation', label: 'Evaluación' },
+]
+
+export default function ProgramPage() {
+  const [tracks, setTracks] = useState<Track[]>([])
+  const [activeTrackId, setActiveTrackId] = useState<string | null>(null)
+  const [programDays, setProgramDays] = useState<ProgramDay[]>([])
+  const [programWeeks, setProgramWeeks] = useState<ProgramWeek[]>([])
+  const [dayLogs, setDayLogs] = useState<DayLog[]>([])
   const [loading, setLoading] = useState(true)
-  const [showDialog, setShowDialog] = useState(false)
-  const [newHabit, setNewHabit] = useState({ name: '', description: '', category: 'communication' as HabitCategory })
-  const today = getToday()
+  const [expandedDay, setExpandedDay] = useState<number | null>(null)
+  const [moduleFilter, setModuleFilter] = useState<ProgramModule | 'all'>('all')
 
-  const loadData = useCallback(async () => {
+  const todayStr = getToday()
+
+  const loadTracks = useCallback(async () => {
     try {
-      const [allHabits, todayLogs] = await Promise.all([
-        StoicDB.getHabits(),
-        StoicDB.getHabitLogs(today),
-      ])
-      setHabits(allHabits)
-      setLogs(todayLogs)
+      const all = await StoicDB.getTracks()
+      setTracks(all)
+      setActiveTrackId(prev => prev ?? all[0]?.id ?? null)
     } catch (err) {
-      console.error('Error loading habits:', err)
+      console.error('Error loading tracks:', err)
+      toast.error('Error al cargar los tracks')
     } finally {
       setLoading(false)
     }
-  }, [today])
+  }, [])
+
+  const loadTrackData = useCallback(async () => {
+    if (!activeTrackId) return
+    try {
+      const [days, weeks, logs] = await Promise.all([
+        StoicDB.getProgramDays(activeTrackId),
+        StoicDB.getProgramWeeks(activeTrackId),
+        StoicDB.getDayLogs(activeTrackId),
+      ])
+      setProgramDays(days)
+      setProgramWeeks(weeks)
+      setDayLogs(logs)
+    } catch (err) {
+      console.error('Error loading program:', err)
+      toast.error('Error al cargar el programa')
+    }
+  }, [activeTrackId])
+
+  useEffect(() => { loadTracks() }, [loadTracks])
 
   useEffect(() => {
-    loadData()
-    const handler = () => loadData()
+    loadTrackData()
+    const handler = () => loadTrackData()
     window.addEventListener('stoic_data_changed', handler)
     return () => window.removeEventListener('stoic_data_changed', handler)
-  }, [loadData])
-
-  const handleToggle = async (habitId: string) => {
-    try {
-      await StoicDB.toggleHabitLog(habitId, today)
-      await loadData()
-    } catch (err) {
-      console.error('Error:', err)
-      toast.error('Error al actualizar habito')
-    }
-  }
-
-  const handleAddHabit = async () => {
-    if (!newHabit.name.trim()) {
-      toast.error('El nombre es requerido')
-      return
-    }
-    try {
-      await StoicDB.addHabit(newHabit.name, newHabit.description, newHabit.category)
-      setShowDialog(false)
-      setNewHabit({ name: '', description: '', category: 'communication' })
-      toast.success('Habito creado')
-      await loadData()
-    } catch (err) {
-      console.error('Error:', err)
-      toast.error('Error al crear habito')
-    }
-  }
-
-  const handleDeleteHabit = async (id: string) => {
-    try {
-      await StoicDB.deleteHabit(id)
-      toast.success('Habito eliminado')
-      await loadData()
-    } catch (err) {
-      console.error('Error:', err)
-      toast.error('Error al eliminar')
-    }
-  }
-
-  const isCompleted = (habitId: string) => {
-    return logs.some(l => l.habit_id === habitId && l.completed)
-  }
-
-  const getCategoryIconPath = (category: string) => {
-    switch (category) {
-      case 'communication': return '/icons/harp.png'
-      case 'stoic': return '/icons/skull.png'
-      case 'social': return '/icons/amphora.png'
-      default: return '/icons/skull.png'
-    }
-  }
-
-  const renderHabitList = (filteredHabits: Habit[]) => (
-    <div className="space-y-3 mt-4">
-      {filteredHabits.length === 0 ? (
-        <div className="text-center py-12 text-slate-500">
-          <i className="pi pi-inbox text-4xl mb-3 block" />
-          <p>No hay habitos en esta categoria</p>
-        </div>
-      ) : (
-        filteredHabits.map((habit) => (
-          <div
-            key={habit.id}
-            className={`flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 group ${
-              isCompleted(habit.id)
-                ? 'bg-[var(--primary-gold)]/10 border-[var(--primary-gold)]/30'
-                : 'bg-[var(--background)] border-[var(--border-color)] hover:border-[var(--primary-gold)]/20'
-            }`}
-          >
-            <button
-              onClick={() => handleToggle(habit.id)}
-              className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
-                isCompleted(habit.id)
-                  ? 'border-[var(--primary-gold)] bg-[var(--primary-gold)] scale-110'
-                  : 'border-slate-400 dark:border-slate-600 hover:border-[var(--primary-gold)]/50'
-              }`}
-            >
-              {isCompleted(habit.id) && (
-                <i className="pi pi-check text-xs text-white dark:text-[#0a0a0f] font-bold" />
-              )}
-            </button>
-
-            <div className="flex-1 min-w-0">
-              <p className={`font-medium ${isCompleted(habit.id) ? 'text-[var(--primary-gold)] line-through' : 'text-[var(--foreground)]'}`}>
-                {habit.name}
-              </p>
-              {habit.description && (
-                <p className="text-xs text-slate-500 mt-1">{habit.description}</p>
-              )}
-              <div className="flex flex-wrap items-center gap-2 mt-2">
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--primary-gold)]/10 text-[var(--primary-gold)] font-semibold flex items-center gap-1">
-                  <img
-                    src={getCategoryIconPath(habit.category)}
-                    className="w-3.5 h-3.5 object-contain dark:invert dark:opacity-75"
-                    alt={habit.category}
-                  />
-                  {habit.category === 'communication' ? 'Comunicación' : habit.category === 'stoic' ? 'Estoico' : 'Social'}
-                </span>
-                {habit.phase && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 font-medium">
-                    Fase {habit.phase}: {getPhaseLabel(habit.phase)}
-                  </span>
-                )}
-                {habit.week && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700/50 text-slate-700 dark:text-slate-400 font-medium">
-                    Semana {habit.week}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {habit.is_custom && (
-              <button
-                onClick={() => handleDeleteHabit(habit.id)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-500/10"
-              >
-                <i className="pi pi-trash text-xs text-red-400" />
-              </button>
-            )}
-          </div>
-        ))
-      )}
-    </div>
-  )
+  }, [loadTrackData])
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <i className="pi pi-spin pi-spinner text-4xl text-[#c9a84c]" />
+        <i className="pi pi-spin pi-spinner text-4xl text-[var(--primary-gold)]" />
       </div>
     )
   }
 
-  const categoryOptions = [
-    { label: 'Comunicacion', value: 'communication' },
-    { label: 'Estoico', value: 'stoic' },
-    { label: 'Social', value: 'social' },
-  ]
+  const activeTrack = tracks.find(t => t.id === activeTrackId) || null
+  const logByDate = new Map(dayLogs.map(l => [l.date, l]))
 
-  const completedCount = habits.filter(h => isCompleted(h.id)).length
+  const statusFor = (dayNumber: number): { status: DayStatus; dateStr: string | null } => {
+    if (!activeTrack?.start_date) return { status: 'pending', dateStr: null }
+    const dateStr = dateForDayNumber(activeTrack.start_date, dayNumber)
+    return { status: dayStatus(dateStr, logByDate.get(dateStr), todayStr), dateStr }
+  }
+
+  const filteredDays = moduleFilter === 'all'
+    ? programDays
+    : programDays.filter(d => d.module === moduleFilter)
+
+  // Agrupar por semanas
+  const weeks = Array.from({ length: 13 }, (_, w) => {
+    const weekNum = w + 1
+    return {
+      weekNum,
+      programWeek: programWeeks.find(pw => pw.week_number === weekNum),
+      days: filteredDays.filter(d => d.week === weekNum),
+    }
+  }).filter(w => w.days.length > 0)
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)]">Habitos</h1>
-          <p className="text-slate-400 text-sm mt-1">
-            {completedCount} de {habits.length} completados hoy
-          </p>
-        </div>
-        <Button
-          icon="pi pi-plus"
-          label="Nuevo"
-          className="p-button-sm"
-          onClick={() => setShowDialog(true)}
-          style={{ backgroundColor: 'var(--primary-gold)', borderColor: 'var(--primary-gold)', color: 'var(--background)' }}
-        />
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)] flex items-center gap-2">
+          <img src="/icons/skull.png" className="w-8 h-8 object-contain" alt="Programa" />
+          El Programa
+        </h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+          Los 90 días completos de cada track: qué toca, cuándo, por qué funciona y de quién viene.
+        </p>
       </div>
 
-      {/* Progress */}
-      <div className="mb-6 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-4">
-        <div className="flex justify-between text-sm mb-2">
-          <span className="text-slate-400">Progreso de hoy</span>
-          <span className="text-[var(--primary-gold)] font-medium">
-            {habits.length > 0 ? Math.round((completedCount / habits.length) * 100) : 0}%
-          </span>
-        </div>
-        <ProgressBar
-          value={habits.length > 0 ? Math.round((completedCount / habits.length) * 100) : 0}
-          showValue={false}
-          style={{ height: '6px', borderRadius: '3px' }}
-        />
+      {/* Track selector */}
+      <div className="flex gap-2 flex-wrap">
+        {tracks.map(t => (
+          <button
+            key={t.id}
+            onClick={() => { setActiveTrackId(t.id); setExpandedDay(null) }}
+            className={`px-4 py-2 rounded-lg text-sm font-bold border transition-all ${
+              t.id === activeTrackId
+                ? 'bg-[var(--primary-gold)]/15 border-[var(--primary-gold)]/40 text-[var(--primary-gold)]'
+                : 'bg-[var(--card-bg)] border-[var(--border-color)] text-slate-500 hover:text-[var(--foreground)]'
+            }`}
+          >
+            {t.name}
+          </button>
+        ))}
       </div>
 
-      {/* Tabs by category */}
-      <TabView className="stoic-tabs">
-        <TabPanel header="Todos" leftIcon="pi pi-list mr-2">
-          {renderHabitList(habits)}
-        </TabPanel>
-        <TabPanel header="Comunicacion" leftIcon="pi pi-comments mr-2">
-          {renderHabitList(habits.filter(h => h.category === 'communication'))}
-        </TabPanel>
-        <TabPanel header="Estoico" leftIcon="pi pi-sun mr-2">
-          {renderHabitList(habits.filter(h => h.category === 'stoic'))}
-        </TabPanel>
-        <TabPanel header="Social" leftIcon="pi pi-users mr-2">
-          {renderHabitList(habits.filter(h => h.category === 'social'))}
-        </TabPanel>
-      </TabView>
+      {/* Module filter */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Filter className="w-3.5 h-3.5 text-slate-500" />
+        {MODULE_FILTERS.map(f => (
+          <button
+            key={f.value}
+            onClick={() => setModuleFilter(f.value)}
+            className={`px-3 py-1 rounded-full text-[11px] font-bold border transition-all ${
+              moduleFilter === f.value
+                ? 'bg-[var(--primary-gold)]/15 border-[var(--primary-gold)]/40 text-[var(--primary-gold)]'
+                : 'bg-[var(--card-bg)] border-[var(--border-color)] text-slate-500'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
 
-      {/* Add Habit Dialog */}
-      <Dialog
-        header="Nuevo Habito"
-        visible={showDialog}
-        style={{ width: '90vw', maxWidth: '480px' }}
-        onHide={() => setShowDialog(false)}
-        className="stoic-dialog"
-      >
-        <div className="space-y-4 pt-2">
-          <div>
-            <label className="text-sm text-slate-400 block mb-1">Nombre</label>
-            <InputText
-              value={newHabit.name}
-              onChange={(e) => setNewHabit({ ...newHabit, name: e.target.value })}
-              placeholder="Ej: Meditar 10 minutos"
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-slate-400 block mb-1">Descripcion</label>
-            <InputTextarea
-              value={newHabit.description}
-              onChange={(e) => setNewHabit({ ...newHabit, description: e.target.value })}
-              placeholder="Descripcion opcional"
-              rows={3}
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-slate-400 block mb-1">Categoria</label>
-            <Dropdown
-              value={newHabit.category}
-              onChange={(e) => setNewHabit({ ...newHabit, category: e.value })}
-              options={categoryOptions}
-              className="w-full"
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              label="Cancelar"
-              icon="pi pi-times"
-              className="p-button-text p-button-sm"
-              onClick={() => setShowDialog(false)}
-            />
-            <Button
-              label="Crear"
-              icon="pi pi-check"
-              className="p-button-sm"
-              onClick={handleAddHabit}
-              style={{ backgroundColor: '#c9a84c', borderColor: '#c9a84c', color: '#0a0a0f' }}
-            />
-          </div>
+      {!activeTrack ? (
+        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-10 text-center text-slate-500">
+          <p className="text-sm">No hay tracks. Ejecuta el esquema y los seeds V2 en Supabase.</p>
         </div>
-      </Dialog>
+      ) : (
+        <div className="space-y-6">
+          {!activeTrack.start_date && (
+            <div className="bg-[var(--primary-gold)]/5 border border-[var(--primary-gold)]/25 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-300">
+              Este track aún no tiene fecha de inicio: estás viendo el programa completo en modo lectura.{' '}
+              <Link href="/" className="font-bold text-[var(--primary-gold)] hover:underline">Inícialo desde el Panel</Link> para activar el calendario.
+            </div>
+          )}
+
+          {weeks.map(week => (
+            <div key={week.weekNum} className="space-y-2">
+              {/* Week header */}
+              <div className="flex items-baseline gap-2 border-b border-[var(--border-color)] pb-2">
+                <h2 className="text-sm font-black text-[var(--foreground)] uppercase tracking-wider">
+                  Semana {week.weekNum}
+                </h2>
+                {week.programWeek && (
+                  <span className="text-xs text-[var(--primary-gold)] font-medium">{week.programWeek.theme}</span>
+                )}
+              </div>
+
+              {/* Days */}
+              <div className="space-y-2">
+                {week.days.map(pd => {
+                  const { status, dateStr } = statusFor(pd.day_number)
+                  const isExpanded = expandedDay === pd.day_number
+                  const color = getModuleColor(pd.module)
+                  return (
+                    <div key={pd.day_number} className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg overflow-hidden">
+                      <button
+                        onClick={() => setExpandedDay(isExpanded ? null : pd.day_number)}
+                        className="w-full flex items-center gap-3 p-3 text-left"
+                      >
+                        <span className={`w-9 h-9 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0 ${
+                          status === 'completed' ? 'bg-[var(--primary-gold)]/20 text-[var(--primary-gold)]'
+                          : status === 'missed' ? 'bg-red-500/10 text-red-500'
+                          : status === 'today' ? 'bg-[var(--primary-gold)] text-[#0a0a0f]'
+                          : 'bg-[var(--background)] text-slate-500'
+                        }`}>
+                          {pd.day_number}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${color.bg} ${color.text}`}>
+                              {getModuleLabel(pd.module)}
+                            </span>
+                            {status === 'completed' && <CheckCircle2 className="w-3.5 h-3.5 text-[var(--primary-gold)]" />}
+                            {status === 'missed' && <XCircle className="w-3.5 h-3.5 text-red-500" />}
+                            {dateStr && <span className="text-[10px] text-slate-500">{dateStr}</span>}
+                          </div>
+                          <p className={`text-sm font-bold mt-0.5 truncate ${status === 'completed' ? 'text-[var(--primary-gold)]' : 'text-[var(--foreground)]'}`}>
+                            {pd.title}
+                          </p>
+                        </div>
+                        {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-500 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-slate-500 flex-shrink-0" />}
+                      </button>
+                      {isExpanded && (
+                        <div className="px-3 pb-4 pt-1 border-t border-[var(--border-color)] space-y-3">
+                          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{pd.instructions}</p>
+                          {pd.rationale && (
+                            <div className="p-3 rounded-md bg-[var(--background)] border border-[var(--border-color)] border-l-4 border-l-[var(--primary-gold)]">
+                              <p className="text-[10px] font-bold text-[var(--primary-gold)] uppercase tracking-widest mb-1">Por qué funciona</p>
+                              <p className="text-xs text-slate-500 italic leading-relaxed">{pd.rationale}</p>
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between">
+                            {pd.source_author && (
+                              <p className="text-[11px] text-slate-500">Fuente: {pd.source_author}</p>
+                            )}
+                            {dateStr && status !== 'future' && (
+                              <Link href="/calendar" className="text-[11px] font-bold text-[var(--primary-gold)] hover:underline">
+                                Registrar en el calendario →
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

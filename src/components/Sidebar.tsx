@@ -42,7 +42,7 @@ export default function Sidebar() {
   const menuItems = [
     { label: 'Dashboard', path: '/', icon: '/icons/time.png' },
     { label: 'Calendario', path: '/calendar', icon: '/icons/earth.png' },
-    { label: 'Habitos', path: '/habits', icon: '/icons/skull.png' },
+    { label: 'Programa', path: '/habits', icon: '/icons/skull.png' },
     { label: 'Retos', path: '/challenges', icon: '/icons/armour.png' },
     { label: 'Recursos', path: '/resources', icon: '/icons/history-book.png' },
     { label: 'Diario', path: '/journal', icon: '/icons/papyrus.png' },

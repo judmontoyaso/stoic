@@ -1,117 +1,90 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Dialog } from 'primereact/dialog'
-import { InputText } from 'primereact/inputtext'
 import { InputTextarea } from 'primereact/inputtextarea'
-import { Button } from 'primereact/button'
-import { Dropdown } from 'primereact/dropdown'
+import { Award, Target, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
-import { getToday, getLevelLabel } from '@/lib/utils'
-import type { Challenge, ChallengeLog } from '@/types'
+import { getToday } from '@/lib/utils'
+import { currentDayNumber } from '@/lib/program'
+import type { Track, ProgramWeek, ProgramMonth, WeekLog, MonthLog } from '@/types'
 
 export default function ChallengesPage() {
-  const [challenges, setChallenges] = useState<Challenge[]>([])
-  const [logs, setLogs] = useState<ChallengeLog[]>([])
+  const [tracks, setTracks] = useState<Track[]>([])
+  const [activeTrackId, setActiveTrackId] = useState<string | null>(null)
+  const [programWeeks, setProgramWeeks] = useState<ProgramWeek[]>([])
+  const [programMonths, setProgramMonths] = useState<ProgramMonth[]>([])
+  const [weekLogs, setWeekLogs] = useState<WeekLog[]>([])
+  const [monthLogs, setMonthLogs] = useState<MonthLog[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeLevel, setActiveLevel] = useState<number | null>(null)
-  const [showDialog, setShowDialog] = useState(false)
-  const [noteDialog, setNoteDialog] = useState<{ id: string; open: boolean }>({ id: '', open: false })
-  const [noteText, setNoteText] = useState('')
-  const [reflectionText, setReflectionText] = useState('')
-  const [newChallenge, setNewChallenge] = useState({ title: '', description: '', level: 1 })
-  const today = getToday()
+  const [reflectionDraft, setReflectionDraft] = useState<Record<number, string>>({})
+  const [openReflection, setOpenReflection] = useState<number | null>(null)
 
-  const loadData = useCallback(async () => {
+  const loadTracks = useCallback(async () => {
     try {
-      const [allChallenges, todayLogs] = await Promise.all([
-        StoicDB.getChallenges(),
-        StoicDB.getChallengeLogs(today),
-      ])
-      setChallenges(allChallenges)
-      setLogs(todayLogs)
+      const all = await StoicDB.getTracks()
+      setTracks(all)
+      setActiveTrackId(prev => prev ?? all[0]?.id ?? null)
     } catch (err) {
-      console.error('Error:', err)
+      console.error('Error loading tracks:', err)
+      toast.error('Error al cargar los tracks')
     } finally {
       setLoading(false)
     }
-  }, [today])
+  }, [])
+
+  const loadTrackData = useCallback(async () => {
+    if (!activeTrackId) return
+    try {
+      const [weeks, months, wLogs, mLogs] = await Promise.all([
+        StoicDB.getProgramWeeks(activeTrackId),
+        StoicDB.getProgramMonths(activeTrackId),
+        StoicDB.getWeekLogs(activeTrackId),
+        StoicDB.getMonthLogs(activeTrackId),
+      ])
+      setProgramWeeks(weeks)
+      setProgramMonths(months)
+      setWeekLogs(wLogs)
+      setMonthLogs(mLogs)
+    } catch (err) {
+      console.error('Error loading challenges:', err)
+      toast.error('Error al cargar los retos')
+    }
+  }, [activeTrackId])
+
+  useEffect(() => { loadTracks() }, [loadTracks])
 
   useEffect(() => {
-    loadData()
-    const handler = () => loadData()
+    loadTrackData()
+    const handler = () => loadTrackData()
     window.addEventListener('stoic_data_changed', handler)
     return () => window.removeEventListener('stoic_data_changed', handler)
-  }, [loadData])
+  }, [loadTrackData])
 
-  const handleToggle = async (challengeId: string) => {
+  const activeTrack = tracks.find(t => t.id === activeTrackId) || null
+  const dayNumber = activeTrack ? currentDayNumber(activeTrack) : null
+  const currentWeek = dayNumber ? Math.min(13, Math.ceil(dayNumber / 7)) : null
+  const currentMonth = dayNumber ? Math.min(3, Math.ceil(dayNumber / 30)) : null
+
+  const handleToggleWeek = async (weekNumber: number) => {
+    if (!activeTrack) return
     try {
-      await StoicDB.toggleChallengeLog(challengeId, today)
-      await loadData()
+      await StoicDB.toggleWeekLog(activeTrack.id, weekNumber, reflectionDraft[weekNumber] || null)
+      toast.success('Reto semanal actualizado')
     } catch (err) {
-      console.error('Error:', err)
-      toast.error('Error al actualizar reto')
+      console.error(err)
+      toast.error('Error al actualizar el reto')
     }
   }
 
-  const handleSaveNote = async () => {
+  const handleToggleMonth = async (monthNumber: number) => {
+    if (!activeTrack) return
     try {
-      await StoicDB.updateChallengeLogNotes(noteDialog.id, today, noteText, reflectionText)
-      setNoteDialog({ id: '', open: false })
-      setNoteText('')
-      setReflectionText('')
-      toast.success('Notas guardadas')
-      await loadData()
+      await StoicDB.toggleMonthLog(activeTrack.id, monthNumber)
+      toast.success('Hito mensual actualizado')
     } catch (err) {
-      console.error('Error:', err)
-      toast.error('Error al guardar notas')
-    }
-  }
-
-  const handleAddChallenge = async () => {
-    if (!newChallenge.title.trim()) {
-      toast.error('El titulo es requerido')
-      return
-    }
-    try {
-      await StoicDB.addChallenge(
-        newChallenge.title,
-        newChallenge.description,
-        'social_ladder',
-        newChallenge.level
-      )
-      setShowDialog(false)
-      setNewChallenge({ title: '', description: '', level: 1 })
-      toast.success('Reto creado')
-      await loadData()
-    } catch (err) {
-      console.error('Error:', err)
-      toast.error('Error al crear reto')
-    }
-  }
-
-  const isCompleted = (challengeId: string) => {
-    return logs.some(l => l.challenge_id === challengeId && l.completed)
-  }
-
-  const getLevelIcon = (level: number) => {
-    switch (level) {
-      case 1: return <img src="/icons/earth.png" className="w-4 h-4 object-contain" alt="Level 1" />
-      case 2: return <img src="/icons/amphora.png" className="w-4 h-4 object-contain" alt="Level 2" />
-      case 3: return <img src="/icons/harp.png" className="w-4 h-4 object-contain" alt="Level 3" />
-      case 4: return <img src="/icons/armour.png" className="w-4 h-4 object-contain" alt="Level 4" />
-      default: return <img src="/icons/earth.png" className="w-4 h-4 object-contain" alt="Level" />
-    }
-  }
-
-  const getLevelColor = (level: number) => {
-    switch (level) {
-      case 1: return { bg: 'bg-emerald-500/10', text: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-500/20' }
-      case 2: return { bg: 'bg-blue-500/10', text: 'text-blue-700 dark:text-blue-400', border: 'border-blue-500/20' }
-      case 3: return { bg: 'bg-orange-500/10', text: 'text-orange-700 dark:text-orange-400', border: 'border-orange-500/20' }
-      case 4: return { bg: 'bg-red-500/10', text: 'text-red-700 dark:text-red-400', border: 'border-red-500/20' }
-      default: return { bg: 'bg-slate-500/10', text: 'text-slate-700 dark:text-slate-400', border: 'border-slate-500/20' }
+      console.error(err)
+      toast.error('Error al actualizar el hito')
     }
   }
 
@@ -123,256 +96,164 @@ export default function ChallengesPage() {
     )
   }
 
-  const filteredChallenges = activeLevel
-    ? challenges.filter(c => c.level === activeLevel)
-    : challenges
-
-  const completedCount = filteredChallenges.filter(c => isCompleted(c.id)).length
-  const levels = [1, 2, 3, 4]
-
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)]">Retos</h1>
-          <p className="text-slate-400 text-sm mt-1">Escalera de exposicion social</p>
-        </div>
-        <Button
-          icon="pi pi-plus"
-          label="Nuevo"
-          className="p-button-sm"
-          onClick={() => setShowDialog(true)}
-          style={{ backgroundColor: 'var(--primary-gold)', borderColor: 'var(--primary-gold)', color: 'var(--background)' }}
-        />
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)] flex items-center gap-2">
+          <img src="/icons/armour.png" className="w-8 h-8 object-contain" alt="Retos" />
+          Retos del Programa
+        </h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+          13 retos semanales con entregable verificable y 3 hitos mensuales por track. Sin trampas: el entregable existe o no existe.
+        </p>
       </div>
 
-      {/* Level filters */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        <button
-          onClick={() => setActiveLevel(null)}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-            activeLevel === null
-              ? 'bg-[var(--primary-gold)] text-white dark:text-[#0a0a0f]'
-              : 'bg-[var(--card-bg)] text-slate-450 dark:text-slate-400 border border-[var(--border-color)] hover:border-[var(--primary-gold)]/35'
-          }`}
-        >
-          <i className="pi pi-list mr-2" />
-          Todos ({challenges.length})
-        </button>
-        {levels.map(level => {
-          const levelChallenges = challenges.filter(c => c.level === level)
-          const levelCompleted = levelChallenges.filter(c => isCompleted(c.id)).length
-          const colors = getLevelColor(level)
-          return (
-            <button
-              key={level}
-              onClick={() => setActiveLevel(activeLevel === level ? null : level)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-                activeLevel === level
-                  ? `${colors.bg} ${colors.text} border ${colors.border}`
-                  : 'bg-[var(--card-bg)] text-slate-450 dark:text-slate-400 border border-[var(--border-color)] hover:border-[var(--primary-gold)]/35'
-              }`}
-            >
-              {getLevelIcon(level)}
-              {getLevelLabel(level)}
-              <span className="text-xs opacity-70">({levelCompleted}/{levelChallenges.length})</span>
-            </button>
-          )
-        })}
+      {/* Track selector */}
+      <div className="flex gap-2 flex-wrap">
+        {tracks.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setActiveTrackId(t.id)}
+            className={`px-4 py-2 rounded-lg text-sm font-bold border transition-all ${
+              t.id === activeTrackId
+                ? 'bg-[var(--primary-gold)]/15 border-[var(--primary-gold)]/40 text-[var(--primary-gold)]'
+                : 'bg-[var(--card-bg)] border-[var(--border-color)] text-slate-500 hover:text-[var(--foreground)]'
+            }`}
+          >
+            {t.name}
+          </button>
+        ))}
       </div>
 
-      {/* Summary bar */}
-      <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-4 mb-6">
-        <div className="flex justify-between text-sm mb-2">
-          <span className="text-slate-400">Completados hoy</span>
-          <span className="text-[var(--primary-gold)] font-medium">{completedCount}/{filteredChallenges.length}</span>
-        </div>
-      </div>
-
-      {/* Challenge list */}
+      {/* Hitos mensuales */}
       <div className="space-y-3">
-        {filteredChallenges.map((challenge) => {
-          const colors = getLevelColor(challenge.level)
-          const completed = isCompleted(challenge.id)
-          const log = logs.find(l => l.challenge_id === challenge.id)
-
-          return (
-            <div
-              key={challenge.id}
-              className={`flex items-start gap-3 p-4 rounded-xl border transition-all duration-200 group ${
-                completed
-                  ? `${colors.bg} ${colors.border}`
-                  : 'bg-[var(--background)] border-[var(--border-color)] hover:border-[var(--primary-gold)]/20'
-              }`}
-            >
+        <h2 className="text-sm font-black text-[var(--foreground)] uppercase tracking-wider flex items-center gap-2">
+          <Award className="w-4 h-4 text-[var(--primary-gold)]" />
+          Hitos mensuales
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {programMonths.map(pm => {
+            const log = monthLogs.find(l => l.month_number === pm.month_number)
+            const isCurrent = currentMonth === pm.month_number
+            return (
               <button
-                onClick={() => handleToggle(challenge.id)}
-                className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
-                  completed
-                    ? `border-current bg-current ${colors.text}`
-                    : 'border-slate-400 dark:border-slate-600 hover:border-[var(--primary-gold)]/50'
+                key={pm.month_number}
+                onClick={() => handleToggleMonth(pm.month_number)}
+                className={`p-4 rounded-xl border text-left transition-all ${
+                  log?.completed
+                    ? 'bg-[var(--primary-gold)]/10 border-[var(--primary-gold)]/40'
+                    : isCurrent
+                      ? 'bg-[var(--card-bg)] border-[var(--primary-gold)]/40 ring-1 ring-[var(--primary-gold)]/20'
+                      : 'bg-[var(--card-bg)] border-[var(--border-color)] hover:border-[var(--primary-gold)]/25'
                 }`}
               >
-                {completed && <i className="pi pi-check text-xs text-white dark:text-[#0a0a0f] font-bold" />}
-              </button>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className={`font-medium ${completed ? `${colors.text} line-through` : 'text-[var(--foreground)]'}`}>
-                    {challenge.title}
-                  </p>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} font-medium`}>
-                    Nv.{challenge.level}
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-bold text-[var(--primary-gold)] uppercase tracking-widest">
+                    Mes {pm.month_number} {isCurrent && '· actual'}
                   </span>
+                  {log?.completed && <CheckCircle2 className="w-4 h-4 text-[var(--primary-gold)]" />}
                 </div>
-                {challenge.description && (
-                  <p className="text-xs text-slate-500 mt-1">{challenge.description}</p>
-                )}
-                {log?.notes && (
-                  <div className="mt-2 p-2 rounded-lg bg-[var(--card-bg)] border border-[var(--border-color)]">
-                    <p className="text-xs text-slate-400"><i className="pi pi-pencil mr-1" />{log.notes}</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => {
-                    const existingLog = logs.find(l => l.challenge_id === challenge.id)
-                    setNoteText(existingLog?.notes || '')
-                    setReflectionText(existingLog?.reflection || '')
-                    setNoteDialog({ id: challenge.id, open: true })
-                  }}
-                  className="p-1.5 rounded-lg hover:bg-[var(--primary-gold)]/10"
-                  title="Agregar nota"
-                >
-                  <i className="pi pi-pencil text-xs text-[var(--primary-gold)]" />
-                </button>
-                {challenge.is_custom && (
-                  <button
-                    onClick={async () => {
-                      await StoicDB.deleteChallenge(challenge.id)
-                      toast.success('Reto eliminado')
-                      await loadData()
-                    }}
-                    className="p-1.5 rounded-lg hover:bg-red-500/10"
-                  >
-                    <i className="pi pi-trash text-xs text-red-400" />
-                  </button>
-                )}
-              </div>
-            </div>
-          )
-        })}
+                <p className={`text-sm font-bold ${log?.completed ? 'text-[var(--primary-gold)]' : 'text-[var(--foreground)]'}`}>
+                  {pm.title}
+                </p>
+                <p className="text-[11px] text-slate-500 mt-2 leading-relaxed line-clamp-4">{pm.description}</p>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
-      {/* Note Dialog */}
-      <Dialog
-        header="Notas del reto"
-        visible={noteDialog.open}
-        style={{ width: '90vw', maxWidth: '480px' }}
-        onHide={() => setNoteDialog({ id: '', open: false })}
-        className="stoic-dialog"
-      >
-        <div className="space-y-4 pt-2">
-          <div>
-            <label className="text-sm text-slate-400 block mb-1">Que paso?</label>
-            <InputTextarea
-              value={noteText}
-              onChange={(e) => setNoteText(e.target.value)}
-              placeholder="Describe brevemente la interaccion..."
-              rows={3}
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-slate-400 block mb-1">Reflexion</label>
-            <InputTextarea
-              value={reflectionText}
-              onChange={(e) => setReflectionText(e.target.value)}
-              placeholder="Que aprendiste? Como te sentiste?"
-              rows={3}
-              className="w-full"
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              label="Cancelar"
-              icon="pi pi-times"
-              className="p-button-text p-button-sm"
-              onClick={() => setNoteDialog({ id: '', open: false })}
-            />
-            <Button
-              label="Guardar"
-              icon="pi pi-check"
-              className="p-button-sm"
-              onClick={handleSaveNote}
-              style={{ backgroundColor: '#c9a84c', borderColor: '#c9a84c', color: '#0a0a0f' }}
-            />
-          </div>
+      {/* Retos semanales */}
+      <div className="space-y-3">
+        <h2 className="text-sm font-black text-[var(--foreground)] uppercase tracking-wider flex items-center gap-2">
+          <Target className="w-4 h-4 text-emerald-500" />
+          Retos semanales
+        </h2>
+        <div className="space-y-2">
+          {programWeeks.map(pw => {
+            const log = weekLogs.find(l => l.week_number === pw.week_number)
+            const isCurrent = currentWeek === pw.week_number
+            const isOpen = openReflection === pw.week_number
+            return (
+              <div
+                key={pw.week_number}
+                className={`rounded-xl border overflow-hidden transition-all ${
+                  log?.completed
+                    ? 'bg-emerald-500/5 border-emerald-500/30'
+                    : isCurrent
+                      ? 'bg-[var(--card-bg)] border-emerald-500/40 ring-1 ring-emerald-500/20'
+                      : 'bg-[var(--card-bg)] border-[var(--border-color)]'
+                }`}
+              >
+                <div className="p-4 flex items-start gap-3">
+                  <button
+                    onClick={() => handleToggleWeek(pw.week_number)}
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
+                      log?.completed ? 'border-emerald-500 bg-emerald-500' : 'border-slate-400 dark:border-slate-600 hover:border-emerald-500'
+                    }`}
+                  >
+                    {log?.completed && <i className="pi pi-check text-[10px] text-white font-bold" />}
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-600 dark:text-emerald-400">
+                      Semana {pw.week_number}: {pw.theme} {isCurrent && '· actual'}
+                    </p>
+                    <p className={`text-sm font-bold mt-0.5 ${log?.completed ? 'text-emerald-500 line-through' : 'text-[var(--foreground)]'}`}>
+                      {pw.challenge_title}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">{pw.challenge_description}</p>
+                    {pw.deliverable && (
+                      <p className="text-[11px] text-slate-500 mt-2">
+                        <span className="font-bold text-[var(--foreground)]">Entregable:</span> {pw.deliverable}
+                      </p>
+                    )}
+                    {log?.reflection && !isOpen && (
+                      <p className="text-[11px] text-slate-500 italic mt-2 border-l-2 border-emerald-500/40 pl-2">{log.reflection}</p>
+                    )}
+                    <button
+                      onClick={() => {
+                        setOpenReflection(isOpen ? null : pw.week_number)
+                        setReflectionDraft(prev => ({ ...prev, [pw.week_number]: log?.reflection || '' }))
+                      }}
+                      className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mt-2 hover:underline"
+                    >
+                      {isOpen ? 'Cerrar' : log?.reflection ? 'Editar reflexión' : 'Añadir reflexión'}
+                    </button>
+                    {isOpen && (
+                      <div className="mt-2 space-y-2">
+                        <InputTextarea
+                          value={reflectionDraft[pw.week_number] || ''}
+                          onChange={(e) => setReflectionDraft(prev => ({ ...prev, [pw.week_number]: e.target.value }))}
+                          rows={3}
+                          placeholder="Qué pasó con el reto, qué costó, qué aprendiste..."
+                          className="w-full"
+                        />
+                        <button
+                          onClick={async () => {
+                            if (!activeTrack) return
+                            try {
+                              await StoicDB.updateWeekLogReflection(activeTrack.id, pw.week_number, reflectionDraft[pw.week_number] || null)
+                              setOpenReflection(null)
+                              toast.success('Reflexión guardada')
+                            } catch (err) {
+                              console.error(err)
+                              toast.error('Error al guardar')
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-[var(--background)] border border-[var(--border-color)] text-[11px] font-bold text-[var(--foreground)] hover:border-emerald-500/40"
+                        >
+                          Guardar reflexión
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </div>
-      </Dialog>
-
-      {/* Add Challenge Dialog */}
-      <Dialog
-        header="Nuevo Reto"
-        visible={showDialog}
-        style={{ width: '90vw', maxWidth: '480px' }}
-        onHide={() => setShowDialog(false)}
-        className="stoic-dialog"
-      >
-        <div className="space-y-4 pt-2">
-          <div>
-            <label className="text-sm text-slate-400 block mb-1">Titulo</label>
-            <InputText
-              value={newChallenge.title}
-              onChange={(e) => setNewChallenge({ ...newChallenge, title: e.target.value })}
-              placeholder="Ej: Iniciar conversacion con el portero"
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-slate-400 block mb-1">Descripcion</label>
-            <InputTextarea
-              value={newChallenge.description}
-              onChange={(e) => setNewChallenge({ ...newChallenge, description: e.target.value })}
-              placeholder="Descripcion opcional"
-              rows={3}
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-slate-400 block mb-1">Nivel de dificultad</label>
-            <Dropdown
-              value={newChallenge.level}
-              onChange={(e) => setNewChallenge({ ...newChallenge, level: e.value })}
-              options={[
-                { label: 'Nivel 1 - Casi sin friccion', value: 1 },
-                { label: 'Nivel 2 - Un paso mas', value: 2 },
-                { label: 'Nivel 3 - Conversacion real', value: 3 },
-                { label: 'Nivel 4 - Sostener la conversacion', value: 4 },
-              ]}
-              className="w-full"
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              label="Cancelar"
-              icon="pi pi-times"
-              className="p-button-text p-button-sm"
-              onClick={() => setShowDialog(false)}
-            />
-            <Button
-              label="Crear"
-              icon="pi pi-check"
-              className="p-button-sm"
-              onClick={handleAddChallenge}
-              style={{ backgroundColor: '#c9a84c', borderColor: '#c9a84c', color: '#0a0a0f' }}
-            />
-          </div>
-        </div>
-      </Dialog>
+      </div>
     </div>
   )
 }
