@@ -42,3 +42,6 @@ next-env.d.ts
 
 # investigacion personal (planes en PDF)
 /pdf/
+
+# libros de referencia (no versionar)
+/books/
