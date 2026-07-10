@@ -7,6 +7,7 @@ import { InputTextarea } from 'primereact/inputtextarea'
 import { Calendar as CalendarIcon, CheckCircle2, XCircle, Flame } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
+import DailyReading from '@/components/DailyReading'
 import { getToday, formatDate } from '@/lib/utils'
 import {
   dateForDayNumber,
@@ -321,6 +322,11 @@ export default function CalendarPage() {
                   </div>
                 )}
               </div>
+
+              {/* Lectura del día (bajo demanda para no generar lecciones de días futuros) */}
+              {selectedInfo.status !== 'future' && (
+                <DailyReading trackId={activeTrack.id} dayNumber={selectedProgramDay.day_number} />
+              )}
 
               {/* Toggle (solo hoy o pasado) */}
               {selectedInfo.status !== 'future' && (

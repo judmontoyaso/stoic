@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Flame, Target, CheckCircle2, Zap, Play, BookOpen, Award, ChevronDown, ChevronUp } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
+import DailyReading from '@/components/DailyReading'
 import { getTodayQuote, getQuoteForDay } from '@/lib/quotes'
 import { getToday } from '@/lib/utils'
 import {
@@ -317,6 +318,11 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <p className="text-sm text-slate-500 italic">No hay contenido para este día. Ejecuta los seeds V2 en Supabase.</p>
+              )}
+
+              {/* Lectura del día (lección completa del mentor) */}
+              {programDay && (
+                <DailyReading trackId={track.id} dayNumber={dayNumber} />
               )}
 
               {/* Reto semanal */}

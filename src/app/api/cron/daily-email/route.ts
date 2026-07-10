@@ -3,9 +3,13 @@ import { createClient } from '@supabase/supabase-js'
 import { getQuoteForDay, getTodayQuote } from '@/lib/quotes'
 import { dailyProgramEmail, sendEmail, type TrackEmailBlock } from '@/lib/email'
 import { generateDailyReflection } from '@/lib/ai'
+import { getOrCreateDailyReading } from '@/lib/readings'
 
 // Endpoint de Cron diario: envía el ejercicio del día de cada track activo
+// (incluye la lectura completa y la deja pre-generada en caché para la app)
 // GET /api/cron/daily-email?secret=...&to=...&date=YYYY-MM-DD
+
+export const maxDuration = 300
 
 const MODULE_LABELS: Record<string, string> = {
   perception: 'Percepción',
@@ -88,6 +92,10 @@ export async function GET(request: Request) {
     const day = days?.[0]
     if (!day) continue
 
+    // Pre-generar (o leer de caché) la lección completa del día: queda lista
+    // para el correo y para que la app la cargue instantánea.
+    const readingResult = await getOrCreateDailyReading(supabase, track.id, dayNumber)
+
     blocks.push({
       trackName: track.name,
       dayNumber,
@@ -99,6 +107,7 @@ export async function GET(request: Request) {
       weeklyChallenge: weeks?.[0]
         ? { title: weeks[0].challenge_title, description: weeks[0].challenge_description }
         : null,
+      reading: readingResult?.model !== 'static' ? readingResult?.reading : null,
     })
   }
 

@@ -158,6 +158,7 @@ export interface TrackEmailBlock {
   rationale: string | null
   sourceAuthor: string | null
   weeklyChallenge: { title: string; description: string } | null
+  reading?: string | null // Lección completa del día (párrafos separados por \n\n)
 }
 
 export function dailyProgramEmail(opts: {
@@ -189,6 +190,11 @@ export function dailyProgramEmail(opts: {
         <div style="margin-top:12px;padding:12px 14px;background:#f0fdf4;border:1px dashed #86efac;border-radius:4px;">
           <p style="margin:0 0 4px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:#15803d;">Reto de la semana: ${b.weeklyChallenge.title}</p>
           <p style="margin:0;font-size:12px;line-height:1.5;color:${MUTED_LIGHT};">${b.weeklyChallenge.description}</p>
+        </div>` : ''}
+        ${b.reading ? `
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid ${BORDER_LIGHT};">
+          <p style="margin:0 0 10px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#ab841d;">Lectura del día</p>
+          ${b.reading.split(/\n\n+/).filter(p => p.trim()).map(p => `<p style="margin:0 0 12px;font-size:13px;line-height:1.7;color:${TEXT_LIGHT};">${p}</p>`).join('')}
         </div>` : ''}
       </div>`
     )
