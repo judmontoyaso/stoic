@@ -4,14 +4,15 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Menu, 
-  X, 
-  ChevronLeft, 
+import {
+  Menu,
+  X,
+  ChevronLeft,
   ChevronRight,
   Sun,
   Moon
 } from 'lucide-react'
+import PushToggle from '@/components/PushToggle'
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -141,6 +142,7 @@ export default function Sidebar() {
                 {renderNavItems(true)}
               </nav>
               <div className="pt-4 border-t border-[var(--border-color)] flex flex-col gap-3">
+                <PushToggle />
                 <button
                   onClick={toggleTheme}
                   className="flex items-center justify-center gap-2 p-2 rounded-lg bg-slate-800/10 dark:bg-slate-800/30 text-[var(--foreground)] hover:text-[var(--primary-gold)] transition-colors w-full"
@@ -208,6 +210,7 @@ export default function Sidebar() {
 
         {/* Footer */}
         <div className="pt-4 border-t border-[var(--border-color)] flex flex-col gap-2 items-center">
+          <PushToggle collapsed={collapsed} />
           <button
             onClick={toggleTheme}
             className="p-2 rounded-lg bg-slate-800/10 dark:bg-slate-800/20 text-slate-500 hover:text-[var(--primary-gold)] hover:bg-slate-850/20 transition-colors flex items-center justify-center w-full"

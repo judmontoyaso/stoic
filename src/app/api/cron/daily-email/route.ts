@@ -4,6 +4,7 @@ import { getQuoteForDay, getTodayQuote } from '@/lib/quotes'
 import { dailyProgramEmail, sendEmail, type TrackEmailBlock } from '@/lib/email'
 import { generateDailyReflection } from '@/lib/ai'
 import { getOrCreateDailyReading } from '@/lib/readings'
+import { sendPushToAll } from '@/lib/push'
 
 // Endpoint de Cron diario: envía el ejercicio del día de cada track activo
 // (incluye la lectura completa y la deja pre-generada en caché para la app)
@@ -32,14 +33,21 @@ function dayNumberFor(startDate: string, dateStr: string, durationDays: number):
   return dayNumber
 }
 
+/** Autorizado por query secret (schedulers externos) o Bearer (Vercel Cron) */
+function isAuthorized(request: Request, secret: string | null): boolean {
+  const cronSecret = process.env.CRON_SECRET
+  if (!cronSecret) return true
+  if (secret === cronSecret) return true
+  const auth = request.headers.get('authorization')
+  return auth === `Bearer ${cronSecret}`
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const secret = searchParams.get('secret')
   const forceTo = searchParams.get('to')
   const forceDate = searchParams.get('date')
 
-  const cronSecret = process.env.CRON_SECRET
-  if (cronSecret && secret !== cronSecret) {
+  if (!isAuthorized(request, searchParams.get('secret'))) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
@@ -147,11 +155,22 @@ export async function GET(request: Request) {
 
   const success = await sendEmail(to, emailContent)
 
+  // Push matutino (best effort): el ejercicio del día en la pantalla de bloqueo
+  const push = await sendPushToAll(supabase, {
+    title: `Día ${blocks[0].dayNumber} · ${blocks[0].title}`,
+    body: blocks.length > 1
+      ? blocks.map(b => `${b.trackName}: ${b.title}`).join(' · ')
+      : blocks[0].instructions.slice(0, 120) + '...',
+    url: '/',
+    tag: 'stoic-morning',
+  })
+
   return NextResponse.json({
     ok: true,
     date: dateStr,
     tracks: blocks.map(b => ({ track: b.trackName, day: b.dayNumber, title: b.title })),
     sent: success ? 1 : 0,
     failed: success ? 0 : 1,
+    push,
   })
 }

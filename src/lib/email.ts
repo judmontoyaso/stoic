@@ -232,6 +232,69 @@ export function dailyProgramEmail(opts: {
   }
 }
 
+// --- V2: recordatorio nocturno (cierre del día + examen de Séneca) ---
+export interface EveningTrackStatus {
+  trackName: string
+  dayNumber: number
+  title: string
+  completed: boolean
+  streak: number
+}
+
+export function eveningReviewEmail(opts: {
+  name: string
+  statuses: EveningTrackStatus[]
+  appUrl: string
+}): EmailContent {
+  const allDone = opts.statuses.every(s => s.completed)
+  const pending = opts.statuses.filter(s => !s.completed)
+
+  const statusHtml = opts.statuses
+    .map(
+      (s) => `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 10px;">
+        <tr>
+          <td style="padding:12px 16px;background:${s.completed ? '#f0fdf4' : '#fef2f2'};border:1px solid ${s.completed ? '#86efac' : '#fecaca'};border-radius:6px;">
+            <p style="margin:0;font-size:12px;font-weight:800;color:${s.completed ? '#15803d' : '#b91c1c'};">
+              ${s.completed ? '&#10003;' : '&#9675;'} ${s.trackName} · Día ${s.dayNumber}
+            </p>
+            <p style="margin:4px 0 0;font-size:13px;color:${TEXT_LIGHT};">
+              ${s.completed ? `Completado. Racha: ${s.streak} día${s.streak === 1 ? '' : 's'}.` : `Pendiente: <strong>${s.title}</strong>`}
+            </p>
+          </td>
+        </tr>
+      </table>`
+    )
+    .join('')
+
+  const examHtml = `
+    <div style="margin:20px 0;padding:16px 20px;background:#f5f5f4;border-left:4px solid ${ACCENT};border-radius:0 4px 4px 0;">
+      <p style="margin:0 0 10px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#ab841d;">Examen nocturno de Séneca</p>
+      <p style="margin:0 0 6px;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};">1. ¿Qué hice mal hoy y cómo afectó mi paz o mis relaciones?</p>
+      <p style="margin:0 0 6px;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};">2. ¿Qué hice bien y qué virtud apliqué?</p>
+      <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};">3. ¿Qué haría diferente mañana?</p>
+    </div>`
+
+  const intro = allDone
+    ? paragraph('Todo lo de hoy está completado. Queda lo más importante: cerrar el día por escrito antes de dormir.')
+    : paragraph(`Todavía tienes <strong>${pending.length} ejercicio${pending.length === 1 ? '' : 's'} pendiente${pending.length === 1 ? '' : 's'}</strong>. Un día perdido se marca y no se recupera: aún estás a tiempo de que hoy no sea uno de ellos.`)
+
+  return {
+    subject: allDone
+      ? 'Cierra el día: examen nocturno'
+      : `Aún estás a tiempo: ${pending.length} pendiente${pending.length === 1 ? '' : 's'} de hoy`,
+    html: baseLayout({
+      preheader: allDone ? 'Todo completado. Cierra el ciclo con el examen nocturno.' : 'El día aún no termina.',
+      heading: `${opts.name}, el día se cierra por escrito`,
+      body:
+        intro +
+        statusHtml +
+        examHtml +
+        button(allDone ? 'Escribir examen nocturno' : 'Completar el día ahora', `${opts.appUrl}${allDone ? '/journal' : ''}`),
+    }),
+  }
+}
+
 export async function sendEmail(to: string, content: EmailContent): Promise<boolean> {
   const key = process.env.RESEND_API_KEY
   if (!key) {

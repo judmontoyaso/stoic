@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Award, Flame, XCircle, CheckCircle2, TrendingUp, TrendingDown, BookOpen } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
+import MoodChart from '@/components/MoodChart'
 import { getToday, formatDate } from '@/lib/utils'
 import { buildTrackReport, getModuleLabel, getModuleColor, type TrackReport } from '@/lib/program'
 import type { Track, JournalEntry, ProgramModule, WeekLog, MonthLog } from '@/types'
@@ -21,6 +22,7 @@ const MODULES: ProgramModule[] = ['perception', 'action', 'will', 'evaluation']
 export default function EvaluationPage() {
   const [evaluations, setEvaluations] = useState<TrackEvaluation[]>([])
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([])
+  const [completedDates, setCompletedDates] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
 
   const loadData = useCallback(async () => {
@@ -29,6 +31,7 @@ export default function EvaluationPage() {
         StoicDB.getTracks(),
         StoicDB.getJournalEntries(),
       ])
+      const allCompleted = new Set<string>()
       const evals = await Promise.all(
         tracks.map(async (track) => {
           const [programDays, dayLogs, weekLogs, monthLogs] = await Promise.all([
@@ -37,6 +40,7 @@ export default function EvaluationPage() {
             StoicDB.getWeekLogs(track.id),
             StoicDB.getMonthLogs(track.id),
           ])
+          dayLogs.forEach(l => { if (l.completed) allCompleted.add(l.date) })
           return {
             track,
             report: buildTrackReport(track, programDays, dayLogs),
@@ -47,6 +51,7 @@ export default function EvaluationPage() {
       )
       setEvaluations(evals)
       setJournalEntries(journal)
+      setCompletedDates(allCompleted)
     } catch (err) {
       console.error('Error loading evaluation:', err)
       toast.error('Error al cargar la evaluación')
@@ -71,6 +76,22 @@ export default function EvaluationPage() {
   const journalDays = new Set(journalEntries.map(e => e.date)).size
   const moods = journalEntries.filter(e => e.mood !== null).map(e => e.mood as number)
   const avgMood = moods.length > 0 ? (moods.reduce((a, b) => a + b, 0) / moods.length).toFixed(1) : null
+
+  // Serie de animo para el grafico: un punto por dia (promedio si hay varias entradas)
+  const moodByDate = new Map<string, number[]>()
+  journalEntries.forEach(e => {
+    if (e.mood !== null) {
+      const arr = moodByDate.get(e.date) || []
+      arr.push(e.mood)
+      moodByDate.set(e.date, arr)
+    }
+  })
+  const moodPoints = Array.from(moodByDate.entries()).map(([date, arr]) => ({
+    date,
+    mood: Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 10) / 10,
+  }))
+  const trackStarts = evaluations.map(e => e.track.start_date).filter((d): d is string => !!d)
+  const chartStart = [...trackStarts, ...moodPoints.map(p => p.date)].sort()[0] || getToday()
   const byType = journalEntries.reduce<Record<string, number>>((acc, e) => {
     acc[e.entry_type] = (acc[e.entry_type] || 0) + 1
     return acc
@@ -203,6 +224,22 @@ export default function EvaluationPage() {
           )
         })
       )}
+
+      {/* Ánimo y consistencia */}
+      <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-6 space-y-4">
+        <div>
+          <h2 className="text-lg font-bold text-[var(--foreground)]">Ánimo a lo largo del programa</h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Tu estado de ánimo reportado en el diario (1-5), junto a la banda verde de días completados: aquí se leen las correlaciones entre consistencia y ánimo.
+          </p>
+        </div>
+        <MoodChart
+          points={moodPoints.map(p => ({ date: p.date, mood: p.mood }))}
+          completedDates={completedDates}
+          startDate={chartStart}
+          endDate={getToday()}
+        />
+      </div>
 
       {/* Journaling (global) */}
       <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-6 space-y-4">
