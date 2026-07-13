@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Sidebar as PrimeSidebar } from 'primereact/sidebar'
 import { InputTextarea } from 'primereact/inputtextarea'
@@ -13,18 +13,17 @@ import {
   dateForDayNumber,
   dayStatus,
   currentStreak,
-  getModuleLabel,
-  getModuleColor,
 } from '@/lib/program'
-import type { Track, ProgramDay, ProgramWeek, DayLog, DayStatus } from '@/types'
+import { Card, EmptyState, LoadingScreen, ModuleBadge, PageHeader, StatCard, TrackSelector } from '@/components/ui'
+import { useStoicSync } from '@/hooks/useStoicSync'
+import { useTrackSelection } from '@/hooks/useTrackSelection'
+import type { ProgramDay, ProgramWeek, DayLog, DayStatus } from '@/types'
 
 export default function CalendarPage() {
-  const [tracks, setTracks] = useState<Track[]>([])
-  const [activeTrackId, setActiveTrackId] = useState<string | null>(null)
+  const { tracks, activeTrack, activeTrackId, setActiveTrackId, loading, reloadTracks } = useTrackSelection()
   const [programDays, setProgramDays] = useState<ProgramDay[]>([])
   const [programWeeks, setProgramWeeks] = useState<ProgramWeek[]>([])
   const [dayLogs, setDayLogs] = useState<DayLog[]>([])
-  const [loading, setLoading] = useState(true)
 
   const [selectedDayNumber, setSelectedDayNumber] = useState<number | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -32,20 +31,9 @@ export default function CalendarPage() {
 
   const todayStr = getToday()
 
-  const loadTracks = useCallback(async () => {
-    try {
-      const all = await StoicDB.getTracks()
-      setTracks(all)
-      setActiveTrackId(prev => prev ?? all[0]?.id ?? null)
-    } catch (err) {
-      console.error('Error loading tracks:', err)
-      toast.error('Error al cargar los tracks')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
   const loadTrackData = useCallback(async () => {
+    // La fecha de inicio puede cambiar desde el dashboard: refrescar también los tracks
+    reloadTracks()
     if (!activeTrackId) return
     try {
       const [days, weeks, logs] = await Promise.all([
@@ -60,23 +48,9 @@ export default function CalendarPage() {
       console.error('Error loading track data:', err)
       toast.error('Error al cargar el calendario')
     }
-  }, [activeTrackId])
+  }, [activeTrackId, reloadTracks])
 
-  useEffect(() => {
-    loadTracks()
-  }, [loadTracks])
-
-  useEffect(() => {
-    loadTrackData()
-    const handler = () => {
-      loadTracks()
-      loadTrackData()
-    }
-    window.addEventListener('stoic_data_changed', handler)
-    return () => window.removeEventListener('stoic_data_changed', handler)
-  }, [loadTrackData, loadTracks])
-
-  const activeTrack = tracks.find(t => t.id === activeTrackId) || null
+  useStoicSync(loadTrackData)
 
   const handleToggleDay = async (dayNumber: number) => {
     if (!activeTrack?.start_date) return
@@ -105,13 +79,7 @@ export default function CalendarPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <i className="pi pi-spin pi-spinner text-4xl text-[var(--primary-gold)]" />
-      </div>
-    )
-  }
+  if (loading) return <LoadingScreen />
 
   const logByDate = new Map(dayLogs.map(l => [l.date, l]))
 
@@ -124,10 +92,7 @@ export default function CalendarPage() {
 
   const completedCount = dayLogs.filter(l => l.completed).length
   const missedCount = activeTrack?.start_date
-    ? programDays.filter(d => {
-        const s = statusFor(d.day_number)
-        return s?.status === 'missed'
-      }).length
+    ? programDays.filter(d => statusFor(d.day_number)?.status === 'missed').length
     : 0
   const streak = activeTrack ? currentStreak(activeTrack, dayLogs, todayStr) : 0
 
@@ -148,63 +113,46 @@ export default function CalendarPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)]">Calendario de 90 Días</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-          Fechas reales. Si pierdes un día, se marca como perdido y sigues: el calendario nunca se reorganiza.
-        </p>
-      </div>
+      <PageHeader
+        title="Calendario de 90 Días"
+        subtitle="Fechas reales. Si pierdes un día, se marca como perdido y sigues: el calendario nunca se reorganiza."
+      />
 
-      {/* Track selector */}
-      <div className="flex gap-2 flex-wrap">
-        {tracks.map(t => (
-          <button
-            key={t.id}
-            onClick={() => setActiveTrackId(t.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-bold border transition-all ${
-              t.id === activeTrackId
-                ? 'bg-[var(--primary-gold)]/15 border-[var(--primary-gold)]/40 text-[var(--primary-gold)]'
-                : 'bg-[var(--card-bg)] border-[var(--border-color)] text-slate-500 hover:text-[var(--foreground)]'
-            }`}
-          >
-            {t.name}
-          </button>
-        ))}
-      </div>
+      <TrackSelector tracks={tracks} activeTrackId={activeTrackId} onSelect={setActiveTrackId} />
 
       {!activeTrack ? (
-        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-10 text-center text-slate-500">
+        <EmptyState>
           <p className="text-sm">No hay tracks. Ejecuta el esquema y los seeds V2 en Supabase.</p>
-        </div>
+        </EmptyState>
       ) : !activeTrack.start_date ? (
-        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-10 text-center text-slate-500 space-y-3">
-          <CalendarIcon className="w-8 h-8 mx-auto text-[var(--primary-gold)] opacity-60" />
+        <EmptyState icon={<CalendarIcon className="w-8 h-8 text-[var(--primary-gold)]" />}>
           <p className="text-sm">Este track aún no tiene fecha de inicio.</p>
           <Link href="/" className="inline-block text-sm font-bold text-[var(--primary-gold)] hover:underline">
             Iniciarlo desde el Panel de Control
           </Link>
-        </div>
+        </EmptyState>
       ) : (
         <>
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-4">
-              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Completados</p>
-              <p className="text-2xl font-black text-[var(--primary-gold)] mt-1">{completedCount}<span className="text-sm text-slate-400 font-normal"> / 90</span></p>
-            </div>
-            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-4">
-              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Perdidos</p>
-              <p className="text-2xl font-black text-red-500 mt-1">{missedCount}</p>
-            </div>
-            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-4">
-              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Racha actual</p>
-              <p className="text-2xl font-black text-orange-400 mt-1 flex items-center gap-1"><Flame className="w-5 h-5" />{streak}</p>
-            </div>
-            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-4">
-              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Inicio</p>
-              <p className="text-sm font-bold text-[var(--foreground)] mt-2">{formatDate(activeTrack.start_date)}</p>
-            </div>
+            <StatCard
+              variant="card"
+              label="Completados"
+              value={<>{completedCount}<span className="text-sm text-slate-400 font-normal"> / 90</span></>}
+              valueClassName="text-[var(--primary-gold)]"
+            />
+            <StatCard variant="card" label="Perdidos" value={missedCount} valueClassName="text-red-500" />
+            <StatCard
+              variant="card"
+              label="Racha actual"
+              value={<span className="flex items-center gap-1"><Flame className="w-5 h-5" />{streak}</span>}
+              valueClassName="text-orange-400"
+            />
+            <StatCard
+              variant="card"
+              label="Inicio"
+              value={<span className="text-sm font-bold text-[var(--foreground)]">{formatDate(activeTrack.start_date)}</span>}
+            />
           </div>
 
           {/* Leyenda */}
@@ -218,7 +166,7 @@ export default function CalendarPage() {
           {/* Grid de semanas */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {weeks.map((week) => (
-              <div key={week.weekNum} className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-4">
+              <Card key={week.weekNum} className="rounded-md! p-4">
                 <div className="mb-3">
                   <h3 className="font-bold text-sm text-[var(--foreground)]">
                     Semana {week.weekNum}
@@ -256,7 +204,7 @@ export default function CalendarPage() {
                     )
                   })}
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         </>
@@ -280,9 +228,7 @@ export default function CalendarPage() {
                 <span className="text-[10px] font-bold text-[var(--primary-gold)] uppercase tracking-widest">
                   Día {selectedProgramDay.day_number} · Semana {selectedProgramDay.week} · Fase {selectedProgramDay.phase}
                 </span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${getModuleColor(selectedProgramDay.module).bg} ${getModuleColor(selectedProgramDay.module).text}`}>
-                  {getModuleLabel(selectedProgramDay.module)}
-                </span>
+                <ModuleBadge module={selectedProgramDay.module} />
               </div>
               <h2 className="text-lg font-black">
                 {new Date(selectedInfo.dateStr + 'T00:00:00').toLocaleDateString('es-CO', {

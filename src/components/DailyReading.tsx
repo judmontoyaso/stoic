@@ -33,6 +33,8 @@ export default function DailyReading({ trackId, dayNumber, autoLoad = true }: Da
   }, [trackId, dayNumber])
 
   useEffect(() => {
+    // Reset intencional al cambiar de track/día antes de pedir la nueva lectura
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setReading(null)
     setExpanded(false)
     if (autoLoad) load()

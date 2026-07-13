@@ -3,10 +3,22 @@
 // ============================================================
 
 /**
- * Get today's date as YYYY-MM-DD string
+ * Format a Date as YYYY-MM-DD using the local timezone
+ * (toISOString daría la fecha UTC: en UTC-5 "hoy" saltaría al día
+ * siguiente desde las 7pm)
+ */
+export function toLocalDateString(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+/**
+ * Get today's date as YYYY-MM-DD string (local timezone)
  */
 export function getToday(): string {
-  return new Date().toISOString().split('T')[0]
+  return toLocalDateString(new Date())
 }
 
 /**
@@ -133,7 +145,7 @@ export function getLastNDays(n: number): string[] {
   for (let i = n - 1; i >= 0; i--) {
     const d = new Date()
     d.setDate(d.getDate() - i)
-    dates.push(d.toISOString().split('T')[0])
+    dates.push(toLocalDateString(d))
   }
   return dates
 }

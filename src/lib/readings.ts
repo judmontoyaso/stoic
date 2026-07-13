@@ -4,6 +4,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Cliente con cualquier esquema (la app usa el esquema "stoic")
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = SupabaseClient<any, any, any, any, any>
 
 import { getQuoteForDay } from '@/lib/quotes'

@@ -1,70 +1,16 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { InputTextarea } from 'primereact/inputtextarea'
-import { Calendar, Sun, Moon, BookOpen, Feather, Trash2 } from 'lucide-react'
+import { Calendar, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
 import { getToday, formatDate } from '@/lib/utils'
+import { JOURNAL_TEMPLATES, MOODS } from '@/lib/journal'
+import TemplateIcon from '@/components/journal/TemplateIcon'
+import { Card, EmptyState, LoadingScreen, PageHeader, Pill } from '@/components/ui'
+import { useStoicSync } from '@/hooks/useStoicSync'
 import type { JournalEntry, JournalEntryType } from '@/types'
-
-// Plantillas basadas en el plan de cambio de identidad (Frankl / Séneca / Marco Aurelio)
-const TEMPLATES: Record<JournalEntryType, { label: string; icon: 'sun' | 'moon' | 'book' | 'feather'; fields: { key: string; label: string; placeholder: string }[] }> = {
-  morning: {
-    label: 'Examen matutino',
-    icon: 'sun',
-    fields: [
-      { key: 'identity', label: 'Hoy soy... (identidad deseada)', placeholder: 'Soy disciplinado, tranquilo, claro al hablar...' },
-      { key: 'goals', label: 'Mis metas para hoy (1-2 tareas alineadas)', placeholder: 'Qué haré hoy que confirme esa identidad...' },
-      { key: 'triggers', label: 'Obstáculos y gatillos probables de hoy', placeholder: 'Personas difíciles, retrasos, críticas... ¿qué depende de mí y qué no?' },
-      { key: 'pattern_to_break', label: '¿Qué patrón limitante intento romper hoy?', placeholder: 'El hábito viejo que hoy no me gobernará...' },
-    ],
-  },
-  evening: {
-    label: 'Examen nocturno',
-    icon: 'moon',
-    fields: [
-      { key: 'did_well', label: '¿Qué hice bien hoy?', placeholder: 'Al menos 2 decisiones alineadas con la nueva identidad...' },
-      { key: 'to_improve', label: '¿Qué puedo mejorar?', placeholder: 'Sin juzgarte: un error o dificultad y su ajuste...' },
-      { key: 'learned', label: '¿Qué aprendí hoy?', placeholder: 'El punto clave del día...' },
-      { key: 'gratitude', label: 'Gratitud y avance de propósito', placeholder: 'Algo específico de hoy, conectado a tu porqué...' },
-    ],
-  },
-  weekly: {
-    label: 'Revisión semanal',
-    icon: 'book',
-    fields: [
-      { key: 'why_wake_up', label: '¿Por qué me levanto cada día?', placeholder: 'El propósito de esta semana en tus palabras...' },
-      { key: 'praise_self', label: 'Elogios a la persona en que me estoy convirtiendo', placeholder: 'Cualidades demostradas esta semana, con ejemplos...' },
-      { key: 'sacrifice', label: 'Sacrificio asumido con valor', placeholder: 'Una renuncia o esfuerzo hecho conscientemente...' },
-      { key: 'next_week', label: 'Proyección de la próxima semana', placeholder: 'Objetivos concretos alineados al propósito...' },
-    ],
-  },
-  free: {
-    label: 'Escritura libre',
-    icon: 'feather',
-    fields: [
-      { key: 'text', label: 'Lo que necesites sacar', placeholder: 'Escribe sin filtro...' },
-    ],
-  },
-}
-
-const MOODS = [
-  { value: 1, emoji: '😞', label: 'Muy bajo' },
-  { value: 2, emoji: '😕', label: 'Bajo' },
-  { value: 3, emoji: '😐', label: 'Neutro' },
-  { value: 4, emoji: '🙂', label: 'Bien' },
-  { value: 5, emoji: '💪', label: 'Fuerte' },
-]
-
-function TemplateIcon({ icon, className }: { icon: 'sun' | 'moon' | 'book' | 'feather'; className?: string }) {
-  switch (icon) {
-    case 'sun': return <Sun className={className} />
-    case 'moon': return <Moon className={className} />
-    case 'book': return <BookOpen className={className} />
-    case 'feather': return <Feather className={className} />
-  }
-}
 
 export default function JournalPage() {
   const [entries, setEntries] = useState<JournalEntry[]>([])
@@ -89,22 +35,22 @@ export default function JournalPage() {
     }
   }, [])
 
-  useEffect(() => {
-    loadData()
-    const handler = () => loadData()
-    window.addEventListener('stoic_data_changed', handler)
-    return () => window.removeEventListener('stoic_data_changed', handler)
-  }, [loadData])
+  useStoicSync(loadData)
 
-  // Pre-cargar el borrador si ya existe entrada de hoy para el tipo activo
-  useEffect(() => {
-    const existing = entries.find(e => e.date === today && e.entry_type === activeType)
-    setDraft(existing?.content || {})
-    setMood(existing?.mood ?? null)
-  }, [activeType, entries, today])
+  // Pre-cargar el borrador si ya existe entrada de hoy para el tipo activo.
+  // Ajuste de estado durante el render (patrón React) en vez de useEffect:
+  // se re-siembra cuando cambia el tipo activo o aparece la entrada de hoy.
+  const existingEntry = entries.find(e => e.date === today && e.entry_type === activeType)
+  const draftKey = `${today}|${activeType}|${existingEntry?.id ?? 'new'}`
+  const [loadedDraftKey, setLoadedDraftKey] = useState<string | null>(null)
+  if (loadedDraftKey !== draftKey) {
+    setLoadedDraftKey(draftKey)
+    setDraft(existingEntry?.content || {})
+    setMood(existingEntry?.mood ?? null)
+  }
 
   const handleSave = async () => {
-    const template = TEMPLATES[activeType]
+    const template = JOURNAL_TEMPLATES[activeType]
     const hasContent = template.fields.some(f => (draft[f.key] || '').trim().length > 0)
     if (!hasContent) {
       toast('Escribe algo antes de guardar', { icon: '✍️' })
@@ -133,53 +79,34 @@ export default function JournalPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <i className="pi pi-spin pi-spinner text-4xl text-[var(--primary-gold)]" />
-      </div>
-    )
-  }
+  if (loading) return <LoadingScreen />
 
-  const template = TEMPLATES[activeType]
+  const template = JOURNAL_TEMPLATES[activeType]
   const todayHas = (type: JournalEntryType) => entries.some(e => e.date === today && e.entry_type === type)
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)] flex items-center gap-2">
-          <img src="/icons/papyrus.png" className="w-8 h-8 object-contain" alt="Papiro" />
-          Diario Estoico
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-          Examen matutino (Marco Aurelio), examen nocturno (Séneca) y revisión semanal. Lo que se escribe, se integra.
-        </p>
-      </div>
+      <PageHeader
+        title="Diario Estoico"
+        icon={<img src="/icons/papyrus.png" className="w-8 h-8 object-contain" alt="Papiro" />}
+        subtitle="Examen matutino (Marco Aurelio), examen nocturno (Séneca) y revisión semanal. Lo que se escribe, se integra."
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Editor */}
         <div className="lg:col-span-2 space-y-4">
           {/* Type tabs */}
           <div className="flex gap-2 flex-wrap">
-            {(Object.keys(TEMPLATES) as JournalEntryType[]).map(type => (
-              <button
-                key={type}
-                onClick={() => setActiveType(type)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
-                  activeType === type
-                    ? 'bg-[var(--primary-gold)]/15 border-[var(--primary-gold)]/40 text-[var(--primary-gold)]'
-                    : 'bg-[var(--card-bg)] border-[var(--border-color)] text-slate-500 hover:text-[var(--foreground)]'
-                }`}
-              >
-                <TemplateIcon icon={TEMPLATES[type].icon} className="w-3.5 h-3.5" />
-                {TEMPLATES[type].label}
+            {(Object.keys(JOURNAL_TEMPLATES) as JournalEntryType[]).map(type => (
+              <Pill key={type} size="xs" active={activeType === type} onClick={() => setActiveType(type)}>
+                <TemplateIcon icon={JOURNAL_TEMPLATES[type].icon} className="w-3.5 h-3.5" />
+                {JOURNAL_TEMPLATES[type].label}
                 {todayHas(type) && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
-              </button>
+              </Pill>
             ))}
           </div>
 
-          <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-5 space-y-4">
+          <Card className="p-5 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
               <h2 className="text-base font-bold text-[var(--foreground)] flex items-center gap-2">
                 <TemplateIcon icon={template.icon} className="w-4 h-4 text-[var(--primary-gold)]" />
@@ -229,25 +156,27 @@ export default function JournalPage() {
             >
               {saving ? 'Guardando...' : todayHas(activeType) ? 'Actualizar entrada de hoy' : 'Guardar entrada'}
             </button>
-          </div>
+          </Card>
         </div>
 
         {/* Historial */}
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Historial</h2>
           {entries.length === 0 ? (
-            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-8 text-center text-slate-500">
-              <img src="/icons/history-book.png" className="w-8 h-8 mx-auto mb-3 object-contain opacity-55" alt="Vacío" />
+            <EmptyState
+              className="p-8"
+              icon={<img src="/icons/history-book.png" className="w-8 h-8 object-contain" alt="Vacío" />}
+            >
               <p className="text-sm">Aún no hay entradas.</p>
-            </div>
+            </EmptyState>
           ) : (
             <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
               {entries.map(entry => {
-                const t = TEMPLATES[entry.entry_type]
+                const t = JOURNAL_TEMPLATES[entry.entry_type]
                 const moodEmoji = MOODS.find(m => m.value === entry.mood)?.emoji
                 const isOpen = viewEntry?.id === entry.id
                 return (
-                  <div key={entry.id} className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl overflow-hidden">
+                  <Card key={entry.id} className="overflow-hidden">
                     <button
                       onClick={() => setViewEntry(isOpen ? null : entry)}
                       className="w-full p-3 text-left flex items-center justify-between gap-2"
@@ -283,7 +212,7 @@ export default function JournalPage() {
                         </button>
                       </div>
                     )}
-                  </div>
+                  </Card>
                 )
               })}
             </div>

@@ -1,16 +1,18 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { TabView, TabPanel } from 'primereact/tabview'
 import { Dialog } from 'primereact/dialog'
 import { InputText } from 'primereact/inputtext'
 import { InputTextarea } from 'primereact/inputtextarea'
 import { Dropdown } from 'primereact/dropdown'
 import { Button } from 'primereact/button'
-import { Plus, ExternalLink, Award } from 'lucide-react'
+import { ExternalLink, Award } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
 import { getResourceTypeLabel, getPhaseLabel } from '@/lib/utils'
+import { LoadingScreen, PageHeader } from '@/components/ui'
+import { useStoicSync } from '@/hooks/useStoicSync'
 import type { Resource, ResourceType } from '@/types'
 
 export default function ResourcesPage() {
@@ -37,12 +39,7 @@ export default function ResourcesPage() {
     }
   }, [])
 
-  useEffect(() => {
-    loadResources()
-    const handler = () => loadResources()
-    window.addEventListener('stoic_data_changed', handler)
-    return () => window.removeEventListener('stoic_data_changed', handler)
-  }, [loadResources])
+  useStoicSync(loadResources)
 
   const handleToggleCompleted = async (id: string) => {
     try {
@@ -172,13 +169,7 @@ export default function ResourcesPage() {
     </div>
   )
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <i className="pi pi-spin pi-spinner text-4xl text-[var(--primary-gold)]" />
-      </div>
-    )
-  }
+  if (loading) return <LoadingScreen />
 
   const typeOptions = [
     { label: 'Libro', value: 'book' },
@@ -196,20 +187,19 @@ export default function ResourcesPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)]">Recursos</h1>
-          <p className="text-slate-400 text-sm mt-1">
-            Libros, canales y diplomados recomendados para tu estudio
-          </p>
-        </div>
-        <Button
-          icon="pi pi-plus"
-          label="Nuevo"
-          className="p-button-sm"
-          onClick={() => setShowDialog(true)}
-          style={{ backgroundColor: 'var(--primary-gold)', borderColor: 'var(--primary-gold)', color: 'var(--background)' }}
+      <div className="mb-6">
+        <PageHeader
+          title="Recursos"
+          subtitle="Libros, canales y diplomados recomendados para tu estudio"
+          actions={
+            <Button
+              icon="pi pi-plus"
+              label="Nuevo"
+              className="p-button-sm"
+              onClick={() => setShowDialog(true)}
+              style={{ backgroundColor: 'var(--primary-gold)', borderColor: 'var(--primary-gold)', color: 'var(--background)' }}
+            />
+          }
         />
       </div>
 

@@ -1,37 +1,24 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { InputTextarea } from 'primereact/inputtextarea'
 import { Award, Target, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
-import { getToday } from '@/lib/utils'
 import { currentDayNumber } from '@/lib/program'
-import type { Track, ProgramWeek, ProgramMonth, WeekLog, MonthLog } from '@/types'
+import { LoadingScreen, PageHeader, TrackSelector } from '@/components/ui'
+import { useStoicSync } from '@/hooks/useStoicSync'
+import { useTrackSelection } from '@/hooks/useTrackSelection'
+import type { ProgramWeek, ProgramMonth, WeekLog, MonthLog } from '@/types'
 
 export default function ChallengesPage() {
-  const [tracks, setTracks] = useState<Track[]>([])
-  const [activeTrackId, setActiveTrackId] = useState<string | null>(null)
+  const { tracks, activeTrack, activeTrackId, setActiveTrackId, loading } = useTrackSelection()
   const [programWeeks, setProgramWeeks] = useState<ProgramWeek[]>([])
   const [programMonths, setProgramMonths] = useState<ProgramMonth[]>([])
   const [weekLogs, setWeekLogs] = useState<WeekLog[]>([])
   const [monthLogs, setMonthLogs] = useState<MonthLog[]>([])
-  const [loading, setLoading] = useState(true)
   const [reflectionDraft, setReflectionDraft] = useState<Record<number, string>>({})
   const [openReflection, setOpenReflection] = useState<number | null>(null)
-
-  const loadTracks = useCallback(async () => {
-    try {
-      const all = await StoicDB.getTracks()
-      setTracks(all)
-      setActiveTrackId(prev => prev ?? all[0]?.id ?? null)
-    } catch (err) {
-      console.error('Error loading tracks:', err)
-      toast.error('Error al cargar los tracks')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
 
   const loadTrackData = useCallback(async () => {
     if (!activeTrackId) return
@@ -52,16 +39,8 @@ export default function ChallengesPage() {
     }
   }, [activeTrackId])
 
-  useEffect(() => { loadTracks() }, [loadTracks])
+  useStoicSync(loadTrackData)
 
-  useEffect(() => {
-    loadTrackData()
-    const handler = () => loadTrackData()
-    window.addEventListener('stoic_data_changed', handler)
-    return () => window.removeEventListener('stoic_data_changed', handler)
-  }, [loadTrackData])
-
-  const activeTrack = tracks.find(t => t.id === activeTrackId) || null
   const dayNumber = activeTrack ? currentDayNumber(activeTrack) : null
   const currentWeek = dayNumber ? Math.min(13, Math.ceil(dayNumber / 7)) : null
   const currentMonth = dayNumber ? Math.min(3, Math.ceil(dayNumber / 30)) : null
@@ -88,43 +67,17 @@ export default function ChallengesPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <i className="pi pi-spin pi-spinner text-4xl text-[var(--primary-gold)]" />
-      </div>
-    )
-  }
+  if (loading) return <LoadingScreen />
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)] flex items-center gap-2">
-          <img src="/icons/armour.png" className="w-8 h-8 object-contain" alt="Retos" />
-          Retos del Programa
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-          13 retos semanales con entregable verificable y 3 hitos mensuales por track. Sin trampas: el entregable existe o no existe.
-        </p>
-      </div>
+      <PageHeader
+        title="Retos del Programa"
+        icon={<img src="/icons/armour.png" className="w-8 h-8 object-contain" alt="Retos" />}
+        subtitle="13 retos semanales con entregable verificable y 3 hitos mensuales por track. Sin trampas: el entregable existe o no existe."
+      />
 
-      {/* Track selector */}
-      <div className="flex gap-2 flex-wrap">
-        {tracks.map(t => (
-          <button
-            key={t.id}
-            onClick={() => setActiveTrackId(t.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-bold border transition-all ${
-              t.id === activeTrackId
-                ? 'bg-[var(--primary-gold)]/15 border-[var(--primary-gold)]/40 text-[var(--primary-gold)]'
-                : 'bg-[var(--card-bg)] border-[var(--border-color)] text-slate-500 hover:text-[var(--foreground)]'
-            }`}
-          >
-            {t.name}
-          </button>
-        ))}
-      </div>
+      <TrackSelector tracks={tracks} activeTrackId={activeTrackId} onSelect={setActiveTrackId} />
 
       {/* Hitos mensuales */}
       <div className="space-y-3">

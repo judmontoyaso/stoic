@@ -24,6 +24,8 @@ export default function Sidebar() {
     const saved = localStorage.getItem('theme') as 'dark' | 'light' | null
     const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     const initialTheme = saved || (systemDark ? 'dark' : 'light')
+    // Sincroniza con localStorage tras montar: en SSR no hay window
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(initialTheme)
     document.documentElement.classList.toggle('dark', initialTheme === 'dark')
   }, [])

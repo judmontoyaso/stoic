@@ -1,13 +1,15 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Award, Flame, XCircle, CheckCircle2, TrendingUp, TrendingDown, BookOpen } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
 import MoodChart from '@/components/MoodChart'
 import { getToday, formatDate } from '@/lib/utils'
-import { buildTrackReport, getModuleLabel, getModuleColor, type TrackReport } from '@/lib/program'
+import { buildTrackReport, getModuleColor, getModuleLabel, type TrackReport } from '@/lib/program'
+import { Card, EmptyState, LoadingScreen, PageHeader, StatCard } from '@/components/ui'
+import { useStoicSync } from '@/hooks/useStoicSync'
 import type { Track, JournalEntry, ProgramModule, WeekLog, MonthLog } from '@/types'
 
 interface TrackEvaluation {
@@ -18,6 +20,13 @@ interface TrackEvaluation {
 }
 
 const MODULES: ProgramModule[] = ['perception', 'action', 'will', 'evaluation']
+
+const MODULE_BAR_COLOR: Record<ProgramModule, string> = {
+  perception: 'bg-sky-500',
+  action: 'bg-emerald-500',
+  will: 'bg-[var(--primary-gold)]',
+  evaluation: 'bg-purple-500',
+}
 
 export default function EvaluationPage() {
   const [evaluations, setEvaluations] = useState<TrackEvaluation[]>([])
@@ -60,24 +69,16 @@ export default function EvaluationPage() {
     }
   }, [])
 
-  useEffect(() => {
-    loadData()
-  }, [loadData])
+  useStoicSync(loadData)
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <i className="pi pi-spin pi-spinner text-4xl text-[var(--primary-gold)]" />
-      </div>
-    )
-  }
+  if (loading) return <LoadingScreen />
 
-  // Metricas de journaling (frecuencia y animo) — solo lectura
+  // Métricas de journaling (frecuencia y ánimo) — solo lectura
   const journalDays = new Set(journalEntries.map(e => e.date)).size
   const moods = journalEntries.filter(e => e.mood !== null).map(e => e.mood as number)
   const avgMood = moods.length > 0 ? (moods.reduce((a, b) => a + b, 0) / moods.length).toFixed(1) : null
 
-  // Serie de animo para el grafico: un punto por dia (promedio si hay varias entradas)
+  // Serie de ánimo para el gráfico: un punto por día (promedio si hay varias entradas)
   const moodByDate = new Map<string, number[]>()
   journalEntries.forEach(e => {
     if (e.mood !== null) {
@@ -101,32 +102,26 @@ export default function EvaluationPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)] flex items-center gap-2">
-          <Award className="w-7 h-7 text-[var(--primary-gold)]" />
-          Evaluación del Programa
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-          Informe de solo lectura: consulta tus datos, nunca los modifica. Corte al {formatDate(getToday())}.
-        </p>
-      </div>
+      <PageHeader
+        title="Evaluación del Programa"
+        icon={<Award className="w-7 h-7 text-[var(--primary-gold)]" />}
+        subtitle={`Informe de solo lectura: consulta tus datos, nunca los modifica. Corte al ${formatDate(getToday())}.`}
+      />
 
       {activeEvals.length === 0 ? (
-        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-10 text-center text-slate-500 space-y-3">
-          <Award className="w-8 h-8 mx-auto text-[var(--primary-gold)] opacity-60" />
+        <EmptyState icon={<Award className="w-8 h-8 text-[var(--primary-gold)]" />}>
           <p className="text-sm">Aún no hay tracks iniciados que evaluar.</p>
           <Link href="/" className="inline-block text-sm font-bold text-[var(--primary-gold)] hover:underline">
             Iniciar un track desde el Panel de Control
           </Link>
-        </div>
+        </EmptyState>
       ) : (
         activeEvals.map(({ track, report, weekLogs, monthLogs }) => {
           if (!report) return null
           const weeksCompleted = weekLogs.filter(w => w.completed).length
           const monthsCompleted = monthLogs.filter(m => m.completed).length
           return (
-            <div key={track.id} className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-6 space-y-5">
+            <Card key={track.id} className="p-6 space-y-5">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <h2 className="text-lg font-bold text-[var(--foreground)]">{track.name}</h2>
                 <span className="text-xs text-slate-500">
@@ -136,34 +131,29 @@ export default function EvaluationPage() {
 
               {/* Stats principales */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-[var(--background)] border border-[var(--border-color)] rounded-md p-3">
-                  <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3 text-[var(--primary-gold)]" /> Completados
-                  </p>
-                  <p className="text-2xl font-black text-[var(--primary-gold)] mt-1">{report.completedDays}</p>
-                  <p className="text-[10px] text-slate-500">de {report.elapsedDays} transcurridos</p>
-                </div>
-                <div className="bg-[var(--background)] border border-[var(--border-color)] rounded-md p-3">
-                  <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider flex items-center gap-1">
-                    <XCircle className="w-3 h-3 text-red-500" /> Perdidos
-                  </p>
-                  <p className="text-2xl font-black text-red-500 mt-1">{report.missedDays}</p>
-                  <p className="text-[10px] text-slate-500">marcados, no reorganizados</p>
-                </div>
-                <div className="bg-[var(--background)] border border-[var(--border-color)] rounded-md p-3">
-                  <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Consistencia</p>
-                  <p className="text-2xl font-black text-[var(--foreground)] mt-1">{report.consistencyRate}%</p>
-                  <div className="w-full h-1 rounded-full bg-[var(--border-color)] mt-1 overflow-hidden">
-                    <div className="h-full bg-[var(--primary-gold)]" style={{ width: `${report.consistencyRate}%` }} />
-                  </div>
-                </div>
-                <div className="bg-[var(--background)] border border-[var(--border-color)] rounded-md p-3">
-                  <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider flex items-center gap-1">
-                    <Flame className="w-3 h-3 text-orange-400" /> Rachas
-                  </p>
-                  <p className="text-2xl font-black text-orange-400 mt-1">{report.currentStreak}</p>
-                  <p className="text-[10px] text-slate-500">mejor: {report.longestStreak} días</p>
-                </div>
+                <StatCard
+                  label={<><CheckCircle2 className="w-3 h-3 text-[var(--primary-gold)]" /> Completados</>}
+                  value={report.completedDays}
+                  valueClassName="text-[var(--primary-gold)]"
+                  sub={`de ${report.elapsedDays} transcurridos`}
+                />
+                <StatCard
+                  label={<><XCircle className="w-3 h-3 text-red-500" /> Perdidos</>}
+                  value={report.missedDays}
+                  valueClassName="text-red-500"
+                  sub="marcados, no reorganizados"
+                />
+                <StatCard
+                  label="Consistencia"
+                  value={`${report.consistencyRate}%`}
+                  progress={report.consistencyRate}
+                />
+                <StatCard
+                  label={<><Flame className="w-3 h-3 text-orange-400" /> Rachas</>}
+                  value={report.currentStreak}
+                  valueClassName="text-orange-400"
+                  sub={`mejor: ${report.longestStreak} días`}
+                />
               </div>
 
               {/* Progreso por módulo */}
@@ -181,7 +171,7 @@ export default function EvaluationPage() {
                           {getModuleLabel(mod)}
                         </span>
                         <div className="flex-1 h-2 rounded-full bg-[var(--background)] border border-[var(--border-color)] overflow-hidden">
-                          <div className={`h-full ${mod === 'will' ? 'bg-[var(--primary-gold)]' : mod === 'action' ? 'bg-emerald-500' : mod === 'perception' ? 'bg-sky-500' : 'bg-purple-500'}`} style={{ width: `${pct}%` }} />
+                          <div className={`h-full ${MODULE_BAR_COLOR[mod]}`} style={{ width: `${pct}%` }} />
                         </div>
                         <span className="text-xs font-bold text-[var(--foreground)] w-16 text-right flex-shrink-0">
                           {m.completed}/{m.total}
@@ -220,13 +210,13 @@ export default function EvaluationPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </Card>
           )
         })
       )}
 
       {/* Ánimo y consistencia */}
-      <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-6 space-y-4">
+      <Card className="p-6 space-y-4">
         <div>
           <h2 className="text-lg font-bold text-[var(--foreground)]">Ánimo a lo largo del programa</h2>
           <p className="text-xs text-slate-500 mt-1">
@@ -239,38 +229,34 @@ export default function EvaluationPage() {
           startDate={chartStart}
           endDate={getToday()}
         />
-      </div>
+      </Card>
 
       {/* Journaling (global) */}
-      <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-6 space-y-4">
+      <Card className="p-6 space-y-4">
         <h2 className="text-lg font-bold text-[var(--foreground)] flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-[var(--primary-gold)]" />
           Journaling
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="bg-[var(--background)] border border-[var(--border-color)] rounded-md p-3">
-            <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Días con escritura</p>
-            <p className="text-2xl font-black text-[var(--foreground)] mt-1">{journalDays}</p>
-          </div>
-          <div className="bg-[var(--background)] border border-[var(--border-color)] rounded-md p-3">
-            <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Entradas totales</p>
-            <p className="text-2xl font-black text-[var(--foreground)] mt-1">{journalEntries.length}</p>
-          </div>
-          <div className="bg-[var(--background)] border border-[var(--border-color)] rounded-md p-3">
-            <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Ánimo promedio</p>
-            <p className="text-2xl font-black text-[var(--foreground)] mt-1">{avgMood ?? '—'}<span className="text-sm text-slate-500 font-normal">{avgMood ? ' / 5' : ''}</span></p>
-          </div>
-          <div className="bg-[var(--background)] border border-[var(--border-color)] rounded-md p-3">
-            <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Por tipo</p>
-            <p className="text-xs text-[var(--foreground)] mt-2 leading-relaxed">
-              ☀️ {byType['morning'] || 0} · 🌙 {byType['evening'] || 0} · 📖 {byType['weekly'] || 0} · ✍️ {byType['free'] || 0}
-            </p>
-          </div>
+          <StatCard label="Días con escritura" value={journalDays} />
+          <StatCard label="Entradas totales" value={journalEntries.length} />
+          <StatCard
+            label="Ánimo promedio"
+            value={<>{avgMood ?? '—'}<span className="text-sm text-slate-500 font-normal">{avgMood ? ' / 5' : ''}</span></>}
+          />
+          <StatCard
+            label="Por tipo"
+            value={
+              <span className="text-xs font-normal leading-relaxed">
+                ☀️ {byType['morning'] || 0} · 🌙 {byType['evening'] || 0} · 📖 {byType['weekly'] || 0} · ✍️ {byType['free'] || 0}
+              </span>
+            }
+          />
         </div>
         <p className="text-[10px] text-slate-500">
           La frecuencia de journaling y el ánimo reportado alimentan este informe. El módulo de evaluación solo lee: nunca escribe sobre los demás módulos.
         </p>
-      </div>
+      </Card>
     </div>
   )
 }

@@ -23,6 +23,8 @@ export default function PushToggle({ collapsed = false }: PushToggleProps) {
   useEffect(() => {
     if (typeof window === 'undefined') return
     const ok = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+    // Detección de capacidades del navegador: solo posible tras montar en cliente
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSupported(ok)
     if (!ok) return
     navigator.serviceWorker.ready

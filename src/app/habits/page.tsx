@@ -1,13 +1,16 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { ChevronDown, ChevronUp, CheckCircle2, XCircle, Filter } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
 import { getToday } from '@/lib/utils'
-import { dateForDayNumber, dayStatus, getModuleLabel, getModuleColor } from '@/lib/program'
-import type { Track, ProgramDay, ProgramWeek, DayLog, ProgramModule, DayStatus } from '@/types'
+import { dateForDayNumber, dayStatus } from '@/lib/program'
+import { EmptyState, LoadingScreen, ModuleBadge, PageHeader, Pill, TrackSelector } from '@/components/ui'
+import { useStoicSync } from '@/hooks/useStoicSync'
+import { useTrackSelection } from '@/hooks/useTrackSelection'
+import type { ProgramDay, ProgramWeek, DayLog, ProgramModule, DayStatus } from '@/types'
 
 const MODULE_FILTERS: { value: ProgramModule | 'all'; label: string }[] = [
   { value: 'all', label: 'Todos' },
@@ -18,29 +21,14 @@ const MODULE_FILTERS: { value: ProgramModule | 'all'; label: string }[] = [
 ]
 
 export default function ProgramPage() {
-  const [tracks, setTracks] = useState<Track[]>([])
-  const [activeTrackId, setActiveTrackId] = useState<string | null>(null)
+  const { tracks, activeTrack, activeTrackId, setActiveTrackId, loading } = useTrackSelection()
   const [programDays, setProgramDays] = useState<ProgramDay[]>([])
   const [programWeeks, setProgramWeeks] = useState<ProgramWeek[]>([])
   const [dayLogs, setDayLogs] = useState<DayLog[]>([])
-  const [loading, setLoading] = useState(true)
   const [expandedDay, setExpandedDay] = useState<number | null>(null)
   const [moduleFilter, setModuleFilter] = useState<ProgramModule | 'all'>('all')
 
   const todayStr = getToday()
-
-  const loadTracks = useCallback(async () => {
-    try {
-      const all = await StoicDB.getTracks()
-      setTracks(all)
-      setActiveTrackId(prev => prev ?? all[0]?.id ?? null)
-    } catch (err) {
-      console.error('Error loading tracks:', err)
-      toast.error('Error al cargar los tracks')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
 
   const loadTrackData = useCallback(async () => {
     if (!activeTrackId) return
@@ -59,24 +47,10 @@ export default function ProgramPage() {
     }
   }, [activeTrackId])
 
-  useEffect(() => { loadTracks() }, [loadTracks])
+  useStoicSync(loadTrackData)
 
-  useEffect(() => {
-    loadTrackData()
-    const handler = () => loadTrackData()
-    window.addEventListener('stoic_data_changed', handler)
-    return () => window.removeEventListener('stoic_data_changed', handler)
-  }, [loadTrackData])
+  if (loading) return <LoadingScreen />
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <i className="pi pi-spin pi-spinner text-4xl text-[var(--primary-gold)]" />
-      </div>
-    )
-  }
-
-  const activeTrack = tracks.find(t => t.id === activeTrackId) || null
   const logByDate = new Map(dayLogs.map(l => [l.date, l]))
 
   const statusFor = (dayNumber: number): { status: DayStatus; dateStr: string | null } => {
@@ -101,56 +75,32 @@ export default function ProgramPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--foreground)] flex items-center gap-2">
-          <img src="/icons/skull.png" className="w-8 h-8 object-contain" alt="Programa" />
-          El Programa
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-          Los 90 días completos de cada track: qué toca, cuándo, por qué funciona y de quién viene.
-        </p>
-      </div>
+      <PageHeader
+        title="El Programa"
+        icon={<img src="/icons/skull.png" className="w-8 h-8 object-contain" alt="Programa" />}
+        subtitle="Los 90 días completos de cada track: qué toca, cuándo, por qué funciona y de quién viene."
+      />
 
-      {/* Track selector */}
-      <div className="flex gap-2 flex-wrap">
-        {tracks.map(t => (
-          <button
-            key={t.id}
-            onClick={() => { setActiveTrackId(t.id); setExpandedDay(null) }}
-            className={`px-4 py-2 rounded-lg text-sm font-bold border transition-all ${
-              t.id === activeTrackId
-                ? 'bg-[var(--primary-gold)]/15 border-[var(--primary-gold)]/40 text-[var(--primary-gold)]'
-                : 'bg-[var(--card-bg)] border-[var(--border-color)] text-slate-500 hover:text-[var(--foreground)]'
-            }`}
-          >
-            {t.name}
-          </button>
-        ))}
-      </div>
+      <TrackSelector
+        tracks={tracks}
+        activeTrackId={activeTrackId}
+        onSelect={(id) => { setActiveTrackId(id); setExpandedDay(null) }}
+      />
 
-      {/* Module filter */}
+      {/* Filtro por módulo */}
       <div className="flex items-center gap-2 flex-wrap">
         <Filter className="w-3.5 h-3.5 text-slate-500" />
         {MODULE_FILTERS.map(f => (
-          <button
-            key={f.value}
-            onClick={() => setModuleFilter(f.value)}
-            className={`px-3 py-1 rounded-full text-[11px] font-bold border transition-all ${
-              moduleFilter === f.value
-                ? 'bg-[var(--primary-gold)]/15 border-[var(--primary-gold)]/40 text-[var(--primary-gold)]'
-                : 'bg-[var(--card-bg)] border-[var(--border-color)] text-slate-500'
-            }`}
-          >
+          <Pill key={f.value} size="xs" active={moduleFilter === f.value} onClick={() => setModuleFilter(f.value)}>
             {f.label}
-          </button>
+          </Pill>
         ))}
       </div>
 
       {!activeTrack ? (
-        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl p-10 text-center text-slate-500">
+        <EmptyState>
           <p className="text-sm">No hay tracks. Ejecuta el esquema y los seeds V2 en Supabase.</p>
-        </div>
+        </EmptyState>
       ) : (
         <div className="space-y-6">
           {!activeTrack.start_date && (
@@ -177,7 +127,6 @@ export default function ProgramPage() {
                 {week.days.map(pd => {
                   const { status, dateStr } = statusFor(pd.day_number)
                   const isExpanded = expandedDay === pd.day_number
-                  const color = getModuleColor(pd.module)
                   return (
                     <div key={pd.day_number} className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg overflow-hidden">
                       <button
@@ -194,9 +143,7 @@ export default function ProgramPage() {
                         </span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${color.bg} ${color.text}`}>
-                              {getModuleLabel(pd.module)}
-                            </span>
+                            <ModuleBadge module={pd.module} size="xs" />
                             {status === 'completed' && <CheckCircle2 className="w-3.5 h-3.5 text-[var(--primary-gold)]" />}
                             {status === 'missed' && <XCircle className="w-3.5 h-3.5 text-red-500" />}
                             {dateStr && <span className="text-[10px] text-slate-500">{dateStr}</span>}
