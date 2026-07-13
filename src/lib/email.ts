@@ -308,6 +308,9 @@ export async function sendEmail(to: string, content: EmailContent): Promise<bool
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ from, to: [to], subject: content.subject, html: content.html }),
     })
+    if (!res.ok) {
+      console.error('Resend rechazó el correo:', res.status, await res.text().catch(() => ''))
+    }
     return res.ok
   } catch (error) {
     console.error('Error al enviar el correo vía Resend:', error)

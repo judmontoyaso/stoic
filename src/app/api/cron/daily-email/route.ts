@@ -8,7 +8,9 @@ import { sendPushToAll } from '@/lib/push'
 
 // Endpoint de Cron diario: envía el ejercicio del día de cada track activo
 // (incluye la lectura completa y la deja pre-generada en caché para la app)
-// GET /api/cron/daily-email?secret=...&to=...&date=YYYY-MM-DD
+// GET/POST /api/cron/daily-email?secret=...&to=...&date=YYYY-MM-DD
+// Webhook-compatible: n8n u otro scheduler puede llamarlo por POST con
+// header "Authorization: Bearer <CRON_SECRET>" o query ?secret=
 
 export const maxDuration = 300
 
@@ -36,10 +38,15 @@ function dayNumberFor(startDate: string, dateStr: string, durationDays: number):
 /** Autorizado por query secret (schedulers externos) o Bearer (Vercel Cron) */
 function isAuthorized(request: Request, secret: string | null): boolean {
   const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret) return true
+  // Sin secret configurado: abierto solo en desarrollo, nunca en producción
+  if (!cronSecret) return process.env.NODE_ENV !== 'production'
   if (secret === cronSecret) return true
   const auth = request.headers.get('authorization')
   return auth === `Bearer ${cronSecret}`
+}
+
+export async function POST(request: Request) {
+  return GET(request)
 }
 
 export async function GET(request: Request) {

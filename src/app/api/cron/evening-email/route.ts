@@ -5,7 +5,9 @@ import { sendPushToAll } from '@/lib/push'
 
 // Cron nocturno (~8:30pm Bogota): pregunta si completaste el día y trae el
 // examen nocturno de Séneca. El eslabón que más se rompe es el cierre del día.
-// GET /api/cron/evening-email?secret=...&to=...&date=YYYY-MM-DD
+// GET/POST /api/cron/evening-email?secret=...&to=...&date=YYYY-MM-DD
+// Webhook-compatible: n8n u otro scheduler puede llamarlo por POST con
+// header "Authorization: Bearer <CRON_SECRET>" o query ?secret=
 
 export const maxDuration = 60
 
@@ -30,10 +32,15 @@ function addDays(dateStr: string, n: number): string {
 /** Autorizado por query secret (schedulers externos) o Bearer (Vercel Cron) */
 function isAuthorized(request: Request, secret: string | null): boolean {
   const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret) return true
+  // Sin secret configurado: abierto solo en desarrollo, nunca en producción
+  if (!cronSecret) return process.env.NODE_ENV !== 'production'
   if (secret === cronSecret) return true
   const auth = request.headers.get('authorization')
   return auth === `Bearer ${cronSecret}`
+}
+
+export async function POST(request: Request) {
+  return GET(request)
 }
 
 export async function GET(request: Request) {
