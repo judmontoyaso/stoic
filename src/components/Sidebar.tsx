@@ -13,6 +13,7 @@ import {
   Moon
 } from 'lucide-react'
 import PushToggle from '@/components/PushToggle'
+import { TABS } from '@/components/MobileTabBar'
 import { createClient } from '@/utils/supabase/client'
 
 export default function Sidebar() {
@@ -64,7 +65,11 @@ export default function Sidebar() {
   }
 
   const renderNavItems = (isMobile = false) => {
-    return menuItems.map((item) => {
+    // En móvil la barra inferior ya tiene las rutas principales:
+    // el drawer solo muestra el resto (Recursos, Evaluación)
+    const tabPaths = new Set(TABS.map(t => t.path))
+    const items = isMobile ? menuItems.filter(i => !tabPaths.has(i.path)) : menuItems
+    return items.map((item) => {
       const active = pathname === item.path
       return (
         <Link
@@ -124,7 +129,7 @@ export default function Sidebar() {
       {/* Mobile Drawer Overlay */}
       <AnimatePresence>
         {mobileOpen && (
-          <div className="md:hidden fixed inset-0 z-40 flex">
+          <div className="md:hidden fixed inset-0 z-[60] flex">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}

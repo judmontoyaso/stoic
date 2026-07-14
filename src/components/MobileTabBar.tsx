@@ -4,8 +4,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 // Barra de pestañas inferior para móvil/PWA standalone.
-// Las 5 rutas principales; el resto vive en el drawer del header.
-const TABS = [
+// Las 5 rutas principales; el resto vive en el drawer del header
+// (el Sidebar usa TABS para no repetirlas allí).
+export const TABS = [
   { label: 'Panel', path: '/', icon: '/icons/time.png' },
   { label: 'Calendario', path: '/calendar', icon: '/icons/earth.png' },
   { label: 'Programa', path: '/habits', icon: '/icons/skull.png' },

@@ -4,6 +4,17 @@ import { useEffect, useState, useCallback } from 'react'
 import { Bell, BellOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 
+// navigator.serviceWorker.ready no resuelve nunca si el SW no llegó a
+// registrarse: con timeout el botón falla con mensaje en vez de colgarse
+function swReady(timeoutMs = 6000): Promise<ServiceWorkerRegistration> {
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('El service worker no está disponible')), timeoutMs)
+    ),
+  ])
+}
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
@@ -27,7 +38,7 @@ export default function PushToggle({ collapsed = false }: PushToggleProps) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSupported(ok)
     if (!ok) return
-    navigator.serviceWorker.ready
+    swReady()
       .then(reg => reg.pushManager.getSubscription())
       .then(sub => {
         setSubscribed(!!sub)
@@ -48,7 +59,7 @@ export default function PushToggle({ collapsed = false }: PushToggleProps) {
     if (busy) return
     setBusy(true)
     try {
-      const reg = await navigator.serviceWorker.ready
+      const reg = await swReady()
       const existing = await reg.pushManager.getSubscription()
 
       if (existing) {
