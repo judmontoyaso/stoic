@@ -11,6 +11,7 @@ function isPublicPath(pathname: string): boolean {
     pathname.startsWith('/api/auth/verify-code') ||
     pathname.startsWith('/icons/') ||
     pathname === '/login' ||
+    pathname === '/landing' ||
     pathname === '/terms' ||
     pathname === '/privacy' ||
     pathname === '/favicon.ico' ||
@@ -62,8 +63,9 @@ export async function proxy(request: NextRequest) {
     return response
   }
 
-  const loginUrl = new URL('/login', request.url)
-  return NextResponse.redirect(loginUrl)
+  // Visitante sin sesión: la raíz muestra la landing; el resto pide login
+  const destination = pathname === '/' ? '/landing' : '/login'
+  return NextResponse.redirect(new URL(destination, request.url))
 }
 
 // Configuración de las rutas a interceptar

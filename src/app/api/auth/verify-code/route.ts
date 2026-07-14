@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { createClient as createServerSupabase } from '@/utils/supabase/server'
+import { sendEmail, welcomeEmail } from '@/lib/email'
 
 // Aprueba al usuario logueado si presenta el código de acceso correcto.
 // La aprobación se guarda en app_metadata.stoicom_approved: solo el
@@ -93,6 +94,13 @@ export async function POST(request: Request) {
   if (error) {
     console.error('Error aprobando usuario:', error)
     return NextResponse.json({ error: 'No se pudo aprobar el usuario' }, { status: 500 })
+  }
+
+  // Bienvenida (best effort: la aprobación ya quedó hecha)
+  if (user.email) {
+    const appUrl = process.env.APP_URL || 'https://stoic-mu.vercel.app'
+    sendEmail(user.email, welcomeEmail({ name: user.email.split('@')[0], appUrl }))
+      .catch(err => console.error('Error enviando bienvenida:', err))
   }
 
   return NextResponse.json({ ok: true })

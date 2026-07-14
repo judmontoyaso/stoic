@@ -295,6 +295,127 @@ export function eveningReviewEmail(opts: {
   }
 }
 
+// --- Bienvenida al aprobar el código de acceso ---
+export function welcomeEmail(opts: { name: string; appUrl: string }): EmailContent {
+  return {
+    subject: 'Bienvenido a StoiCom: así funciona tu entrenamiento',
+    html: baseLayout({
+      preheader: 'Tu programa de 90 días está listo para empezar.',
+      heading: `${opts.name}, tu entrenamiento está listo`,
+      body:
+        paragraph(
+          'Tu correo quedó aprobado. StoiCom es un programa de 90 días con un ejercicio concreto al día: así funciona tu rutina a partir de ahora.'
+        ) +
+        `
+        <div style="margin:20px 0;padding:16px 20px;background:#f5f5f4;border-left:4px solid ${ACCENT};border-radius:0 4px 4px 0;">
+          <p style="margin:0 0 10px;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};"><strong style="color:#8e6d15;">En la mañana</strong> — te llega el ejercicio del día con su lección completa, a la hora que elijas en Preferencias.</p>
+          <p style="margin:0 0 10px;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};"><strong style="color:#8e6d15;">Durante el día</strong> — ejecutas el ejercicio en tu vida real y lo marcas en la app. Los días perdidos se marcan; el calendario nunca se reorganiza.</p>
+          <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};"><strong style="color:#8e6d15;">En la noche</strong> — el examen nocturno de Séneca: tres preguntas por escrito en tu diario.</p>
+        </div>` +
+        paragraph(
+          'Dos cosas antes de empezar: <strong>1)</strong> fija tu fecha de inicio y la hora de tus correos, y <strong>2)</strong> activa la campana de notificaciones en el menú para recibir los recordatorios en tu teléfono.'
+        ) +
+        button('Configurar mi programa', `${opts.appUrl}/welcome`),
+    }),
+  }
+}
+
+// --- Resumen semanal del domingo ---
+export interface WeeklyTrackSummary {
+  trackName: string
+  dayNumber: number
+  completedThisWeek: number
+  missedThisWeek: number
+  totalCompleted: number
+  streak: number
+}
+
+export function weeklySummaryEmail(opts: {
+  name: string
+  appUrl: string
+  summaries: WeeklyTrackSummary[]
+  moodAvg: number | null
+  nextChallenge: { title: string; description: string } | null
+}): EmailContent {
+  const rows = opts.summaries
+    .map(
+      s => `
+      <div style="margin:0 0 12px;padding:14px 16px;background:${CARD_LIGHT};border:1px solid ${BORDER_LIGHT};border-radius:6px;">
+        <p style="margin:0 0 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#ab841d;">${s.trackName} · vas en el día ${s.dayNumber}</p>
+        <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};">
+          Esta semana: <strong>${s.completedThisWeek} de ${s.completedThisWeek + s.missedThisWeek} días completados</strong>${s.missedThisWeek > 0 ? ` (${s.missedThisWeek} marcado${s.missedThisWeek === 1 ? '' : 's'} como perdido${s.missedThisWeek === 1 ? '' : 's'})` : ' — semana impecable'}.
+          Racha actual: ${s.streak} día${s.streak === 1 ? '' : 's'}. Total del programa: ${s.totalCompleted}/90.
+        </p>
+      </div>`
+    )
+    .join('')
+
+  const moodHtml =
+    opts.moodAvg !== null
+      ? paragraph(
+          `Tu ánimo promedio de la semana fue <strong>${opts.moodAvg.toFixed(1)}/5</strong> según tu diario.`
+        )
+      : ''
+
+  const challengeHtml = opts.nextChallenge
+    ? `
+      <div style="margin:20px 0;padding:14px 16px;background:#f0fdf4;border:1px dashed #86efac;border-radius:4px;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:#15803d;">La semana que viene: ${opts.nextChallenge.title}</p>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:${MUTED_LIGHT};">${opts.nextChallenge.description}</p>
+      </div>`
+    : ''
+
+  return {
+    subject: 'Tu semana estoica en números',
+    html: baseLayout({
+      preheader: 'Balance de la semana y lo que viene.',
+      heading: `${opts.name}, así cerró tu semana`,
+      body:
+        paragraph(
+          'El domingo es para el balance, no para el juicio: los números de abajo son información, no un veredicto.'
+        ) +
+        rows +
+        moodHtml +
+        challengeHtml +
+        button('Ver mi progreso', `${opts.appUrl}/evaluation`),
+    }),
+  }
+}
+
+// --- Rescate tras días de inactividad ---
+export function rescueEmail(opts: {
+  name: string
+  appUrl: string
+  daysInactive: number
+  tracks: { trackName: string; dayNumber: number; title: string }[]
+}): EmailContent {
+  const list = opts.tracks
+    .map(
+      t =>
+        `<li style="margin-bottom:8px;font-size:13px;line-height:1.5;color:${TEXT_LIGHT};"><strong style="color:#ab841d;">${t.trackName}</strong> — hoy es tu día ${t.dayNumber}: ${t.title}</li>`
+    )
+    .join('')
+
+  return {
+    subject: 'El programa sigue contando tus días',
+    html: baseLayout({
+      preheader: 'Volver hoy cuesta menos que volver mañana.',
+      heading: `${opts.name}, llevas ${opts.daysInactive} días sin marcar`,
+      body:
+        paragraph(
+          'Sin culpa y sin discurso: los días perdidos ya están marcados y no se recuperan. Lo único que importa es el de hoy, y el de hoy todavía está abierto.'
+        ) +
+        `<ul style="margin:0 0 16px;padding-left:20px;">${list}</ul>` +
+        `
+        <div style="margin:20px 0;padding:16px 20px;background:#f5f5f4;border-left:4px solid ${ACCENT};border-radius:0 4px 4px 0;">
+          <p style="margin:0;font-size:14px;font-style:italic;line-height:1.6;color:${TEXT_LIGHT};">&ldquo;No pospongas nada. Equilibra la balanza de la vida cada día.&rdquo;</p>
+          <p style="margin:6px 0 0;font-size:12px;font-weight:700;color:#ab841d;text-align:right;">— Séneca</p>
+        </div>` +
+        button('Retomar hoy', opts.appUrl),
+    }),
+  }
+}
+
 export async function sendEmail(to: string, content: EmailContent): Promise<boolean> {
   const key = process.env.RESEND_API_KEY
   if (!key) {

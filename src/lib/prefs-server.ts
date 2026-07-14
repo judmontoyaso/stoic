@@ -17,6 +17,8 @@ export interface EmailPrefs {
   evening_hour: number
   last_morning_sent: string | null
   last_evening_sent: string | null
+  last_weekly_sent: string | null
+  last_rescue_sent: string | null
 }
 
 export const DEFAULT_EMAIL_PREFS: EmailPrefs = {
@@ -25,15 +27,19 @@ export const DEFAULT_EMAIL_PREFS: EmailPrefs = {
   evening_hour: 20,
   last_morning_sent: null,
   last_evening_sent: null,
+  last_weekly_sent: null,
+  last_rescue_sent: null,
 }
 
 /** Preferencias de todos los usuarios (una sola query por corrida del cron) */
 export async function getPrefsMap(supabase: AnySupabaseClient): Promise<Map<string, EmailPrefs>> {
   const map = new Map<string, EmailPrefs>()
   try {
+    // select('*'): las columnas de retención pueden no existir aún (V6);
+    // pedirlas explícitamente rompería también el dedupe diario
     const { data, error } = await supabase
       .from('user_prefs')
-      .select('user_id, timezone, morning_hour, evening_hour, last_morning_sent, last_evening_sent')
+      .select('*')
     if (error) {
       // Tabla aún no creada (supabase_v5): todos con defaults
       console.error('user_prefs no disponible, usando defaults:', error.message)
@@ -44,8 +50,10 @@ export async function getPrefsMap(supabase: AnySupabaseClient): Promise<Map<stri
         timezone: row.timezone || DEFAULT_EMAIL_PREFS.timezone,
         morning_hour: row.morning_hour ?? DEFAULT_EMAIL_PREFS.morning_hour,
         evening_hour: row.evening_hour ?? DEFAULT_EMAIL_PREFS.evening_hour,
-        last_morning_sent: row.last_morning_sent,
-        last_evening_sent: row.last_evening_sent,
+        last_morning_sent: row.last_morning_sent ?? null,
+        last_evening_sent: row.last_evening_sent ?? null,
+        last_weekly_sent: row.last_weekly_sent ?? null,
+        last_rescue_sent: row.last_rescue_sent ?? null,
       })
     }
   } catch (err) {
@@ -54,8 +62,11 @@ export async function getPrefsMap(supabase: AnySupabaseClient): Promise<Map<stri
   return map
 }
 
-/** Fecha (YYYY-MM-DD) y hora (0-23) actuales en la zona horaria dada */
-export function localParts(timezone: string, now: Date = new Date()): { date: string; hour: number } {
+/** Fecha (YYYY-MM-DD), hora (0-23) y día de semana actuales en la zona dada */
+export function localParts(
+  timezone: string,
+  now: Date = new Date()
+): { date: string; hour: number; weekday: string } {
   let tz = timezone
   try {
     Intl.DateTimeFormat('en-CA', { timeZone: tz })
@@ -69,12 +80,14 @@ export function localParts(timezone: string, now: Date = new Date()): { date: st
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
+    weekday: 'short',
   }).formatToParts(now)
   const get = (type: string) => parts.find(p => p.type === type)?.value || ''
   return {
     date: `${get('year')}-${get('month')}-${get('day')}`,
     // Algunos runtimes devuelven "24" para medianoche
     hour: Number(get('hour')) % 24,
+    weekday: get('weekday'), // 'Sun'..'Sat' (en-CA)
   }
 }
 
@@ -82,7 +95,7 @@ export function localParts(timezone: string, now: Date = new Date()): { date: st
 export async function markEmailSent(
   supabase: AnySupabaseClient,
   userId: string,
-  field: 'last_morning_sent' | 'last_evening_sent',
+  field: 'last_morning_sent' | 'last_evening_sent' | 'last_weekly_sent' | 'last_rescue_sent',
   localDate: string,
   prefs: EmailPrefs
 ): Promise<void> {

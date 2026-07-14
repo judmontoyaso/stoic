@@ -43,8 +43,13 @@ export default async function RootLayout({
 }>) {
   const headersList = await headers()
   const pathname = headersList.get('x-pathname') || ''
-  // Pantallas de autenticación: sin sidebar
-  const isLoginPage = pathname === '/login' || pathname.startsWith('/auth/')
+  // Pantallas sin sidebar: autenticación y páginas públicas
+  const isLoginPage =
+    pathname === '/login' ||
+    pathname.startsWith('/auth/') ||
+    pathname === '/landing' ||
+    pathname === '/terms' ||
+    pathname === '/privacy'
 
   return (
     <html lang="es" className="scroll-smooth">
