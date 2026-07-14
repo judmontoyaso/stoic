@@ -1,4 +1,4 @@
-// Server-only. Envío de notificaciones Web Push a todas las suscripciones.
+// Server-only. Envío de notificaciones Web Push por usuario.
 
 import webpush from 'web-push'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -27,12 +27,14 @@ function configureVapid(): boolean {
 }
 
 /**
- * Envía un push a todas las suscripciones guardadas.
+ * Envía un push a las suscripciones de UN usuario (cada quien recibe
+ * su propio contenido; una suscripción sin user_id no recibe nada).
  * Limpia automáticamente las suscripciones expiradas (410/404).
  * Best effort: nunca lanza, devuelve conteos.
  */
-export async function sendPushToAll(
+export async function sendPushToUser(
   supabase: AnySupabaseClient,
+  userId: string,
   payload: PushPayload
 ): Promise<{ sent: number; failed: number; removed: number }> {
   if (!configureVapid()) {
@@ -41,7 +43,10 @@ export async function sendPushToAll(
 
   let subs: { id: string; endpoint: string; keys: { p256dh: string; auth: string } }[] = []
   try {
-    const { data } = await supabase.from('push_subscriptions').select('id, endpoint, keys')
+    const { data } = await supabase
+      .from('push_subscriptions')
+      .select('id, endpoint, keys')
+      .eq('user_id', userId)
     subs = data || []
   } catch {
     return { sent: 0, failed: 0, removed: 0 }

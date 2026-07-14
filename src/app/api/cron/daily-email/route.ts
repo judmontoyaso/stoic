@@ -4,7 +4,7 @@ import { getQuoteForDay } from '@/lib/quotes'
 import { dailyProgramEmail, sendEmail, type TrackEmailBlock } from '@/lib/email'
 import { generateDailyReflection } from '@/lib/ai'
 import { getOrCreateDailyReading } from '@/lib/readings'
-import { sendPushToAll } from '@/lib/push'
+import { sendPushToUser } from '@/lib/push'
 import { getApprovedUsers, type ApprovedUser } from '@/lib/recipients'
 
 // Endpoint de Cron diario: envía a CADA usuario aprobado el ejercicio del
@@ -162,7 +162,7 @@ export async function GET(request: Request) {
 
   let sent = 0
   let failed = 0
-  let firstBlocks: TrackEmailBlock[] = []
+  const push = { sent: 0, failed: 0, removed: 0 }
   const detail: { email: string; tracks: number; sent: boolean }[] = []
 
   for (const user of users) {
@@ -171,7 +171,6 @@ export async function GET(request: Request) {
       detail.push({ email: user.email, tracks: 0, sent: false })
       continue
     }
-    if (firstBlocks.length === 0) firstBlocks = blocks
 
     const quote = getQuoteForDay(blocks[0].dayNumber)
 
@@ -197,20 +196,20 @@ export async function GET(request: Request) {
     if (success) sent++
     else failed++
     detail.push({ email: user.email, tracks: blocks.length, sent: success })
-  }
 
-  // Push matutino (best effort). Las suscripciones no distinguen usuario:
-  // se usa el contenido del primer usuario con programa activo.
-  const push = firstBlocks.length > 0
-    ? await sendPushToAll(supabase, {
-        title: `Día ${firstBlocks[0].dayNumber} · ${firstBlocks[0].title}`,
-        body: firstBlocks.length > 1
-          ? firstBlocks.map(b => `${b.trackName}: ${b.title}`).join(' · ')
-          : firstBlocks[0].instructions.slice(0, 120) + '...',
-        url: '/',
-        tag: 'stoic-morning',
-      })
-    : { sent: 0, failed: 0, removed: 0 }
+    // Push matutino (best effort) con el contenido del propio usuario
+    const p = await sendPushToUser(supabase, user.id, {
+      title: `Día ${blocks[0].dayNumber} · ${blocks[0].title}`,
+      body: blocks.length > 1
+        ? blocks.map(b => `${b.trackName}: ${b.title}`).join(' · ')
+        : blocks[0].instructions.slice(0, 120) + '...',
+      url: '/',
+      tag: 'stoic-morning',
+    })
+    push.sent += p.sent
+    push.failed += p.failed
+    push.removed += p.removed
+  }
 
   return NextResponse.json({ ok: true, date: dateStr, recipients: users.length, sent, failed, detail, push })
 }

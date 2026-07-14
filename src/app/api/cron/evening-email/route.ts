@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { eveningReviewEmail, sendEmail, type EveningTrackStatus } from '@/lib/email'
-import { sendPushToAll } from '@/lib/push'
+import { sendPushToUser } from '@/lib/push'
 import { getApprovedUsers, type ApprovedUser } from '@/lib/recipients'
 
 // Cron nocturno (~8:30pm Bogota): a CADA usuario aprobado le pregunta si
@@ -146,7 +146,7 @@ export async function GET(request: Request) {
 
   let sent = 0
   let failed = 0
-  let firstStatuses: EveningTrackStatus[] = []
+  const push = { sent: 0, failed: 0, removed: 0 }
   const detail: { email: string; tracks: number; sent: boolean }[] = []
 
   for (const user of users) {
@@ -155,7 +155,6 @@ export async function GET(request: Request) {
       detail.push({ email: user.email, tracks: 0, sent: false })
       continue
     }
-    if (firstStatuses.length === 0) firstStatuses = statuses
 
     const success = await sendEmail(user.email, eveningReviewEmail({
       name: user.email.split('@')[0],
@@ -165,15 +164,11 @@ export async function GET(request: Request) {
     if (success) sent++
     else failed++
     detail.push({ email: user.email, tracks: statuses.length, sent: success })
-  }
 
-  // Push nocturno (best effort). Las suscripciones no distinguen usuario:
-  // se usa el estado del primer usuario con programa activo.
-  let push = { sent: 0, failed: 0, removed: 0 }
-  if (firstStatuses.length > 0) {
-    const pending = firstStatuses.filter(s => !s.completed)
+    // Push nocturno (best effort) con el estado del propio usuario
+    const pending = statuses.filter(s => !s.completed)
     const allDone = pending.length === 0
-    push = await sendPushToAll(supabase, {
+    const p = await sendPushToUser(supabase, user.id, {
       title: allDone ? 'Todo completado: cierra el día' : `${pending.length} pendiente${pending.length === 1 ? '' : 's'} de hoy`,
       body: allDone
         ? 'Solo falta el examen nocturno de Séneca. El día se cierra por escrito.'
@@ -181,6 +176,9 @@ export async function GET(request: Request) {
       url: allDone ? '/journal' : '/',
       tag: 'stoic-evening',
     })
+    push.sent += p.sent
+    push.failed += p.failed
+    push.removed += p.removed
   }
 
   return NextResponse.json({ ok: true, date: dateStr, recipients: users.length, sent, failed, detail, push })
