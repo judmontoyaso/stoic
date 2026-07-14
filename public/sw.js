@@ -1,16 +1,19 @@
-const CACHE_NAME = 'stoic-pwa-cache-v2';
+const CACHE_NAME = 'stoic-pwa-cache-v3';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/favicon.ico',
-  '/logo.svg',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/sculpture.png'
 ];
 
-// Instalar SW y almacenar activos estáticos principales
+// Instalar SW y almacenar activos estáticos principales.
+// Cada asset se cachea por separado: con addAll, un solo 404
+// (p. ej. el viejo /favicon.ico inexistente) abortaba la
+// instalación completa y el SW nunca quedaba activo.
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      return Promise.allSettled(ASSETS_TO_CACHE.map((asset) => cache.add(asset)));
     })
   );
   self.skipWaiting();
