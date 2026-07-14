@@ -29,7 +29,18 @@ export default function PushToggle({ collapsed = false }: PushToggleProps) {
     if (!ok) return
     navigator.serviceWorker.ready
       .then(reg => reg.pushManager.getSubscription())
-      .then(sub => setSubscribed(!!sub))
+      .then(sub => {
+        setSubscribed(!!sub)
+        if (!sub) return
+        // Re-sincroniza la suscripción del navegador con el servidor:
+        // repara filas perdidas y la liga al usuario de la sesión actual
+        const json = sub.toJSON()
+        return fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: sub.endpoint, keys: json.keys }),
+        })
+      })
       .catch(() => {})
   }, [])
 
