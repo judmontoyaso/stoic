@@ -3,6 +3,7 @@
 // Entradas del diario estoico (plantillas mañana / noche / semanal / libre).
 
 import { supabase, notifyDataChanged } from './client'
+import { track } from '@/lib/analytics'
 import type { JournalEntry, JournalEntryType } from '@/types'
 
 export async function getJournalEntries(startDate?: string, endDate?: string): Promise<JournalEntry[]> {
@@ -53,6 +54,7 @@ export async function upsertJournalEntry(
     result = data[0]
   }
 
+  track('journal_entry_saved', { entry_type: entryType, date, is_new: !existing })
   notifyDataChanged()
   return result as JournalEntry
 }

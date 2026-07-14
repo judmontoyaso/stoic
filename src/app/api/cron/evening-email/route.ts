@@ -3,19 +3,22 @@ import { createClient } from '@supabase/supabase-js'
 import { eveningReviewEmail, sendEmail, type EveningTrackStatus } from '@/lib/email'
 import { sendPushToUser } from '@/lib/push'
 import { getApprovedUsers, type ApprovedUser } from '@/lib/recipients'
+import { getPrefsMap, localParts, markEmailSent, DEFAULT_EMAIL_PREFS } from '@/lib/prefs-server'
 
-// Cron nocturno (~8:30pm Bogota): a CADA usuario aprobado le pregunta si
-// completó SU día (según su user_tracks y sus day_logs) y trae el examen
-// nocturno de Séneca. El eslabón que más se rompe es el cierre del día.
+// Cron nocturno: a CADA usuario aprobado le pregunta si completó SU día
+// (según su user_tracks y sus day_logs) y trae el examen nocturno de
+// Séneca. El eslabón que más se rompe es el cierre del día.
+//
+// Idempotente por usuario y día local (user_prefs.last_evening_sent):
+// puede dispararse cada hora; envía cuando la hora local del usuario
+// alcanzó su evening_hour y aún no recibió el correo de hoy.
+//
 // GET/POST /api/cron/evening-email?secret=...&to=...&date=YYYY-MM-DD
 // Webhook-compatible: n8n u otro scheduler puede llamarlo por POST con
 // header "Authorization: Bearer <CRON_SECRET>" o query ?secret=
+// ?to= o ?date= fuerzan el envío saltando horario y dedupe (pruebas).
 
 export const maxDuration = 60
-
-function todayInBogota(): string {
-  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })
-}
 
 function dayNumberFor(startDate: string, dateStr: string, durationDays: number): number | null {
   const start = new Date(startDate + 'T00:00:00Z')
@@ -128,7 +131,7 @@ export async function GET(request: Request) {
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey, { db: { schema: 'stoic' } })
-  const dateStr = searchParams.get('date') || todayInBogota()
+  const forceDate = searchParams.get('date')
   const forceTo = searchParams.get('to')
 
   let users: ApprovedUser[] = await getApprovedUsers(supabase)
@@ -144,15 +147,37 @@ export async function GET(request: Request) {
     })
   }
 
+  // ?to= o ?date= son pruebas: saltan horario y dedupe
+  const forced = !!forceTo || !!forceDate
+  const prefsMap = await getPrefsMap(supabase)
+
   let sent = 0
   let failed = 0
+  let skipped = 0
   const push = { sent: 0, failed: 0, removed: 0 }
-  const detail: { email: string; tracks: number; sent: boolean }[] = []
+  const detail: { email: string; tracks: number; sent: boolean; skipped?: string }[] = []
 
   for (const user of users) {
+    const prefs = prefsMap.get(user.id) || { ...DEFAULT_EMAIL_PREFS }
+    const { date: localDate, hour: localHour } = localParts(prefs.timezone)
+
+    if (!forced) {
+      if (localHour < prefs.evening_hour) {
+        skipped++
+        detail.push({ email: user.email, tracks: 0, sent: false, skipped: `aún no es su hora (${localHour} < ${prefs.evening_hour})` })
+        continue
+      }
+      if (prefs.last_evening_sent === localDate) {
+        skipped++
+        detail.push({ email: user.email, tracks: 0, sent: false, skipped: 'ya enviado hoy' })
+        continue
+      }
+    }
+
+    const dateStr = forceDate || localDate
     const statuses = await buildStatusesForUser(supabase, user.id, dateStr)
     if (statuses.length === 0) {
-      detail.push({ email: user.email, tracks: 0, sent: false })
+      detail.push({ email: user.email, tracks: 0, sent: false, skipped: 'sin programa activo' })
       continue
     }
 
@@ -161,8 +186,13 @@ export async function GET(request: Request) {
       statuses,
       appUrl,
     }))
-    if (success) sent++
-    else failed++
+    if (success) {
+      sent++
+      // Los envíos forzados (pruebas) no consumen el correo del día
+      if (!forced) await markEmailSent(supabase, user.id, 'last_evening_sent', localDate, prefs)
+    } else {
+      failed++
+    }
     detail.push({ email: user.email, tracks: statuses.length, sent: success })
 
     // Push nocturno (best effort) con el estado del propio usuario
@@ -181,5 +211,5 @@ export async function GET(request: Request) {
     push.removed += p.removed
   }
 
-  return NextResponse.json({ ok: true, date: dateStr, recipients: users.length, sent, failed, detail, push })
+  return NextResponse.json({ ok: true, recipients: users.length, sent, failed, skipped, detail, push })
 }

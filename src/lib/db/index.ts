@@ -16,16 +16,19 @@ import * as tracks from './tracks'
 import * as logs from './logs'
 import * as journal from './journal'
 import * as resources from './resources'
+import * as prefs from './prefs'
 
 export const StoicDB = {
   ...tracks,
   ...logs,
   ...journal,
   ...resources,
+  ...prefs,
 }
 
 export * from './tracks'
 export * from './logs'
 export * from './journal'
 export * from './resources'
+export * from './prefs'
 export { notifyDataChanged } from './client'

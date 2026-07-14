@@ -54,6 +54,7 @@ export default function Sidebar() {
     { label: 'Recursos', path: '/resources', icon: '/icons/history-book.png' },
     { label: 'Diario', path: '/journal', icon: '/icons/papyrus.png' },
     { label: 'Evaluación', path: '/evaluation', icon: '/icons/harp.png' },
+    { label: 'Preferencias', path: '/settings', icon: '/icons/amphora.png' },
   ]
 
   const toggleCollapsed = () => setCollapsed(!collapsed)

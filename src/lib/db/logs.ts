@@ -4,6 +4,7 @@
 // semanales e hitos mensuales.
 
 import { supabase, notifyDataChanged } from './client'
+import { track } from '@/lib/analytics'
 import type { DayLog, WeekLog, MonthLog } from '@/types'
 
 // --- DAY LOGS (fechas reales) ---
@@ -46,6 +47,9 @@ export async function toggleDayLog(trackId: string, date: string, dayNumber: num
     result = data[0]
   }
 
+  if ((result as DayLog).completed) {
+    track('day_completed', { track_id: trackId, date, day_number: dayNumber })
+  }
   notifyDataChanged()
   return result as DayLog
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Bell, BellOff } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { track } from '@/lib/analytics'
 
 // navigator.serviceWorker.ready no resuelve nunca si el SW no llegó a
 // registrarse: con timeout el botón falla con mensaje en vez de colgarse
@@ -71,6 +72,7 @@ export default function PushToggle({ collapsed = false }: PushToggleProps) {
         })
         await existing.unsubscribe()
         setSubscribed(false)
+        track('push_unsubscribed')
         toast('Notificaciones desactivadas', { icon: '🔕' })
         return
       }
@@ -105,6 +107,7 @@ export default function PushToggle({ collapsed = false }: PushToggleProps) {
       }
 
       setSubscribed(true)
+      track('push_subscribed')
       toast.success('Notificaciones activadas: recibirás el recordatorio matutino y el cierre del día')
     } catch (err) {
       console.error('Error con las notificaciones push:', err)

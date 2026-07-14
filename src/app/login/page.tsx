@@ -91,6 +91,13 @@ function LoginForm() {
           La primera vez se te pedirá un código de acceso para aprobar tu correo.
         </p>
 
+        <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+          Al continuar aceptas los{' '}
+          <a href="/terms" className="text-[var(--primary-gold)] hover:underline">Términos de Servicio</a>
+          {' '}y la{' '}
+          <a href="/privacy" className="text-[var(--primary-gold)] hover:underline">Política de Privacidad</a>.
+        </p>
+
         {/* Memento Mori Footer */}
         <div className="text-center pt-2 border-t border-[var(--border-color)]">
           <p className="text-[9px] text-slate-550 dark:text-slate-450 uppercase tracking-widest font-black">

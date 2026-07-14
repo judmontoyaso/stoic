@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { InputText } from 'primereact/inputtext'
 import toast from 'react-hot-toast'
 import { createClient } from '@/utils/supabase/client'
+import { track } from '@/lib/analytics'
 
 // Primera entrada con Google: pide el código de acceso una única vez.
 // Aprobado el correo, los siguientes logins pasan directo.
@@ -27,8 +28,9 @@ export default function VerifyPage() {
       })
       const data = await res.json()
       if (res.ok && data.ok) {
+        track('code_approved')
         toast.success('Correo aprobado. Bienvenido.')
-        window.location.href = '/'
+        window.location.href = '/welcome'
       } else {
         toast.error(data.error || 'Código incorrecto')
       }

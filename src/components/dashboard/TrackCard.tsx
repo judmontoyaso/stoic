@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Flame, Target, CheckCircle2, Zap, Play, BookOpen, Award, ChevronDown, ChevronUp } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
+import { track as trackEvent } from '@/lib/analytics'
 import DailyReading from '@/components/DailyReading'
 import { Card, ModuleBadge } from '@/components/ui'
 import {
@@ -37,6 +38,7 @@ export default function TrackCard({ state, today }: TrackCardProps) {
   const handleStart = async () => {
     try {
       await StoicDB.setTrackStartDate(track.id, startDateDraft)
+      trackEvent('track_started', { track_id: track.id, track_name: track.name, start_date: startDateDraft })
       toast.success(`${track.name}: programa iniciado el ${startDateDraft}`)
     } catch (err) {
       console.error(err)

@@ -6,14 +6,20 @@ import { generateDailyReflection } from '@/lib/ai'
 import { getOrCreateDailyReading } from '@/lib/readings'
 import { sendPushToUser } from '@/lib/push'
 import { getApprovedUsers, type ApprovedUser } from '@/lib/recipients'
+import { getPrefsMap, localParts, markEmailSent, DEFAULT_EMAIL_PREFS } from '@/lib/prefs-server'
 
 // Endpoint de Cron diario: envía a CADA usuario aprobado el ejercicio del
 // día según SU fecha de inicio (user_tracks). La lectura queda cacheada
 // por (track, día), compartida entre usuarios que vayan en el mismo día.
+//
+// Idempotente por usuario y día local (user_prefs.last_morning_sent):
+// puede dispararse cada hora; envía cuando la hora local del usuario
+// alcanzó su morning_hour y aún no recibió el correo de hoy.
+//
 // GET/POST /api/cron/daily-email?secret=...&to=...&date=YYYY-MM-DD
 // Webhook-compatible: n8n u otro scheduler puede llamarlo por POST con
 // header "Authorization: Bearer <CRON_SECRET>" o query ?secret=
-// ?to= fuerza el destinatario: usa el progreso de ese usuario si existe.
+// ?to= o ?date= fuerzan el envío saltando horario y dedupe (pruebas).
 
 export const maxDuration = 300
 
@@ -22,11 +28,6 @@ const MODULE_LABELS: Record<string, string> = {
   action: 'Acción',
   will: 'Voluntad',
   evaluation: 'Evaluación',
-}
-
-/** Fecha YYYY-MM-DD en la zona horaria del usuario (Colombia) */
-function todayInBogota(): string {
-  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })
 }
 
 /** Día del programa (1-90) para una fecha real, o null si está fuera */
@@ -144,8 +145,6 @@ export async function GET(request: Request) {
     db: { schema: 'stoic' },
   })
 
-  const dateStr = forceDate || todayInBogota()
-
   // Destinatarios: usuarios aprobados; ?to= fuerza uno solo
   let users: ApprovedUser[] = await getApprovedUsers(supabase)
   if (forceTo) {
@@ -160,15 +159,37 @@ export async function GET(request: Request) {
     })
   }
 
+  // ?to= o ?date= son pruebas: saltan horario y dedupe
+  const forced = !!forceTo || !!forceDate
+  const prefsMap = await getPrefsMap(supabase)
+
   let sent = 0
   let failed = 0
+  let skipped = 0
   const push = { sent: 0, failed: 0, removed: 0 }
-  const detail: { email: string; tracks: number; sent: boolean }[] = []
+  const detail: { email: string; tracks: number; sent: boolean; skipped?: string }[] = []
 
   for (const user of users) {
+    const prefs = prefsMap.get(user.id) || { ...DEFAULT_EMAIL_PREFS }
+    const { date: localDate, hour: localHour } = localParts(prefs.timezone)
+
+    if (!forced) {
+      if (localHour < prefs.morning_hour) {
+        skipped++
+        detail.push({ email: user.email, tracks: 0, sent: false, skipped: `aún no es su hora (${localHour} < ${prefs.morning_hour})` })
+        continue
+      }
+      if (prefs.last_morning_sent === localDate) {
+        skipped++
+        detail.push({ email: user.email, tracks: 0, sent: false, skipped: 'ya enviado hoy' })
+        continue
+      }
+    }
+
+    const dateStr = forceDate || localDate
     const blocks = await buildBlocksForUser(supabase, user.id, dateStr)
     if (blocks.length === 0) {
-      detail.push({ email: user.email, tracks: 0, sent: false })
+      detail.push({ email: user.email, tracks: 0, sent: false, skipped: 'sin programa activo' })
       continue
     }
 
@@ -193,8 +214,13 @@ export async function GET(request: Request) {
       appUrl,
       aiReflection,
     }))
-    if (success) sent++
-    else failed++
+    if (success) {
+      sent++
+      // Los envíos forzados (pruebas) no consumen el correo del día
+      if (!forced) await markEmailSent(supabase, user.id, 'last_morning_sent', localDate, prefs)
+    } else {
+      failed++
+    }
     detail.push({ email: user.email, tracks: blocks.length, sent: success })
 
     // Push matutino (best effort) con el contenido del propio usuario
@@ -211,5 +237,5 @@ export async function GET(request: Request) {
     push.removed += p.removed
   }
 
-  return NextResponse.json({ ok: true, date: dateStr, recipients: users.length, sent, failed, detail, push })
+  return NextResponse.json({ ok: true, recipients: users.length, sent, failed, skipped, detail, push })
 }

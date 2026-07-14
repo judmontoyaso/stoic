@@ -11,6 +11,8 @@ function isPublicPath(pathname: string): boolean {
     pathname.startsWith('/api/auth/verify-code') ||
     pathname.startsWith('/icons/') ||
     pathname === '/login' ||
+    pathname === '/terms' ||
+    pathname === '/privacy' ||
     pathname === '/favicon.ico' ||
     pathname === '/favicon.png' ||
     pathname === '/sculpture.png' ||
