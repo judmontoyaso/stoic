@@ -7,7 +7,6 @@ function isPublicPath(pathname: string): boolean {
   return (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/cron') ||      // manejan su propio token
-    pathname.startsWith('/api/auth/login') ||
     pathname.startsWith('/auth/') ||         // callback OAuth + verificación de código
     pathname.startsWith('/api/auth/verify-code') ||
     pathname.startsWith('/icons/') ||
@@ -33,14 +32,8 @@ export async function proxy(request: NextRequest) {
     return response
   }
 
-  // 1. Sesión legacy por contraseña (fallback mientras se migra a Google)
-  const legacySession = request.cookies.get('stoic_session')?.value
-  if (legacySession === 'authenticated') {
-    return response
-  }
-
-  // 2. Sesión Supabase (Google OAuth). getUser() valida el token y
-  //    refresca las cookies si es necesario.
+  // Sesión Supabase (Google OAuth). getUser() valida el token y
+  // refresca las cookies si es necesario.
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,

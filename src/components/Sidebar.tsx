@@ -39,11 +39,9 @@ export default function Sidebar() {
   }
 
   const handleLogout = async () => {
-    // Cierra ambas sesiones: la legacy por contraseña y la de Supabase (Google)
-    document.cookie = 'stoic_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC'
     try {
       await createClient().auth.signOut()
-    } catch { /* sin sesión Supabase: ignorar */ }
+    } catch { /* sin sesión: ignorar */ }
     window.location.href = '/login'
   }
 

@@ -2,8 +2,6 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { InputText } from 'primereact/inputtext'
-import { Button } from 'primereact/button'
 import toast from 'react-hot-toast'
 import { createClient } from '@/utils/supabase/client'
 
@@ -22,8 +20,6 @@ export default function LoginPage() {
 
 function LoginForm() {
   const searchParams = useSearchParams()
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
 
   useEffect(() => {
@@ -53,37 +49,6 @@ function LoginForm() {
     }
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!password.trim()) {
-      toast.error('Por favor ingresa la contraseña')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      })
-
-      const data = await res.json()
-      if (res.ok && data.success) {
-        toast.success('Sesión iniciada correctamente')
-        // Recargar a la raíz para forzar que el proxy verifique la sesión en cookies
-        window.location.href = '/'
-      } else {
-        toast.error(data.error || 'Contraseña incorrecta')
-      }
-    } catch (err) {
-      console.error(err)
-      toast.error('Error al intentar iniciar sesión')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[var(--background)]">
       <div className="w-full max-w-sm p-6 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md shadow-sm space-y-6">
@@ -107,7 +72,7 @@ function LoginForm() {
         <button
           onClick={handleGoogleLogin}
           disabled={googleLoading}
-          className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-[var(--border-color)] bg-[var(--background)] text-sm font-bold text-[var(--foreground)] hover:border-[var(--primary-gold)]/50 transition-all disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-3 py-3 rounded-lg border border-[var(--border-color)] bg-[var(--background)] text-sm font-bold text-[var(--foreground)] hover:border-[var(--primary-gold)]/50 transition-all disabled:opacity-50"
         >
           {googleLoading ? (
             <i className="pi pi-spin pi-spinner" />
@@ -122,47 +87,9 @@ function LoginForm() {
           Continuar con Google
         </button>
 
-        {/* Separador */}
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-[var(--border-color)]" />
-          <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">o con contraseña</span>
-          <div className="flex-1 h-px bg-[var(--border-color)]" />
-        </div>
-
-        {/* Login Form */}
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="password" className="text-xs font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider">
-              Contraseña de Acceso
-            </label>
-            <div className="p-input-icon-left w-full">
-              <i className="pi pi-lock text-slate-500 mr-2" />
-              <InputText
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full text-sm"
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          <Button
-            type="submit"
-            label={loading ? 'Iniciando...' : 'Entrar al Espacio'}
-            icon={loading ? 'pi pi-spin pi-spinner' : 'pi pi-sign-in'}
-            className="w-full p-button-sm font-bold mt-2"
-            disabled={loading}
-            style={{
-              backgroundColor: 'var(--primary-gold)',
-              borderColor: 'var(--primary-gold)',
-              color: 'var(--background)',
-              borderRadius: '4px'
-            }}
-          />
-        </form>
+        <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+          La primera vez se te pedirá un código de acceso para aprobar tu correo.
+        </p>
 
         {/* Memento Mori Footer */}
         <div className="text-center pt-2 border-t border-[var(--border-color)]">
