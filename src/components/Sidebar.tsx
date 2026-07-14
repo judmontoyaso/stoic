@@ -13,6 +13,7 @@ import {
   Moon
 } from 'lucide-react'
 import PushToggle from '@/components/PushToggle'
+import { createClient } from '@/utils/supabase/client'
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -37,8 +38,12 @@ export default function Sidebar() {
     document.documentElement.classList.toggle('dark', nextTheme === 'dark')
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Cierra ambas sesiones: la legacy por contraseña y la de Supabase (Google)
     document.cookie = 'stoic_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC'
+    try {
+      await createClient().auth.signOut()
+    } catch { /* sin sesión Supabase: ignorar */ }
     window.location.href = '/login'
   }
 

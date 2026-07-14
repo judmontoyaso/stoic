@@ -1,47 +1,69 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 
-export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  const requestHeaders = new Headers(request.headers)
-  requestHeaders.set('x-pathname', pathname)
-
-  // Excluir de la redirección de autenticación a:
-  // - Archivos estáticos de Next.js (_next)
-  // - Peticiones del cron (api/cron) que manejan su propio token
-  // - Ruta de API de login (api/auth/login)
-  // - Iconos y logotipo principal
-  // - Ruta de la página de Login
-  if (
+// Rutas que no requieren sesión
+function isPublicPath(pathname: string): boolean {
+  return (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api/cron') ||
+    pathname.startsWith('/api/cron') ||      // manejan su propio token
     pathname.startsWith('/api/auth/login') ||
+    pathname.startsWith('/auth/callback') || // intercambio de código OAuth
     pathname.startsWith('/icons/') ||
     pathname === '/login' ||
     pathname === '/favicon.ico' ||
     pathname === '/favicon.png' ||
     pathname === '/sculpture.png' ||
-    pathname === '/manifest.json'
-  ) {
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      }
-    })
-  }
+    pathname === '/manifest.json' ||
+    pathname === '/sw.js'
+  )
+}
 
-  const session = request.cookies.get('stoic_session')?.value
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-pathname', pathname)
 
-  if (session !== 'authenticated') {
-    const loginUrl = new URL('/login', request.url)
-    return NextResponse.redirect(loginUrl)
-  }
-
-  return NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    }
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
   })
+
+  if (isPublicPath(pathname)) {
+    return response
+  }
+
+  // 1. Sesión legacy por contraseña (fallback mientras se migra a Google)
+  const legacySession = request.cookies.get('stoic_session')?.value
+  if (legacySession === 'authenticated') {
+    return response
+  }
+
+  // 2. Sesión Supabase (Google OAuth). getUser() valida el token y
+  //    refresca las cookies si es necesario.
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    return response
+  }
+
+  const loginUrl = new URL('/login', request.url)
+  return NextResponse.redirect(loginUrl)
 }
 
 // Configuración de las rutas a interceptar

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { eveningReviewEmail, sendEmail, type EveningTrackStatus } from '@/lib/email'
 import { sendPushToAll } from '@/lib/push'
+import { getRecipients } from '@/lib/recipients'
 
 // Cron nocturno (~8:30pm Bogota): pregunta si completaste el día y trae el
 // examen nocturno de Séneca. El eslabón que más se rompe es el cierre del día.
@@ -111,18 +112,23 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, sent: 0, message: 'Ningún track activo tiene día de programa en esta fecha' })
   }
 
-  const to = searchParams.get('to') || process.env.NOTIFICATION_EMAIL
-  if (!to) {
-    return NextResponse.json({ error: 'Falta NOTIFICATION_EMAIL' }, { status: 500 })
+  const recipients = await getRecipients(supabase, searchParams.get('to'))
+  if (recipients.length === 0) {
+    return NextResponse.json({ error: 'Sin destinatarios: no hay usuarios registrados ni NOTIFICATION_EMAIL' }, { status: 500 })
   }
 
-  const content = eveningReviewEmail({
-    name: to.split('@')[0],
-    statuses,
-    appUrl,
-  })
-
-  const success = await sendEmail(to, content)
+  let sent = 0
+  let failed = 0
+  for (const to of recipients) {
+    const content = eveningReviewEmail({
+      name: to.split('@')[0],
+      statuses,
+      appUrl,
+    })
+    const success = await sendEmail(to, content)
+    if (success) sent++
+    else failed++
+  }
 
   // Push nocturno (best effort)
   const pending = statuses.filter(s => !s.completed)
@@ -140,8 +146,9 @@ export async function GET(request: Request) {
     ok: true,
     date: dateStr,
     statuses: statuses.map(s => ({ track: s.trackName, day: s.dayNumber, completed: s.completed, streak: s.streak })),
-    sent: success ? 1 : 0,
-    failed: success ? 0 : 1,
+    recipients: recipients.length,
+    sent,
+    failed,
     push,
   })
 }

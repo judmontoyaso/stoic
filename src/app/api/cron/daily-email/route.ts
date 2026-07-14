@@ -5,6 +5,7 @@ import { dailyProgramEmail, sendEmail, type TrackEmailBlock } from '@/lib/email'
 import { generateDailyReflection } from '@/lib/ai'
 import { getOrCreateDailyReading } from '@/lib/readings'
 import { sendPushToAll } from '@/lib/push'
+import { getRecipients } from '@/lib/recipients'
 
 // Endpoint de Cron diario: envía el ejercicio del día de cada track activo
 // (incluye la lectura completa y la deja pre-generada en caché para la app)
@@ -145,22 +146,26 @@ export async function GET(request: Request) {
       : null,
   })
 
-  // 5. Enviar
-  const to = forceTo || process.env.NOTIFICATION_EMAIL
-  if (!to) {
-    return NextResponse.json({ error: 'Falta NOTIFICATION_EMAIL' }, { status: 500 })
+  // 5. Enviar a cada usuario registrado (Google) o NOTIFICATION_EMAIL de fallback
+  const recipients = await getRecipients(supabase, forceTo)
+  if (recipients.length === 0) {
+    return NextResponse.json({ error: 'Sin destinatarios: no hay usuarios registrados ni NOTIFICATION_EMAIL' }, { status: 500 })
   }
-  const name = to.split('@')[0]
 
-  const emailContent = dailyProgramEmail({
-    name,
-    quote,
-    blocks,
-    appUrl,
-    aiReflection,
-  })
-
-  const success = await sendEmail(to, emailContent)
+  let sent = 0
+  let failed = 0
+  for (const to of recipients) {
+    const emailContent = dailyProgramEmail({
+      name: to.split('@')[0],
+      quote,
+      blocks,
+      appUrl,
+      aiReflection,
+    })
+    const success = await sendEmail(to, emailContent)
+    if (success) sent++
+    else failed++
+  }
 
   // Push matutino (best effort): el ejercicio del día en la pantalla de bloqueo
   const push = await sendPushToAll(supabase, {
@@ -176,8 +181,9 @@ export async function GET(request: Request) {
     ok: true,
     date: dateStr,
     tracks: blocks.map(b => ({ track: b.trackName, day: b.dayNumber, title: b.title })),
-    sent: success ? 1 : 0,
-    failed: success ? 0 : 1,
+    recipients: recipients.length,
+    sent,
+    failed,
     push,
   })
 }
