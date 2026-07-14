@@ -1,12 +1,17 @@
 {
-  "name": "StoiComunicacion",
+  "id": "/",
+  "name": "StoiComunicación",
   "short_name": "StoiCom",
-  "description": "Mejora tus habilidades de comunicacion y habitos con filosofia estoica",
+  "description": "Programa de 90 días: comunicación y práctica interna con filosofía estoica",
+  "lang": "es",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#0a0a0f",
   "theme_color": "#c9a84c",
   "orientation": "portrait",
+  "categories": ["health", "lifestyle", "education", "productivity"],
   "icons": [
     {
       "src": "/favicon.png",
@@ -16,12 +21,40 @@
     {
       "src": "/icon-192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
       "src": "/icon-512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ejercicio de hoy",
+      "short_name": "Hoy",
+      "url": "/",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Diario estoico",
+      "short_name": "Diario",
+      "url": "/journal",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Calendario",
+      "short_name": "Calendario",
+      "url": "/calendar",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

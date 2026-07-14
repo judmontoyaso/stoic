@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import Sidebar from "@/components/Sidebar"
+import MobileTabBar from "@/components/MobileTabBar"
 import RegisterSW from "@/components/RegisterSW"
 import { Toaster } from "react-hot-toast"
 
@@ -81,9 +82,12 @@ export default async function RootLayout({
           }}
         />
         {!isLoginPage && <Sidebar />}
-        <main className={`flex-1 overflow-y-auto h-screen md:h-auto ${isLoginPage ? '' : 'pb-16 md:pb-0'}`}>
+        <main
+          className={`flex-1 overflow-y-auto h-screen md:h-auto ${isLoginPage ? '' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0'}`}
+        >
           {children}
         </main>
+        {!isLoginPage && <MobileTabBar />}
       </body>
     </html>
   )

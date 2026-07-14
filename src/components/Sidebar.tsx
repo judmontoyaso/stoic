@@ -105,7 +105,10 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[var(--sidebar-bg)] border-b border-[var(--border-color)] sticky top-0 z-50">
+      <div
+        className="md:hidden flex items-center justify-between px-4 py-3 bg-[var(--sidebar-bg)] border-b border-[var(--border-color)] sticky top-0 z-50"
+        style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top))' }}
+      >
         <Link href="/" className="flex items-center gap-2">
           <img src="/sculpture.png" className="w-8 h-8 rounded-full object-cover border border-[#c9a84c]/30" alt="StoiCom Logo" />
           <span className="font-bold text-slate-100 tracking-wider">StoiCom</span>
