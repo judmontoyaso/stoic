@@ -99,13 +99,18 @@ export default function PushToggle({ collapsed = false }: PushToggleProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ endpoint: sub.endpoint, keys: json.keys }),
       })
-      if (!res.ok) throw new Error('No se pudo registrar')
+      if (!res.ok) {
+        const body = await res.text().catch(() => '')
+        throw new Error(`Registro falló (${res.status}) ${body.slice(0, 120)}`)
+      }
 
       setSubscribed(true)
       toast.success('Notificaciones activadas: recibirás el recordatorio matutino y el cierre del día')
     } catch (err) {
       console.error('Error con las notificaciones push:', err)
-      toast.error('No se pudieron activar las notificaciones')
+      // Mostrar la causa: sin ella es imposible diagnosticar en el teléfono
+      const msg = err instanceof Error ? `${err.name !== 'Error' ? err.name + ': ' : ''}${err.message}` : String(err)
+      toast.error(`No se pudieron activar las notificaciones. ${msg}`, { duration: 8000 })
     } finally {
       setBusy(false)
     }
