@@ -2,10 +2,11 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { eveningReviewEmail, sendEmail, type EveningTrackStatus } from '@/lib/email'
 import { sendPushToAll } from '@/lib/push'
-import { getRecipients } from '@/lib/recipients'
+import { getApprovedUsers, type ApprovedUser } from '@/lib/recipients'
 
-// Cron nocturno (~8:30pm Bogota): pregunta si completaste el día y trae el
-// examen nocturno de Séneca. El eslabón que más se rompe es el cierre del día.
+// Cron nocturno (~8:30pm Bogota): a CADA usuario aprobado le pregunta si
+// completó SU día (según su user_tracks y sus day_logs) y trae el examen
+// nocturno de Séneca. El eslabón que más se rompe es el cierre del día.
 // GET/POST /api/cron/evening-email?secret=...&to=...&date=YYYY-MM-DD
 // Webhook-compatible: n8n u otro scheduler puede llamarlo por POST con
 // header "Authorization: Bearer <CRON_SECRET>" o query ?secret=
@@ -40,6 +41,75 @@ function isAuthorized(request: Request, secret: string | null): boolean {
   return auth === `Bearer ${cronSecret}`
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = ReturnType<typeof createClient<any, any, any>>
+
+interface UserTrackRow {
+  track_id: string
+  start_date: string | null
+  tracks: { id: string; name: string; duration_days: number | null } | null
+}
+
+/** Estado del día de un usuario en cada uno de sus tracks activos */
+async function buildStatusesForUser(
+  supabase: AnySupabaseClient,
+  userId: string,
+  dateStr: string
+): Promise<EveningTrackStatus[]> {
+  const { data: userTracks, error } = await supabase
+    .from('user_tracks')
+    .select('track_id, start_date, tracks(id, name, duration_days)')
+    .eq('user_id', userId)
+    .not('start_date', 'is', null)
+
+  if (error) {
+    console.error('Error leyendo user_tracks:', error.message)
+    return []
+  }
+
+  const statuses: EveningTrackStatus[] = []
+  for (const ut of (userTracks || []) as unknown as UserTrackRow[]) {
+    if (!ut.start_date || !ut.tracks) continue
+    const dayNumber = dayNumberFor(ut.start_date, dateStr, ut.tracks.duration_days || 90)
+    if (!dayNumber) continue
+
+    const [{ data: days }, { data: logs }] = await Promise.all([
+      supabase
+        .from('program_days')
+        .select('title')
+        .eq('track_id', ut.track_id)
+        .eq('day_number', dayNumber)
+        .limit(1),
+      supabase
+        .from('day_logs')
+        .select('date, completed')
+        .eq('track_id', ut.track_id)
+        .eq('user_id', userId)
+        .eq('completed', true),
+    ])
+
+    const completedDates = new Set((logs || []).map(l => l.date))
+    const completedToday = completedDates.has(dateStr)
+
+    // Racha: días consecutivos completados terminando hoy (o ayer si hoy pende)
+    let cursor = completedToday ? dateStr : addDays(dateStr, -1)
+    let streak = 0
+    while (completedDates.has(cursor)) {
+      streak++
+      cursor = addDays(cursor, -1)
+    }
+
+    statuses.push({
+      trackName: ut.tracks.name,
+      dayNumber,
+      title: days?.[0]?.title || `Día ${dayNumber}`,
+      completed: completedToday,
+      streak,
+    })
+  }
+  return statuses
+}
+
 export async function POST(request: Request) {
   return GET(request)
 }
@@ -59,96 +129,59 @@ export async function GET(request: Request) {
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey, { db: { schema: 'stoic' } })
   const dateStr = searchParams.get('date') || todayInBogota()
+  const forceTo = searchParams.get('to')
 
-  const { data: tracks, error: tracksError } = await supabase
-    .from('tracks')
-    .select('*')
-    .not('start_date', 'is', null)
-
-  if (tracksError) {
-    return NextResponse.json({ error: tracksError.message }, { status: 500 })
+  let users: ApprovedUser[] = await getApprovedUsers(supabase)
+  if (forceTo) {
+    const match = users.find(u => u.email === forceTo.toLowerCase())
+    users = match ? [match] : users.slice(0, 1).map(u => ({ ...u, email: forceTo }))
   }
-
-  const statuses: EveningTrackStatus[] = []
-  for (const track of tracks || []) {
-    const dayNumber = dayNumberFor(track.start_date, dateStr, track.duration_days || 90)
-    if (!dayNumber) continue
-
-    const [{ data: days }, { data: logs }] = await Promise.all([
-      supabase
-        .from('program_days')
-        .select('title')
-        .eq('track_id', track.id)
-        .eq('day_number', dayNumber)
-        .limit(1),
-      supabase
-        .from('day_logs')
-        .select('date, completed')
-        .eq('track_id', track.id)
-        .eq('completed', true),
-    ])
-
-    const completedDates = new Set((logs || []).map(l => l.date))
-    const completedToday = completedDates.has(dateStr)
-
-    // Racha: días consecutivos completados terminando hoy (o ayer si hoy pende)
-    let cursor = completedToday ? dateStr : addDays(dateStr, -1)
-    let streak = 0
-    while (completedDates.has(cursor)) {
-      streak++
-      cursor = addDays(cursor, -1)
-    }
-
-    statuses.push({
-      trackName: track.name,
-      dayNumber,
-      title: days?.[0]?.title || `Día ${dayNumber}`,
-      completed: completedToday,
-      streak,
+  if (users.length === 0) {
+    return NextResponse.json({
+      ok: true,
+      sent: 0,
+      message: 'Sin usuarios aprobados: inicia sesión con Google y el código de acceso',
     })
-  }
-
-  if (statuses.length === 0) {
-    return NextResponse.json({ ok: true, sent: 0, message: 'Ningún track activo tiene día de programa en esta fecha' })
-  }
-
-  const recipients = await getRecipients(supabase, searchParams.get('to'))
-  if (recipients.length === 0) {
-    return NextResponse.json({ error: 'Sin destinatarios: no hay usuarios registrados ni NOTIFICATION_EMAIL' }, { status: 500 })
   }
 
   let sent = 0
   let failed = 0
-  for (const to of recipients) {
-    const content = eveningReviewEmail({
-      name: to.split('@')[0],
+  let firstStatuses: EveningTrackStatus[] = []
+  const detail: { email: string; tracks: number; sent: boolean }[] = []
+
+  for (const user of users) {
+    const statuses = await buildStatusesForUser(supabase, user.id, dateStr)
+    if (statuses.length === 0) {
+      detail.push({ email: user.email, tracks: 0, sent: false })
+      continue
+    }
+    if (firstStatuses.length === 0) firstStatuses = statuses
+
+    const success = await sendEmail(user.email, eveningReviewEmail({
+      name: user.email.split('@')[0],
       statuses,
       appUrl,
-    })
-    const success = await sendEmail(to, content)
+    }))
     if (success) sent++
     else failed++
+    detail.push({ email: user.email, tracks: statuses.length, sent: success })
   }
 
-  // Push nocturno (best effort)
-  const pending = statuses.filter(s => !s.completed)
-  const allDone = pending.length === 0
-  const push = await sendPushToAll(supabase, {
-    title: allDone ? 'Todo completado: cierra el día' : `${pending.length} pendiente${pending.length === 1 ? '' : 's'} de hoy`,
-    body: allDone
-      ? 'Solo falta el examen nocturno de Séneca. El día se cierra por escrito.'
-      : pending.map(s => `${s.trackName}: ${s.title}`).join(' · '),
-    url: allDone ? '/journal' : '/',
-    tag: 'stoic-evening',
-  })
+  // Push nocturno (best effort). Las suscripciones no distinguen usuario:
+  // se usa el estado del primer usuario con programa activo.
+  let push = { sent: 0, failed: 0, removed: 0 }
+  if (firstStatuses.length > 0) {
+    const pending = firstStatuses.filter(s => !s.completed)
+    const allDone = pending.length === 0
+    push = await sendPushToAll(supabase, {
+      title: allDone ? 'Todo completado: cierra el día' : `${pending.length} pendiente${pending.length === 1 ? '' : 's'} de hoy`,
+      body: allDone
+        ? 'Solo falta el examen nocturno de Séneca. El día se cierra por escrito.'
+        : pending.map(s => `${s.trackName}: ${s.title}`).join(' · '),
+      url: allDone ? '/journal' : '/',
+      tag: 'stoic-evening',
+    })
+  }
 
-  return NextResponse.json({
-    ok: true,
-    date: dateStr,
-    statuses: statuses.map(s => ({ track: s.trackName, day: s.dayNumber, completed: s.completed, streak: s.streak })),
-    recipients: recipients.length,
-    sent,
-    failed,
-    push,
-  })
+  return NextResponse.json({ ok: true, date: dateStr, recipients: users.length, sent, failed, detail, push })
 }
