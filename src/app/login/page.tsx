@@ -8,7 +8,6 @@ import toast from 'react-hot-toast'
 import { createClient } from '@/utils/supabase/client'
 
 const OAUTH_ERRORS: Record<string, string> = {
-  no_autorizado: 'Esa cuenta de Google no está autorizada para entrar.',
   oauth: 'Error al iniciar sesión con Google. Intenta de nuevo.',
   sin_codigo: 'Google no devolvió el código de sesión. Intenta de nuevo.',
 }

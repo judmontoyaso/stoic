@@ -8,7 +8,8 @@ function isPublicPath(pathname: string): boolean {
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/cron') ||      // manejan su propio token
     pathname.startsWith('/api/auth/login') ||
-    pathname.startsWith('/auth/callback') || // intercambio de código OAuth
+    pathname.startsWith('/auth/') ||         // callback OAuth + verificación de código
+    pathname.startsWith('/api/auth/verify-code') ||
     pathname.startsWith('/icons/') ||
     pathname === '/login' ||
     pathname === '/favicon.ico' ||
@@ -59,6 +60,10 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
   if (user) {
+    // Logueado con Google pero sin aprobar: debe presentar el código una vez
+    if (user.app_metadata?.stoicom_approved !== true) {
+      return NextResponse.redirect(new URL('/auth/verify', request.url))
+    }
     return response
   }
 

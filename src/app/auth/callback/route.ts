@@ -3,15 +3,8 @@ import { createServerClient } from '@supabase/ssr'
 import type { NextRequest } from 'next/server'
 
 // Callback de OAuth (Google via Supabase): intercambia el código por la
-// sesión y aplica la lista de correos permitidos. Sin ALLOWED_EMAILS en
-// producción se deniega todo login por Google: la app es personal.
-
-function allowedEmails(): string[] {
-  return (process.env.ALLOWED_EMAILS || '')
-    .split(',')
-    .map(e => e.trim().toLowerCase())
-    .filter(Boolean)
-}
+// sesión. Si el correo aún no está aprobado (app_metadata.stoicom_approved),
+// se envía a /auth/verify donde debe presentar el código de acceso una vez.
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -45,15 +38,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=oauth`)
   }
 
-  const allowed = allowedEmails()
-  const email = data.user.email?.toLowerCase() || ''
-  const isAllowed = allowed.length > 0
-    ? allowed.includes(email)
-    : process.env.NODE_ENV !== 'production'
-
-  if (!isAllowed) {
-    await supabase.auth.signOut()
-    return NextResponse.redirect(`${origin}/login?error=no_autorizado`)
+  if (data.user.app_metadata?.stoicom_approved !== true) {
+    // Sesión iniciada pero sin aprobar: pedir el código de acceso.
+    // Se sobreescribe solo el destino para conservar las cookies de sesión.
+    response.headers.set('location', `${origin}/auth/verify`)
   }
 
   return response
