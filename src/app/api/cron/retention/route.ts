@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { sendEmail, weeklySummaryEmail, rescueEmail, type WeeklyTrackSummary } from '@/lib/email'
+import { sendEmail, weeklySummaryEmail, rescueEmail, welcomeEmail, type WeeklyTrackSummary } from '@/lib/email'
 import { sendPushToUser } from '@/lib/push'
 import { getQuoteForDay } from '@/lib/quotes'
 import { getApprovedUsers, type ApprovedUser } from '@/lib/recipients'
@@ -13,7 +13,9 @@ import { getPrefsMap, localParts, markEmailSent, DEFAULT_EMAIL_PREFS } from '@/l
 //   - Cita del mediodía: push (sin correo) con la cita del día del
 //     programa del usuario, referenciada con su autor. Solo llega a
 //     quien activó la campana de notificaciones.
-// GET/POST /api/cron/retention?secret=...
+// GET/POST /api/cron/retention?secret=...&to=correo
+// ?to= es modo prueba: solo ese usuario, salta horarios y dedupe,
+// no marca nada, y añade el correo de bienvenida para previsualizar.
 // Requiere supabase_v6_retention.sql; sin él, el dedupe de estos
 // envíos no persiste y el endpoint no envía nada (fail-safe).
 
@@ -118,19 +120,34 @@ export async function GET(request: Request) {
     })
   }
 
-  const users: ApprovedUser[] = await getApprovedUsers(supabase)
+  const forceTo = searchParams.get('to')
+  const forced = !!forceTo
+
+  let users: ApprovedUser[] = await getApprovedUsers(supabase)
+  if (forceTo) {
+    users = users.filter(u => u.email === forceTo.toLowerCase())
+    if (users.length === 0) {
+      return NextResponse.json({ ok: false, message: `No hay usuario aprobado con correo ${forceTo}` })
+    }
+  }
   const prefsMap = await getPrefsMap(supabase)
 
   let weeklySent = 0
   let rescueSent = 0
   let quotePushSent = 0
-  const detail: { email: string; weekly?: string; rescue?: string; quote?: string }[] = []
+  const detail: { email: string; welcome?: string; weekly?: string; rescue?: string; quote?: string }[] = []
 
   for (const user of users) {
     const prefs = prefsMap.get(user.id) || { ...DEFAULT_EMAIL_PREFS }
     const { date: localDate, hour: localHour, weekday } = localParts(prefs.timezone)
-    const entry: { email: string; weekly?: string; rescue?: string; quote?: string } = { email: user.email }
+    const entry: { email: string; welcome?: string; weekly?: string; rescue?: string; quote?: string } = { email: user.email }
     detail.push(entry)
+
+    // Modo prueba: previsualizar también la bienvenida
+    if (forced) {
+      const ok = await sendEmail(user.email, welcomeEmail({ name: user.email.split('@')[0], appUrl }))
+      entry.welcome = ok ? 'enviado' : 'falló'
+    }
 
     const activeTracks = await getActiveTracks(supabase, user.id, localDate)
     if (activeTracks.length === 0) continue
@@ -150,7 +167,7 @@ export async function GET(request: Request) {
     }
 
     // ---------- Resumen semanal (domingo) ----------
-    if (weekday === 'Sun' && localHour >= WEEKLY_HOUR && prefs.last_weekly_sent !== localDate) {
+    if (forced || (weekday === 'Sun' && localHour >= WEEKLY_HOUR && prefs.last_weekly_sent !== localDate)) {
       const summaries: WeeklyTrackSummary[] = []
       for (const t of activeTracks) {
         const completedDates = completedByTrack.get(t.trackId) || new Set<string>()
@@ -209,7 +226,7 @@ export async function GET(request: Request) {
       }))
       if (ok) {
         weeklySent++
-        await markEmailSent(supabase, user.id, 'last_weekly_sent', localDate, prefs)
+        if (!forced) await markEmailSent(supabase, user.id, 'last_weekly_sent', localDate, prefs)
         entry.weekly = 'enviado'
       } else {
         entry.weekly = 'falló'
@@ -217,7 +234,7 @@ export async function GET(request: Request) {
     }
 
     // ---------- Cita del mediodía (solo push) ----------
-    if (localHour >= QUOTE_HOUR && prefs.last_quote_sent !== localDate) {
+    if (forced || (localHour >= QUOTE_HOUR && prefs.last_quote_sent !== localDate)) {
       const primary = activeTracks[0]
       const quote = getQuoteForDay(primary.dayNumber)
       const p = await sendPushToUser(supabase, user.id, {
@@ -228,8 +245,10 @@ export async function GET(request: Request) {
       })
       if (p.sent > 0) {
         quotePushSent += p.sent
-        await markEmailSent(supabase, user.id, 'last_quote_sent', localDate, prefs)
+        if (!forced) await markEmailSent(supabase, user.id, 'last_quote_sent', localDate, prefs)
         entry.quote = 'enviado'
+      } else if (forced) {
+        entry.quote = `sin entrega (sent=${p.sent}, failed=${p.failed}, removed=${p.removed})`
       }
       // Sin suscripciones no se marca: si activa la campana más tarde,
       // la cita de ese día aún puede llegarle
@@ -243,10 +262,11 @@ export async function GET(request: Request) {
     const cooldownOk = !prefs.last_rescue_sent || daysBetween(prefs.last_rescue_sent, localDate) >= RESCUE_COOLDOWN_DAYS
 
     if (
-      localHour >= RESCUE_HOUR &&
-      programAge >= RESCUE_AFTER_DAYS &&
-      sinceLast >= RESCUE_AFTER_DAYS &&
-      cooldownOk
+      forced ||
+      (localHour >= RESCUE_HOUR &&
+        programAge >= RESCUE_AFTER_DAYS &&
+        sinceLast >= RESCUE_AFTER_DAYS &&
+        cooldownOk)
     ) {
       const trackInfos: { trackName: string; dayNumber: number; title: string }[] = []
       for (const t of activeTracks) {
@@ -262,12 +282,13 @@ export async function GET(request: Request) {
       const ok = await sendEmail(user.email, rescueEmail({
         name: user.email.split('@')[0],
         appUrl,
-        daysInactive: sinceLast,
+        // En modo prueba el usuario suele estar activo: mostrar un valor realista
+        daysInactive: forced ? Math.max(sinceLast, RESCUE_AFTER_DAYS) : sinceLast,
         tracks: trackInfos,
       }))
       if (ok) {
         rescueSent++
-        await markEmailSent(supabase, user.id, 'last_rescue_sent', localDate, prefs)
+        if (!forced) await markEmailSent(supabase, user.id, 'last_rescue_sent', localDate, prefs)
         entry.rescue = 'enviado'
       } else {
         entry.rescue = 'falló'
