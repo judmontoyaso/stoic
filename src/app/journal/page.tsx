@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { InputTextarea } from 'primereact/inputtextarea'
-import { Calendar, Trash2 } from 'lucide-react'
+import { Calendar, Trash2, Search, Download } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
 import { getToday, formatDate } from '@/lib/utils'
@@ -20,6 +20,7 @@ export default function JournalPage() {
   const [mood, setMood] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
   const [viewEntry, setViewEntry] = useState<JournalEntry | null>(null)
+  const [search, setSearch] = useState('')
 
   const today = getToday()
 
@@ -79,10 +80,46 @@ export default function JournalPage() {
     }
   }
 
+  // Tu diario es tuyo: exportarlo completo como Markdown
+  const handleExport = () => {
+    if (entries.length === 0) {
+      toast('Aún no hay entradas para exportar', { icon: '📄' })
+      return
+    }
+    const lines: string[] = [`# Diario Estoico — exportado el ${today}`, '']
+    for (const e of [...entries].sort((a, b) => a.date.localeCompare(b.date))) {
+      const t = JOURNAL_TEMPLATES[e.entry_type]
+      const m = MOODS.find(x => x.value === e.mood)
+      lines.push(`## ${e.date} — ${t.label}${m ? ` · ánimo: ${m.emoji} ${m.label}` : ''}`, '')
+      for (const f of t.fields) {
+        const value = e.content?.[f.key]
+        if (!value) continue
+        lines.push(`**${f.label}**`, '', value, '')
+      }
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `diario-estoico-${today}.md`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success('Diario exportado')
+  }
+
   if (loading) return <LoadingScreen />
 
   const template = JOURNAL_TEMPLATES[activeType]
   const todayHas = (type: JournalEntryType) => entries.some(e => e.date === today && e.entry_type === type)
+
+  const q = search.trim().toLowerCase()
+  const visibleEntries = q
+    ? entries.filter(e => {
+        const t = JOURNAL_TEMPLATES[e.entry_type]
+        const haystack = [t.label, e.date, ...Object.values(e.content || {})].join(' ').toLowerCase()
+        return haystack.includes(q)
+      })
+    : entries
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
@@ -161,7 +198,28 @@ export default function JournalPage() {
 
         {/* Historial */}
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Historial</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Historial</h2>
+            <button
+              onClick={handleExport}
+              title="Exportar todo el diario (Markdown)"
+              className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-[var(--primary-gold)] transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" /> Exportar
+            </button>
+          </div>
+
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <input
+              type="search"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar en el diario..."
+              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-[var(--border-color)] bg-[var(--background)] text-[var(--foreground)] placeholder:text-slate-500 focus:outline-none focus:border-[var(--primary-gold)]/60"
+            />
+          </div>
+
           {entries.length === 0 ? (
             <EmptyState
               className="p-8"
@@ -169,9 +227,13 @@ export default function JournalPage() {
             >
               <p className="text-sm">Aún no hay entradas.</p>
             </EmptyState>
+          ) : visibleEntries.length === 0 ? (
+            <EmptyState className="p-8">
+              <p className="text-sm">Nada coincide con &ldquo;{search}&rdquo;.</p>
+            </EmptyState>
           ) : (
             <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
-              {entries.map(entry => {
+              {visibleEntries.map(entry => {
                 const t = JOURNAL_TEMPLATES[entry.entry_type]
                 const moodEmoji = MOODS.find(m => m.value === entry.mood)?.emoji
                 const isOpen = viewEntry?.id === entry.id

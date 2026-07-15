@@ -46,4 +46,14 @@ export async function saveMyPrefs(prefs: UserPrefs): Promise<void> {
     )
 
   if (error) throw error
+
+  // Idioma del navegador: preparación para i18n futura. Best effort:
+  // si la columna aún no existe (supabase_v7), el update falla y se ignora.
+  try {
+    const locale = typeof navigator !== 'undefined' ? navigator.language : null
+    if (locale) {
+      void supabase.from('user_prefs').update({ locale }).eq('user_id', user.id)
+        .then(() => {})
+    }
+  } catch { /* nunca romper el guardado por esto */ }
 }
