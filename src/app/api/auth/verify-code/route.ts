@@ -96,11 +96,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No se pudo aprobar el usuario' }, { status: 500 })
   }
 
-  // Bienvenida (best effort: la aprobación ya quedó hecha)
+  // Bienvenida (best effort, pero con await: en serverless una promesa
+  // suelta muere cuando la función responde)
   if (user.email) {
     const appUrl = process.env.APP_URL || 'https://stoic-mu.vercel.app'
-    sendEmail(user.email, welcomeEmail({ name: user.email.split('@')[0], appUrl }))
-      .catch(err => console.error('Error enviando bienvenida:', err))
+    try {
+      await sendEmail(user.email, welcomeEmail({ name: user.email.split('@')[0], appUrl }))
+    } catch (err) {
+      console.error('Error enviando bienvenida:', err)
+    }
   }
 
   return NextResponse.json({ ok: true })

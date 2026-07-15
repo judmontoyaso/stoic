@@ -10,7 +10,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Sun,
-  Moon
+  Moon,
+  BarChart3
 } from 'lucide-react'
 import PushToggle from '@/components/PushToggle'
 import { TABS } from '@/components/MobileTabBar'
@@ -21,6 +22,14 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/admin/me')
+      .then(res => res.json())
+      .then(data => setIsAdmin(!!data.admin))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     const saved = localStorage.getItem('theme') as 'dark' | 'light' | null
@@ -63,6 +72,25 @@ export default function Sidebar() {
   const sidebarVariants = {
     expanded: { width: 240 },
     collapsed: { width: 70 },
+  }
+
+  const renderAdminLink = (isMobile: boolean) => {
+    if (!isAdmin) return null
+    const active = pathname === '/admin'
+    return (
+      <Link
+        href="/admin"
+        onClick={() => isMobile && setMobileOpen(false)}
+        className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+          active
+            ? 'bg-[var(--primary-gold)]/10 text-[var(--primary-gold)]'
+            : 'text-slate-450 dark:text-slate-400 hover:text-[var(--foreground)] hover:bg-slate-800/10'
+        }`}
+      >
+        <BarChart3 className={`w-5 h-5 flex-shrink-0 ${active ? 'text-[var(--primary-gold)]' : 'opacity-60'}`} />
+        {(!collapsed || isMobile) && <span className="truncate">Panel</span>}
+      </Link>
+    )
   }
 
   const renderNavItems = (isMobile = false) => {
@@ -154,6 +182,7 @@ export default function Sidebar() {
               </div>
               <nav className="flex-1 space-y-2">
                 {renderNavItems(true)}
+                {renderAdminLink(true)}
               </nav>
               <div className="pt-4 border-t border-[var(--border-color)] flex flex-col gap-3">
                 <PushToggle />
@@ -220,6 +249,7 @@ export default function Sidebar() {
         {/* Navigation */}
         <nav className="flex-1 space-y-2">
           {renderNavItems(false)}
+          {renderAdminLink(false)}
         </nav>
 
         {/* Footer */}

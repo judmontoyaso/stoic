@@ -2,17 +2,13 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerSupabase } from '@/utils/supabase/server'
 import { getApprovedUsers } from '@/lib/recipients'
+import { isAdminEmail } from '@/lib/admin'
 
 // Métricas de producto para el administrador.
 // Autorización: el correo de la sesión debe estar en ADMIN_EMAILS
 // (lista separada por comas) o ser igual a NOTIFICATION_EMAIL.
 
 export const maxDuration = 60
-
-function adminEmails(): string[] {
-  const raw = process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || process.env.NOTIFICATION_EMAIL || ''
-  return raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
-}
 
 function addDays(dateStr: string, n: number): string {
   const d = new Date(dateStr + 'T00:00:00Z')
@@ -23,7 +19,7 @@ function addDays(dateStr: string, n: number): string {
 export async function GET() {
   const session = await createServerSupabase()
   const { data: { user } } = await session.auth.getUser()
-  if (!user?.email || !adminEmails().includes(user.email.toLowerCase())) {
+  if (!isAdminEmail(user?.email)) {
     return NextResponse.json({ error: 'Solo el administrador puede ver estas métricas' }, { status: 403 })
   }
 
