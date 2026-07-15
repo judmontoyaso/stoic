@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { BookOpen, RefreshCw } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 
 interface DailyReadingProps {
   trackId: string
@@ -16,11 +16,11 @@ export default function DailyReading({ trackId, dayNumber, autoLoad = true }: Da
   const [error, setError] = useState(false)
   const [expanded, setExpanded] = useState(false)
 
-  const load = useCallback(async (refresh = false) => {
+  const load = useCallback(async () => {
     setLoading(true)
     setError(false)
     try {
-      const res = await fetch(`/api/daily-reading?track_id=${trackId}&day=${dayNumber}${refresh ? '&refresh=1' : ''}`)
+      const res = await fetch(`/api/daily-reading?track_id=${trackId}&day=${dayNumber}`)
       if (!res.ok) throw new Error('fetch failed')
       const data = await res.json()
       setReading(data.reading)
@@ -50,15 +50,6 @@ export default function DailyReading({ trackId, dayNumber, autoLoad = true }: Da
           <BookOpen className="w-3.5 h-3.5" />
           Lectura del día
         </p>
-        {reading && !loading && (
-          <button
-            onClick={() => load(true)}
-            title="Regenerar la lección"
-            className="text-slate-500 hover:text-[var(--primary-gold)] transition-colors"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-          </button>
-        )}
       </div>
 
       {loading && (

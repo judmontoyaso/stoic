@@ -207,6 +207,23 @@ export async function GET(request: Request) {
         : null,
     })
 
+    // Persistir el consejo del mentor: la app lo muestra en "Hoy"
+    if (aiReflection) {
+      try {
+        await supabase.from('daily_reflections').upsert(
+          {
+            user_id: user.id,
+            date: dateStr,
+            reflection: aiReflection.reflection,
+            actionable_tip: aiReflection.actionableTip || null,
+          },
+          { onConflict: 'user_id,date' }
+        )
+      } catch (err) {
+        console.error('Error guardando la reflexión del día:', err)
+      }
+    }
+
     const success = await sendEmail(user.email, dailyProgramEmail({
       name: user.email.split('@')[0],
       quote,

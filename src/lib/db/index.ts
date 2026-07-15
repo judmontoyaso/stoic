@@ -17,6 +17,7 @@ import * as logs from './logs'
 import * as journal from './journal'
 import * as resources from './resources'
 import * as prefs from './prefs'
+import * as reflections from './reflections'
 
 export const StoicDB = {
   ...tracks,
@@ -24,6 +25,7 @@ export const StoicDB = {
   ...journal,
   ...resources,
   ...prefs,
+  ...reflections,
 }
 
 export * from './tracks'
@@ -31,4 +33,5 @@ export * from './logs'
 export * from './journal'
 export * from './resources'
 export * from './prefs'
+export * from './reflections'
 export { notifyDataChanged } from './client'

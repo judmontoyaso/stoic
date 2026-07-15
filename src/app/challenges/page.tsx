@@ -19,6 +19,7 @@ export default function ChallengesPage() {
   const [monthLogs, setMonthLogs] = useState<MonthLog[]>([])
   const [reflectionDraft, setReflectionDraft] = useState<Record<number, string>>({})
   const [openReflection, setOpenReflection] = useState<number | null>(null)
+  const [openMonth, setOpenMonth] = useState<number | null>(null)
 
   const loadTrackData = useCallback(async () => {
     if (!activeTrackId) return
@@ -89,29 +90,48 @@ export default function ChallengesPage() {
           {programMonths.map(pm => {
             const log = monthLogs.find(l => l.month_number === pm.month_number)
             const isCurrent = currentMonth === pm.month_number
+            const isOpen = openMonth === pm.month_number
             return (
-              <button
+              <div
                 key={pm.month_number}
-                onClick={() => handleToggleMonth(pm.month_number)}
-                className={`p-4 rounded-xl border text-left transition-all ${
+                className={`p-4 rounded-xl border transition-all ${
                   log?.completed
                     ? 'bg-[var(--primary-gold)]/10 border-[var(--primary-gold)]/40'
                     : isCurrent
                       ? 'bg-[var(--card-bg)] border-[var(--primary-gold)]/40 ring-1 ring-[var(--primary-gold)]/20'
-                      : 'bg-[var(--card-bg)] border-[var(--border-color)] hover:border-[var(--primary-gold)]/25'
+                      : 'bg-[var(--card-bg)] border-[var(--border-color)]'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold text-[var(--primary-gold)] uppercase tracking-widest">
                     Mes {pm.month_number} {isCurrent && '· actual'}
                   </span>
-                  {log?.completed && <CheckCircle2 className="w-4 h-4 text-[var(--primary-gold)]" />}
+                  {/* Completar es una decisión explícita, no un tap accidental */}
+                  <button
+                    onClick={() => handleToggleMonth(pm.month_number)}
+                    title={log?.completed ? 'Desmarcar hito' : 'Marcar hito como logrado'}
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                      log?.completed
+                        ? 'border-[var(--primary-gold)] bg-[var(--primary-gold)]'
+                        : 'border-slate-400 dark:border-slate-600 hover:border-[var(--primary-gold)]'
+                    }`}
+                  >
+                    {log?.completed && <CheckCircle2 className="w-4 h-4 text-[#0a0a0f]" />}
+                  </button>
                 </div>
                 <p className={`text-sm font-bold ${log?.completed ? 'text-[var(--primary-gold)]' : 'text-[var(--foreground)]'}`}>
                   {pm.title}
                 </p>
-                <p className="text-[11px] text-slate-500 mt-2 leading-relaxed line-clamp-4">{pm.description}</p>
-              </button>
+                <p className={`text-[11px] text-slate-500 mt-2 leading-relaxed ${isOpen ? '' : 'line-clamp-4'}`}>
+                  {pm.description}
+                </p>
+                <button
+                  onClick={() => setOpenMonth(isOpen ? null : pm.month_number)}
+                  className="text-[11px] font-bold text-[var(--primary-gold)] mt-2 hover:underline"
+                >
+                  {isOpen ? 'Mostrar menos' : 'Leer completo'}
+                </button>
+              </div>
             )
           })}
         </div>

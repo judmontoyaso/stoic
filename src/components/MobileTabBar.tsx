@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 // Las 5 rutas principales; el resto vive en el drawer del header
 // (el Sidebar usa TABS para no repetirlas allí).
 export const TABS = [
-  { label: 'Panel', path: '/', icon: '/icons/time.png' },
+  { label: 'Hoy', path: '/today', icon: '/icons/time.png' },
   { label: 'Calendario', path: '/calendar', icon: '/icons/earth.png' },
   { label: 'Programa', path: '/habits', icon: '/icons/skull.png' },
   { label: 'Diario', path: '/journal', icon: '/icons/papyrus.png' },

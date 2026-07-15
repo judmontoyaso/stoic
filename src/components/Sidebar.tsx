@@ -56,11 +56,11 @@ export default function Sidebar() {
   }
 
   const menuItems = [
-    { label: 'Dashboard', path: '/', icon: '/icons/time.png' },
+    { label: 'Hoy', path: '/today', icon: '/icons/time.png' },
+    { label: 'Panel', path: '/', icon: '/icons/history-book.png' },
     { label: 'Calendario', path: '/calendar', icon: '/icons/earth.png' },
     { label: 'Programa', path: '/habits', icon: '/icons/skull.png' },
     { label: 'Retos', path: '/challenges', icon: '/icons/armour.png' },
-    { label: 'Recursos', path: '/resources', icon: '/icons/history-book.png' },
     { label: 'Diario', path: '/journal', icon: '/icons/papyrus.png' },
     { label: 'Evaluación', path: '/evaluation', icon: '/icons/harp.png' },
     { label: 'Preferencias', path: '/settings', icon: '/icons/amphora.png' },
