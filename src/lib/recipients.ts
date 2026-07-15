@@ -11,6 +11,8 @@ type AnySupabaseClient = SupabaseClient<any, any, any, any, any>
 export interface ApprovedUser {
   id: string
   email: string
+  /** 'founder' si entró pagando; 'code' si entró con código de invitación */
+  plan: string
 }
 
 /** Usuarios aprobados (requiere cliente con SERVICE_ROLE_KEY). */
@@ -23,7 +25,11 @@ export async function getApprovedUsers(supabase: AnySupabaseClient): Promise<App
     }
     return (data?.users || [])
       .filter(u => u.app_metadata?.stoicom_approved === true && !!u.email)
-      .map(u => ({ id: u.id, email: (u.email as string).toLowerCase() }))
+      .map(u => ({
+        id: u.id,
+        email: (u.email as string).toLowerCase(),
+        plan: (u.app_metadata?.stoicom_plan as string) || 'code',
+      }))
   } catch (err) {
     console.error('Error listando usuarios para correos:', err)
     return []

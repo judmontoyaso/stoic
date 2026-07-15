@@ -73,7 +73,8 @@ export default function LandingPage() {
             Entrar con Google
           </Link>
           <p className="text-xs text-slate-500">
-            Beta privada — necesitarás un código de invitación.
+            Entra con tu código de invitación, o hazte fundador: pago único,
+            acceso de por vida.
           </p>
         </div>
       </section>
@@ -237,8 +238,8 @@ export default function LandingPage() {
             Noventa días. Un ejercicio al día.
           </h2>
           <p className="mt-4 text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-            La beta es privada: si tienes un código de invitación, tu primer día
-            empieza hoy mismo.
+            Con código de invitación o con el acceso de fundador — un solo pago,
+            tuyo para siempre — tu primer día empieza hoy mismo.
           </p>
           <Link
             href="/login"

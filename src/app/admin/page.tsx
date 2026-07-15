@@ -13,6 +13,7 @@ interface AdminStats {
   totals: { approvedUsers: number; activeUsers: number; withPush: number; active7d: number }
   users: {
     email: string
+    plan: string
     tracks: { name: string; startDate: string; completed: number }[]
     completedTotal: number
     completed7d: number
@@ -74,6 +75,7 @@ export default function AdminPage() {
           <thead>
             <tr className="text-left text-slate-500 uppercase tracking-wider">
               <th className="pb-2 pr-4">Usuario</th>
+              <th className="pb-2 pr-4">Acceso</th>
               <th className="pb-2 pr-4">Tracks</th>
               <th className="pb-2 pr-4">Días ✓</th>
               <th className="pb-2 pr-4">Últ. 7d</th>
@@ -88,6 +90,11 @@ export default function AdminPage() {
             {stats.users.map(u => (
               <tr key={u.email} className="border-t border-[var(--border-color)] text-[var(--foreground)]">
                 <td className="py-2.5 pr-4 font-medium">{u.email}</td>
+                <td className="py-2.5 pr-4">
+                  {u.plan === 'founder'
+                    ? <span className="text-[var(--primary-gold)] font-bold">fundador</span>
+                    : <span className="text-slate-500">código</span>}
+                </td>
                 <td className="py-2.5 pr-4">
                   {u.tracks.length === 0
                     ? <span className="text-slate-500">sin iniciar</span>

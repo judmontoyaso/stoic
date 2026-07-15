@@ -84,6 +84,7 @@ export async function GET() {
 
     return {
       email: u.email,
+      plan: u.plan,
       tracks: myTracks.map(t => ({
         name: trackNames.get(t.track_id) || t.track_id,
         startDate: t.start_date,

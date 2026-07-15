@@ -9,6 +9,7 @@ function isPublicPath(pathname: string): boolean {
     pathname.startsWith('/api/cron') ||      // manejan su propio token
     pathname.startsWith('/auth/') ||         // callback OAuth + verificación de código
     pathname.startsWith('/api/auth/verify-code') ||
+    pathname.startsWith('/api/webhooks/') ||     // firmas propias (Lemon Squeezy)
     pathname.startsWith('/icons/') ||
     pathname === '/login' ||
     pathname === '/landing' ||

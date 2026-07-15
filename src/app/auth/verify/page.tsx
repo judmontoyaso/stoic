@@ -1,17 +1,30 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { InputText } from 'primereact/inputtext'
 import toast from 'react-hot-toast'
 import { createClient } from '@/utils/supabase/client'
 import { track } from '@/lib/analytics'
 
-// Primera entrada con Google: pide el código de acceso una única vez.
-// Aprobado el correo, los siguientes logins pasan directo.
+// Primera entrada con Google: dos puertas, una sola vez.
+//   1. Código de invitación (gratis, beta privada)
+//   2. Compra fundador vía Lemon Squeezy (pago único; el webhook aprueba)
 
 export default function VerifyPage() {
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    const base = process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL
+    if (!base) return
+    createClient().auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      const sep = base.includes('?') ? '&' : '?'
+      const params = `checkout[custom][user_id]=${user.id}&checkout[email]=${encodeURIComponent(user.email || '')}`
+      setCheckoutUrl(`${base}${sep}${params}`)
+    })
+  }, [])
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -62,8 +75,9 @@ export default function VerifyPage() {
             Un paso más
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-450 leading-relaxed">
-            Tu cuenta de Google inició sesión, pero este espacio es privado.
-            Ingresa el código de acceso <span className="font-bold">una única vez</span> para aprobar tu correo.
+            Tu cuenta de Google inició sesión. Para entrar necesitas
+            <span className="font-bold"> una única vez</span> un código de
+            invitación, o el acceso de fundador.
           </p>
         </div>
 
@@ -92,14 +106,34 @@ export default function VerifyPage() {
             {loading ? 'Verificando...' : 'Aprobar mi correo'}
           </button>
 
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="w-full py-2 rounded-lg text-xs text-slate-500 hover:text-[var(--foreground)] transition-colors"
-          >
-            Salir y usar otra cuenta
-          </button>
         </form>
+
+        {checkoutUrl && (
+          <div className="space-y-3 pt-2 border-t border-[var(--border-color)]">
+            <p className="text-[10px] text-slate-500 text-center uppercase tracking-widest font-bold">
+              ¿Sin código?
+            </p>
+            <a
+              href={checkoutUrl}
+              className="block w-full py-2.5 rounded-lg border border-[var(--primary-gold)]/50 text-center text-sm font-bold text-[var(--primary-gold)] hover:bg-[var(--primary-gold)]/10 transition-colors"
+            >
+              Hazte fundador — pago único
+            </a>
+            <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+              Acceso de por vida al programa completo. El pago se procesa en
+              Lemon Squeezy; al confirmarse, tu cuenta entra sola (recarga esta
+              página al volver).
+            </p>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="w-full py-2 rounded-lg text-xs text-slate-500 hover:text-[var(--foreground)] transition-colors"
+        >
+          Salir y usar otra cuenta
+        </button>
 
         <div className="text-center pt-2 border-t border-[var(--border-color)]">
           <p className="text-[9px] text-slate-550 dark:text-slate-450 uppercase tracking-widest font-black">
