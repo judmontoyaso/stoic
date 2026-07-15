@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendEmail, weeklySummaryEmail, rescueEmail, type WeeklyTrackSummary } from '@/lib/email'
+import { sendPushToUser } from '@/lib/push'
+import { getQuoteForDay } from '@/lib/quotes'
 import { getApprovedUsers, type ApprovedUser } from '@/lib/recipients'
 import { getPrefsMap, localParts, markEmailSent, DEFAULT_EMAIL_PREFS } from '@/lib/prefs-server'
 
@@ -8,9 +10,12 @@ import { getPrefsMap, localParts, markEmailSent, DEFAULT_EMAIL_PREFS } from '@/l
 //   - Resumen semanal: domingo desde las 17h locales del usuario.
 //   - Rescate: 3+ días sin completar nada, desde las 12h locales,
 //     máximo uno cada 4 días.
+//   - Cita del mediodía: push (sin correo) con la cita del día del
+//     programa del usuario, referenciada con su autor. Solo llega a
+//     quien activó la campana de notificaciones.
 // GET/POST /api/cron/retention?secret=...
-// Requiere supabase_v6_retention.sql; sin él, el dedupe de estos dos
-// correos no persiste y el endpoint no envía nada (fail-safe).
+// Requiere supabase_v6_retention.sql; sin él, el dedupe de estos
+// envíos no persiste y el endpoint no envía nada (fail-safe).
 
 export const maxDuration = 120
 
@@ -18,6 +23,7 @@ const WEEKLY_HOUR = 17
 const RESCUE_HOUR = 12
 const RESCUE_AFTER_DAYS = 3
 const RESCUE_COOLDOWN_DAYS = 4
+const QUOTE_HOUR = 12
 
 function isAuthorized(request: Request, secret: string | null): boolean {
   const cronSecret = process.env.CRON_SECRET
@@ -101,7 +107,10 @@ export async function GET(request: Request) {
   const supabase = createClient(supabaseUrl, supabaseServiceKey, { db: { schema: 'stoic' } })
 
   // Sin las columnas de V6 el dedupe no persiste: mejor no enviar nada
-  const { error: v6Error } = await supabase.from('user_prefs').select('last_weekly_sent').limit(1)
+  const { error: v6Error } = await supabase
+    .from('user_prefs')
+    .select('last_weekly_sent, last_quote_sent')
+    .limit(1)
   if (v6Error) {
     return NextResponse.json({
       ok: false,
@@ -114,12 +123,13 @@ export async function GET(request: Request) {
 
   let weeklySent = 0
   let rescueSent = 0
-  const detail: { email: string; weekly?: string; rescue?: string }[] = []
+  let quotePushSent = 0
+  const detail: { email: string; weekly?: string; rescue?: string; quote?: string }[] = []
 
   for (const user of users) {
     const prefs = prefsMap.get(user.id) || { ...DEFAULT_EMAIL_PREFS }
     const { date: localDate, hour: localHour, weekday } = localParts(prefs.timezone)
-    const entry: { email: string; weekly?: string; rescue?: string } = { email: user.email }
+    const entry: { email: string; weekly?: string; rescue?: string; quote?: string } = { email: user.email }
     detail.push(entry)
 
     const activeTracks = await getActiveTracks(supabase, user.id, localDate)
@@ -206,6 +216,25 @@ export async function GET(request: Request) {
       }
     }
 
+    // ---------- Cita del mediodía (solo push) ----------
+    if (localHour >= QUOTE_HOUR && prefs.last_quote_sent !== localDate) {
+      const primary = activeTracks[0]
+      const quote = getQuoteForDay(primary.dayNumber)
+      const p = await sendPushToUser(supabase, user.id, {
+        title: `Día ${primary.dayNumber} · Pausa del mediodía`,
+        body: `«${quote.text}» — ${quote.author}`,
+        url: '/',
+        tag: 'stoic-quote',
+      })
+      if (p.sent > 0) {
+        quotePushSent += p.sent
+        await markEmailSent(supabase, user.id, 'last_quote_sent', localDate, prefs)
+        entry.quote = 'enviado'
+      }
+      // Sin suscripciones no se marca: si activa la campana más tarde,
+      // la cita de ese día aún puede llegarle
+    }
+
     // ---------- Rescate de inactivos ----------
     const programAge = Math.min(...activeTracks.map(t => daysBetween(t.startDate, localDate)))
     const sinceLast = lastCompleted
@@ -246,5 +275,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, weeklySent, rescueSent, detail })
+  return NextResponse.json({ ok: true, weeklySent, rescueSent, quotePushSent, detail })
 }
