@@ -17,9 +17,12 @@ Comunicación, uno por día. El día 7 cierra con la oferta de fundador.
    no envía nada — por diseño, no falla en silencio a medias.
 2. Verificar en Vercel que estén `APP_URL`, `RESEND_API_KEY`, `EMAIL_FROM`
    y `SUPABASE_SERVICE_ROLE_KEY`.
-3. `NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL` es **opcional**: si falta, el
-   correo del día 7 no promete comprar nada, solo avisa de que el programa
-   abre pronto. Es lo correcto mientras Lemon Squeezy siga sin verificar.
+3. **El día 7 no vende hasta que se diga explícitamente.** Necesita
+   `LEMONSQUEEZY_LIVE=true` *además* de `NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL`.
+   Sin la primera, el correo solo avisa de que el programa abre pronto.
+   Tener URL no basta: un checkout en *test mode* existe y responde, pero
+   solo acepta pagos del dueño de la tienda. **Poner `LEMONSQUEEZY_LIVE=true`
+   en Vercel es el último paso, cuando Lemon Squeezy verifique la tienda.**
 
 ## Piezas
 
@@ -46,6 +49,10 @@ Comunicación, uno por día. El día 7 cierra con la oferta de fundador.
   GET destructivo se darían de baja suscriptores que nunca lo pidieron.
 - **El día 1 sale al confirmar**, no al día siguiente: esperar 24 h al cron
   enfriaría la intención justo cuando está más alta.
+- **El interruptor de venta es explícito** (`LEMONSQUEEZY_LIVE`), no se deduce
+  de que exista una URL. El estado por defecto es no vender: equivocarse hacia
+  «no ofrecí comprar» cuesta un correo; hacia «mandé a todos a un checkout
+  muerto» cuesta la lista entera.
 - **Tope de 40 envíos por pasada** y **30 altas nuevas por hora.** El plan
   gratuito de Resend tiene límite diario y los correos del programa (usuarios
   que ya pagaron) tienen prioridad sobre la captación.

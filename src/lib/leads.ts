@@ -111,7 +111,16 @@ export async function sendDripDay(
     return false
   }
 
-  const checkoutUrl = process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL || null
+  // El día 7 solo vende si la tienda puede cobrarle a un desconocido.
+  // Tener URL no basta: un checkout de Lemon Squeezy en test mode existe
+  // y responde, pero solo acepta pagos del dueño de la tienda. Mandar
+  // ahí al lead quemaría el correo de más intención de la secuencia.
+  // Por eso el interruptor es explícito y el estado seguro es el de por
+  // defecto: cuando LS verifique la tienda, LEMONSQUEEZY_LIVE=true.
+  const checkoutUrl =
+    process.env.LEMONSQUEEZY_LIVE === 'true'
+      ? process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL || null
+      : null
 
   const ok = await sendEmail(
     lead.email,
