@@ -24,6 +24,17 @@ interface AdminStats {
     push: boolean
     prefs: { timezone: string; morning: number; evening: number } | null
   }[]
+  // null mientras no se haya ejecutado supabase_v9_leads.sql
+  leads: {
+    total: number
+    confirmed: number
+    unsubscribed: number
+    converted: number
+    finishedDrip: number
+    new7d: number
+    new30d: number
+    bySource: Record<string, number>
+  } | null
   events30d: Record<string, number>
 }
 
@@ -118,6 +129,38 @@ export default function AdminPage() {
           </tbody>
         </table>
       </Card>
+
+      {stats.leads && (
+        <Card className="p-5">
+          <h2 className="text-sm font-bold text-[var(--foreground)] mb-1">Captación</h2>
+          <p className="text-xs text-slate-500 mb-4">
+            {stats.leads.new7d} nuevos en 7 días · {stats.leads.new30d} en 30 días
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {([
+              ['Correos capturados', stats.leads.total],
+              ['Confirmados', stats.leads.confirmed],
+              ['Terminaron los 7 días', stats.leads.finishedDrip],
+              ['Convirtieron', stats.leads.converted],
+              ['Bajas', stats.leads.unsubscribed],
+            ] as const).map(([label, value]) => (
+              <div key={label} className="p-3 rounded-lg border border-[var(--border-color)]">
+                <p className="text-lg font-bold text-[var(--primary-gold)]">{value}</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider">{label}</p>
+              </div>
+            ))}
+          </div>
+          {Object.keys(stats.leads.bySource).length > 0 && (
+            <p className="mt-4 text-xs text-slate-500">
+              Origen:{' '}
+              {Object.entries(stats.leads.bySource)
+                .sort((a, b) => b[1] - a[1])
+                .map(([source, count]) => `${source} (${count})`)
+                .join(' · ')}
+            </p>
+          )}
+        </Card>
+      )}
 
       <Card className="p-5">
         <h2 className="text-sm font-bold text-[var(--foreground)] mb-4">Eventos · últimos 30 días</h2>

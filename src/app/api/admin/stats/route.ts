@@ -99,6 +99,30 @@ export async function GET() {
     }
   })
 
+  // Embudo de captación. Tolera que supabase_v9_leads.sql no esté
+  // ejecutado todavía: en ese caso el panel simplemente no lo muestra.
+  const { data: leadRows, error: leadsError } = await supabase
+    .from('leads')
+    .select('created_at, confirmed_at, unsubscribed_at, converted_at, drip_day, source')
+  const leads = leadsError
+    ? null
+    : (() => {
+        const rows = leadRows || []
+        const bySource: Record<string, number> = {}
+        for (const l of rows) bySource[l.source || 'sin origen'] = (bySource[l.source || 'sin origen'] || 0) + 1
+        const confirmed = rows.filter(l => l.confirmed_at)
+        return {
+          total: rows.length,
+          confirmed: confirmed.length,
+          unsubscribed: rows.filter(l => l.unsubscribed_at).length,
+          converted: rows.filter(l => l.converted_at).length,
+          finishedDrip: rows.filter(l => l.drip_day >= 7).length,
+          new7d: rows.filter(l => String(l.created_at).slice(0, 10) >= since7).length,
+          new30d: rows.filter(l => String(l.created_at).slice(0, 10) >= since30).length,
+          bySource,
+        }
+      })()
+
   // Eventos de los últimos 30 días agrupados por nombre
   const eventCounts: Record<string, number> = {}
   for (const e of eventsRes.data || []) {
@@ -114,6 +138,7 @@ export async function GET() {
       active7d: perUser.filter(u => u.lastActivity && u.lastActivity >= since7).length,
     },
     users: perUser,
+    leads,
     events30d: eventCounts,
   })
 }

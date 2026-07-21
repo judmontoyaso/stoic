@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { createClient as createServerSupabase } from '@/utils/supabase/server'
 import { sendEmail, welcomeEmail } from '@/lib/email'
+import { markLeadConverted } from '@/lib/leads'
 
 // Aprueba al usuario logueado si presenta el código de acceso correcto.
 // La aprobación se guarda en app_metadata.stoicom_approved: solo el
@@ -105,6 +106,8 @@ export async function POST(request: Request) {
     } catch (err) {
       console.error('Error enviando bienvenida:', err)
     }
+    // Si venía de la lista, cierra su ficha de lead (métrica de conversión)
+    await markLeadConverted(user.email)
   }
 
   return NextResponse.json({ ok: true })

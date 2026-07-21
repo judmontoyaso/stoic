@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'node:crypto'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { sendEmail, welcomeEmail } from '@/lib/email'
+import { markLeadConverted } from '@/lib/leads'
 
 // Webhook de Lemon Squeezy: al confirmarse una orden pagada, aprueba al
 // usuario (misma marca que el código de acceso) y registra el plan.
@@ -93,6 +94,9 @@ export async function POST(request: Request) {
     } catch (err) {
       console.error('Error enviando bienvenida al comprador:', err)
     }
+    // El correo de la compra puede diferir del de la cuenta: marcar ambos
+    await markLeadConverted(email)
+    await markLeadConverted(payload.data?.attributes?.user_email)
   }
 
   return NextResponse.json({ ok: true, approved: userId })

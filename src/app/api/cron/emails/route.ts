@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server'
 import { GET as dailyEmail } from '../daily-email/route'
 import { GET as eveningEmail } from '../evening-email/route'
 import { GET as retentionEmail } from '../retention/route'
+import { GET as dripEmail } from '../drip/route'
 
 // Cron combinado: matutino + nocturno + retención (resumen semanal y
-// rescate de inactivos) en una sola pasada. Cada endpoint decide por
-// usuario si le toca (hora local + last_*_sent), así que este puede
-// dispararse cada hora sin duplicar.
+// rescate de inactivos) + secuencia de captación en una sola pasada.
+// Cada endpoint decide por usuario si le toca (hora local +
+// last_*_sent), así que este puede dispararse cada hora sin duplicar.
 //
 // Vercel Hobby solo permite 2 crons diarios: ambos apuntan aquí como
 // respaldo. Para horarios por usuario precisos, n8n lo llama cada hora
@@ -30,9 +31,14 @@ export async function GET(request: Request) {
   const retentionRes = await retentionEmail(request)
   const retention = await retentionRes.json()
 
+  // La captación va al final: si algo falla aquí, los correos del
+  // programa (los que ya se ganaron) ya salieron.
+  const dripRes = await dripEmail(request)
+  const drip = await dripRes.json()
+
   const unauthorized = dailyRes.status === 401 || eveningRes.status === 401
   return NextResponse.json(
-    { ok: !unauthorized, daily, evening, retention },
+    { ok: !unauthorized, daily, evening, retention, drip },
     { status: unauthorized ? 401 : 200 }
   )
 }

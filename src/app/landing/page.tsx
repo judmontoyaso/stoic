@@ -1,5 +1,6 @@
 import { Cinzel } from 'next/font/google'
 import Link from 'next/link'
+import LeadForm from '@/components/LeadForm'
 
 // Landing pública (listada en el proxy): la cara de StoiCom para
 // visitantes sin sesión. Siempre oscura, independiente del tema.
@@ -64,17 +65,16 @@ export default function LandingPage() {
           taza, sin atajos: percepción, acción y voluntad, entrenadas como
           entrenaban los estoicos — por escrito y contra el reloj de un día real.
         </p>
-        <div className="mt-10 flex flex-col items-center gap-3">
-          <Link
-            href="/login"
-            className="inline-block px-8 py-4 rounded font-bold text-sm tracking-wider uppercase text-[#0a0a0f] hover:opacity-90 transition-opacity"
-            style={{ background: GOLD }}
-          >
-            Entrar con Google
-          </Link>
-          <p className="text-xs text-slate-500">
-            Entra con tu código de invitación, o hazte fundador: pago único,
-            acceso de por vida.
+        <div className="mt-10">
+          <p className="mb-5 text-sm font-bold text-slate-200">
+            Empieza gratis: los primeros 7 días del programa, en tu correo.
+          </p>
+          <LeadForm source="landing-hero" />
+          <p className="mt-6 text-xs text-slate-500">
+            ¿Ya tienes acceso?{' '}
+            <Link href="/login" className="underline hover:text-slate-300 transition-colors">
+              Entrar con Google
+            </Link>
           </p>
         </div>
       </section>
@@ -237,17 +237,17 @@ export default function LandingPage() {
           <h2 className={`${cinzel.className} text-2xl md:text-3xl text-slate-100`}>
             Noventa días. Un ejercicio al día.
           </h2>
-          <p className="mt-4 text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-            Con código de invitación o con el acceso de fundador — un solo pago,
-            tuyo para siempre — tu primer día empieza hoy mismo.
+          <p className="mt-4 mb-8 text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+            Prueba los siete primeros sin pagar nada. Si para el día 7 el
+            programa no te ha movido nada, te das de baja y ya está.
           </p>
-          <Link
-            href="/login"
-            className="mt-8 inline-block px-8 py-4 rounded font-bold text-sm tracking-wider uppercase text-[#0a0a0f] hover:opacity-90 transition-opacity"
-            style={{ background: GOLD }}
-          >
-            Entrar con Google
-          </Link>
+          <LeadForm source="landing-footer" />
+          <p className="mt-6 text-xs text-slate-500">
+            ¿Ya tienes acceso?{' '}
+            <Link href="/login" className="underline hover:text-slate-300 transition-colors">
+              Entrar con Google
+            </Link>
+          </p>
         </div>
       </section>
 

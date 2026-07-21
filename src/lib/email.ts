@@ -14,9 +14,17 @@ const SERIF = `Georgia,'Times New Roman',serif`
 
 export type EmailContent = { subject: string; html: string }
 
-// Layout HTML responsivo compatible con clientes de correo
-function baseLayout(opts: { preheader?: string; heading: string; body: string }): string {
-  const { preheader = '', heading, body } = opts
+// Layout HTML responsivo compatible con clientes de correo.
+// unsubscribeUrl solo aplica a los correos de marketing (la secuencia
+// de leads): los correos del programa son transaccionales y se
+// gestionan desde Preferencias.
+function baseLayout(opts: {
+  preheader?: string
+  heading: string
+  body: string
+  unsubscribeUrl?: string
+}): string {
+  const { preheader = '', heading, body, unsubscribeUrl } = opts
   const appUrl = (process.env.APP_URL || 'https://stoic-mu.vercel.app').replace(/\/$/, '')
   const logoUrl = `${appUrl}/sculpture.png`
 
@@ -61,6 +69,7 @@ function baseLayout(opts: { preheader?: string; heading: string; body: string })
         <tr>
           <td style="padding:20px 32px;border-top:1px solid ${BORDER_LIGHT};font-size:10px;color:#64748b;line-height:1.6;background:#0d0d13;text-transform:uppercase;letter-spacing:1px;">
             ${BRAND} · Programa de 90 días · Un ejercicio al día
+            ${unsubscribeUrl ? `<br><a href="${unsubscribeUrl}" style="color:#64748b;text-decoration:underline;">Darse de baja</a>` : ''}
           </td>
         </tr>
       </table>
@@ -416,6 +425,105 @@ export function rescueEmail(opts: {
           <p style="margin:6px 0 0;font-size:12px;font-weight:700;color:#d4b45f;text-align:right;">— Séneca</p>
         </div>` +
         button('Retomar hoy', opts.appUrl),
+    }),
+  }
+}
+
+// ============================================================
+// Captación: doble opt-in + secuencia de 7 días (leads de la landing)
+// ============================================================
+
+// Paso 1: confirmar el correo. Sin este clic no entra a la secuencia.
+export function leadConfirmEmail(opts: { confirmUrl: string }): EmailContent {
+  return {
+    subject: 'Confirma tu correo y empieza el día 1',
+    html: baseLayout({
+      preheader: 'Un clic y te llega el primer ejercicio.',
+      heading: 'Confirma que este correo es tuyo',
+      body:
+        paragraph(
+          'Pediste los <strong>primeros 7 días</strong> del programa de 90. Confirma con el botón de abajo y te llega el día 1 en cuestión de minutos; los seis siguientes, uno por día.'
+        ) +
+        button('Confirmar y recibir el día 1', opts.confirmUrl) +
+        paragraph(
+          'Si no fuiste tú quien pidió esto, ignora el mensaje: sin este clic no te llega nada más.'
+        ),
+    }),
+  }
+}
+
+// Pasos 2-8: un día real del programa por correo.
+// El día 7 cierra con la oferta de fundador.
+export function leadDripEmail(opts: {
+  dayNumber: number
+  title: string
+  instructions: string
+  rationale: string | null
+  sourceAuthor: string | null
+  moduleLabel: string
+  quote: { text: string; author: string }
+  appUrl: string
+  unsubscribeUrl: string
+  checkoutUrl: string | null
+}): EmailContent {
+  const isLast = opts.dayNumber >= 7
+
+  const exercise = `
+    <div style="margin:20px 0;padding:20px;background:${CARD_LIGHT};border:1px solid ${BORDER_LIGHT};border-radius:6px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#d4b45f;">
+            Comunicación · Día ${opts.dayNumber} · ${opts.moduleLabel}
+          </td>
+          ${opts.sourceAuthor ? `<td align="right" style="font-size:10px;color:${MUTED_LIGHT};">${opts.sourceAuthor}</td>` : ''}
+        </tr>
+      </table>
+      <h3 style="margin:8px 0 10px;font-size:17px;font-weight:700;color:#f8fafc;font-family:${SERIF};letter-spacing:0.3px;">${opts.title}</h3>
+      <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};">${opts.instructions}</p>
+      ${opts.rationale ? `
+      <div style="padding:10px 14px;background:#16161d;border-left:3px solid ${ACCENT};border-radius:0 4px 4px 0;">
+        <p style="margin:0;font-size:12px;line-height:1.5;font-style:italic;color:${MUTED_LIGHT};"><strong style="color:#d4b45f;font-style:normal;">Por qué funciona:</strong> ${opts.rationale}</p>
+      </div>` : ''}
+    </div>`
+
+  const quoteHtml = `
+    <div style="margin:0 0 8px;padding:20px;background:#16161d;border-left:4px solid ${ACCENT};border-radius:0 4px 4px 0;">
+      <p style="margin:0 0 8px;font-size:16px;font-style:italic;line-height:1.7;color:#f8fafc;font-family:${SERIF};">&ldquo;${opts.quote.text}&rdquo;</p>
+      <p style="margin:0;font-size:12px;font-weight:700;color:#d4b45f;text-align:right;">— ${opts.quote.author}</p>
+    </div>`
+
+  // El cierre solo aparece cuando hay checkout configurado: sin él, la
+  // oferta sería una promesa que la app todavía no puede cumplir.
+  const closing =
+    isLast && opts.checkoutUrl
+      ? paragraph(
+          'Hasta aquí llegan los siete días de muestra. Quedan 83 en el track de Comunicación, más los 90 de Práctica Interna: la app con tu calendario real, el diario con examen nocturno, la lección diaria escrita para tu día exacto y los correos a la hora que elijas.'
+        ) +
+        `<div style="margin:20px 0;padding:16px 20px;background:#16161d;border:1px solid rgba(201,168,76,0.35);border-radius:6px;">
+          <p style="margin:0 0 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#d4b45f;">Acceso de fundador</p>
+          <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};">Un solo pago, acceso de por vida y a todo lo que venga después. Sin suscripción y sin renovaciones.</p>
+        </div>` +
+        button('Ser fundador', opts.checkoutUrl)
+      : isLast
+        ? paragraph(
+            'Hasta aquí llegan los siete días de muestra. El programa completo — 90 días por track, la app con tu calendario real y el diario con examen nocturno — abre muy pronto. Te aviso por aquí en cuanto esté.'
+          )
+        : paragraph(
+            `Mañana llega el día ${opts.dayNumber + 1}. Hoy basta con ejecutar este.`
+          )
+
+  return {
+    subject: isLast
+      ? `Día 7 · ${opts.title}`
+      : `Día ${opts.dayNumber} · ${opts.title}`,
+    html: baseLayout({
+      preheader: opts.instructions.replace(/<[^>]*>/g, '').slice(0, 90),
+      heading:
+        opts.dayNumber === 1
+          ? 'Día 1. Empieza ahora, no mañana.'
+          : `Día ${opts.dayNumber} de tus siete`,
+      body: quoteHtml + exercise + closing,
+      unsubscribeUrl: opts.unsubscribeUrl,
     }),
   }
 }
