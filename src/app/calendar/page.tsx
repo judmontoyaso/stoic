@@ -14,7 +14,7 @@ import {
   dayStatus,
   currentStreak,
 } from '@/lib/program'
-import { Card, EmptyState, LoadingScreen, ModuleBadge, PageHeader, StatCard, TrackSelector } from '@/components/ui'
+import { Card, CompleteButton, EmptyState, LoadingScreen, ModuleBadge, PageHeader, StatCard, TrackSelector } from '@/components/ui'
 import { useStoicSync } from '@/hooks/useStoicSync'
 import { useTrackSelection } from '@/hooks/useTrackSelection'
 import type { ProgramDay, ProgramWeek, DayLog, DayStatus } from '@/types'
@@ -276,17 +276,13 @@ export default function CalendarPage() {
 
               {/* Toggle (solo hoy o pasado) */}
               {selectedInfo.status !== 'future' && (
-                <button
+                <CompleteButton
+                  completed={!!selectedInfo.log?.completed}
                   onClick={() => handleToggleDay(selectedProgramDay.day_number)}
-                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${
-                    selectedInfo.log?.completed
-                      ? 'bg-[var(--primary-gold)]/15 text-[var(--primary-gold)] border border-[var(--primary-gold)]/40'
-                      : 'bg-[var(--primary-gold)] text-[#0a0a0f] hover:opacity-90'
-                  }`}
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  {selectedInfo.log?.completed ? 'Completado — tocar para deshacer' : 'Marcar como completado'}
-                </button>
+                  labelDone="Completado — tocar para deshacer"
+                  labelTodo="Marcar como completado"
+                  doneVariant="gold"
+                />
               )}
 
               {/* Notas */}

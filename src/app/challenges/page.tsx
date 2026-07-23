@@ -2,11 +2,11 @@
 
 import { useState, useCallback } from 'react'
 import { InputTextarea } from 'primereact/inputtextarea'
-import { Award, Target, CheckCircle2 } from 'lucide-react'
+import { Award, Target } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
 import { currentDayNumber } from '@/lib/program'
-import { LoadingScreen, PageHeader, TrackSelector } from '@/components/ui'
+import { CircleCheck, LoadingScreen, PageHeader, TrackSelector } from '@/components/ui'
 import { useStoicSync } from '@/hooks/useStoicSync'
 import { useTrackSelection } from '@/hooks/useTrackSelection'
 import type { ProgramWeek, ProgramMonth, WeekLog, MonthLog } from '@/types'
@@ -107,17 +107,12 @@ export default function ChallengesPage() {
                     Mes {pm.month_number} {isCurrent && '· actual'}
                   </span>
                   {/* Completar es una decisión explícita, no un tap accidental */}
-                  <button
+                  <CircleCheck
+                    completed={!!log?.completed}
                     onClick={() => handleToggleMonth(pm.month_number)}
+                    variant="gold"
                     title={log?.completed ? 'Desmarcar hito' : 'Marcar hito como logrado'}
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                      log?.completed
-                        ? 'border-[var(--primary-gold)] bg-[var(--primary-gold)]'
-                        : 'border-slate-400 dark:border-slate-600 hover:border-[var(--primary-gold)]'
-                    }`}
-                  >
-                    {log?.completed && <CheckCircle2 className="w-4 h-4 text-[#0a0a0f]" />}
-                  </button>
+                  />
                 </div>
                 <p className={`text-sm font-bold ${log?.completed ? 'text-[var(--primary-gold)]' : 'text-[var(--foreground)]'}`}>
                   {pm.title}
@@ -160,14 +155,12 @@ export default function ChallengesPage() {
                 }`}
               >
                 <div className="p-4 flex items-start gap-3">
-                  <button
+                  <CircleCheck
+                    completed={!!log?.completed}
                     onClick={() => handleToggleWeek(pw.week_number)}
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
-                      log?.completed ? 'border-emerald-500 bg-emerald-500' : 'border-slate-400 dark:border-slate-600 hover:border-emerald-500'
-                    }`}
-                  >
-                    {log?.completed && <i className="pi pi-check text-[10px] text-white font-bold" />}
-                  </button>
+                    variant="emerald"
+                    className="mt-0.5"
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-600 dark:text-emerald-400">
                       Semana {pw.week_number}: {pw.theme} {isCurrent && '· actual'}

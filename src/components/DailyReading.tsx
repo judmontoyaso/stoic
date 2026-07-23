@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { BookOpen } from 'lucide-react'
+import { Skeleton } from '@/components/ui'
 
 interface DailyReadingProps {
   trackId: string
@@ -53,9 +54,15 @@ export default function DailyReading({ trackId, dayNumber, autoLoad = true }: Da
       </div>
 
       {loading && (
-        <div className="flex items-center gap-2 text-xs text-slate-500 py-3">
-          <i className="pi pi-spin pi-spinner text-[var(--primary-gold)]" />
-          El mentor está escribiendo tu lección de hoy...
+        <div className="space-y-2 py-1">
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-11/12" />
+          <Skeleton className="h-3 w-4/5" />
+          <p className="text-[10px] text-slate-500 pt-1.5 flex items-center gap-1.5">
+            <i className="pi pi-spin pi-spinner text-[var(--primary-gold)]" />
+            El mentor está escribiendo tu lección de hoy…
+          </p>
         </div>
       )}
 
