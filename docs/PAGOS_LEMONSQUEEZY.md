@@ -23,13 +23,13 @@ Redeploy después de agregarlas (la pública se incrusta en el build).
 
 ### 3. Webhook
 Settings → Webhooks → nuevo:
-- **Callback URL**: `https://stoic-mu.vercel.app/api/webhooks/lemonsqueezy`
+- **Callback URL**: `https://stoicom.app/api/webhooks/lemonsqueezy`
 - **Signing secret**: genera uno largo y aleatorio (el mismo de Vercel)
 - **Events**: `order_created` (suficiente para pagos únicos)
 
 ### 4. Redirect tras el pago
 En el producto → Confirmation modal / Redirect URL:
-`https://stoic-mu.vercel.app/auth/verify`
+`https://stoicom.app/auth/verify`
 (al volver, la página se recarga ya aprobada; si el webhook tarda unos
 segundos, recargar de nuevo basta).
 

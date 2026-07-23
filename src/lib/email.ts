@@ -25,7 +25,7 @@ function baseLayout(opts: {
   unsubscribeUrl?: string
 }): string {
   const { preheader = '', heading, body, unsubscribeUrl } = opts
-  const appUrl = (process.env.APP_URL || 'https://stoic-mu.vercel.app').replace(/\/$/, '')
+  const appUrl = (process.env.APP_URL || 'https://stoicom.app').replace(/\/$/, '')
   const logoUrl = `${appUrl}/sculpture.png`
 
   return `<!doctype html>

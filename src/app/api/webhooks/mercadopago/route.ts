@@ -106,7 +106,7 @@ export async function POST(request: Request) {
   if (!alreadyApproved) {
     const email = userData.user.email || payment.payerEmail
     if (email) {
-      const appUrl = process.env.APP_URL || 'https://stoic-mu.vercel.app'
+      const appUrl = process.env.APP_URL || 'https://stoicom.app'
       try {
         await sendEmail(email, welcomeEmail({ name: email.split('@')[0], appUrl }))
       } catch (err) {

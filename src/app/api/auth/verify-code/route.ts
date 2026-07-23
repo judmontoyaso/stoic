@@ -100,7 +100,7 @@ export async function POST(request: Request) {
   // Bienvenida (best effort, pero con await: en serverless una promesa
   // suelta muere cuando la función responde)
   if (user.email) {
-    const appUrl = process.env.APP_URL || 'https://stoic-mu.vercel.app'
+    const appUrl = process.env.APP_URL || 'https://stoicom.app'
     try {
       await sendEmail(user.email, welcomeEmail({ name: user.email.split('@')[0], appUrl }))
     } catch (err) {

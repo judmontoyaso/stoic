@@ -88,7 +88,7 @@ export async function POST(request: Request) {
   // suelta muere cuando la función responde)
   const email = userData.user.email || payload.data?.attributes?.user_email
   if (email) {
-    const appUrl = process.env.APP_URL || 'https://stoic-mu.vercel.app'
+    const appUrl = process.env.APP_URL || 'https://stoicom.app'
     try {
       await sendEmail(email, welcomeEmail({ name: email.split('@')[0], appUrl }))
     } catch (err) {

@@ -21,7 +21,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://stoic-mu.vercel.app/api/cron/emails",
+        "url": "https://stoicom.app/api/cron/emails",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
