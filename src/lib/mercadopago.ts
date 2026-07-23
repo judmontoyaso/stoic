@@ -70,7 +70,9 @@ export async function createPreference(opts: {
     external_reference: userId,
     metadata: { user_id: userId },
     back_urls: {
-      success: `${base}/welcome`,
+      // NO va directo a /welcome (protegida): pasa por la ruta de retorno
+      // que verifica el pago y aprueba antes de dejar entrar.
+      success: `${base}/api/checkout/mercadopago/return`,
       pending: `${base}/auth/verify?pago=pendiente`,
       failure: `${base}/auth/verify?pago=fallido`,
     },

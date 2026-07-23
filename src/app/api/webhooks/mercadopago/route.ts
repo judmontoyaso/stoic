@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
-import { sendEmail, welcomeEmail } from '@/lib/email'
-import { markLeadConverted } from '@/lib/leads'
 import { mpConfig, getPayment, verifyWebhookSignature } from '@/lib/mercadopago'
+import { approveMpFounder } from '@/lib/mercadopago-approve'
 
 // Webhook de Mercado Pago: al aprobarse un pago, aprueba al usuario
 // (misma marca app_metadata.stoicom_approved que el código y que LS) y
@@ -72,55 +70,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: `status ${payment.status}` })
   }
 
-  const userId = payment.externalReference
-  if (!userId) {
-    console.error('Pago MP aprobado sin external_reference:', payment.id)
-    return NextResponse.json({ ok: true, warning: 'pago sin user_id' })
-  }
-
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!serviceKey) {
-    return NextResponse.json({ error: 'Falta SUPABASE_SERVICE_ROLE_KEY' }, { status: 500 })
-  }
-  const admin = createSupabaseAdmin(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey)
-
-  const { data: userData, error: getError } = await admin.auth.admin.getUserById(userId)
-  if (getError || !userData?.user) {
-    console.error('Pago MP para usuario inexistente:', userId, getError)
-    return NextResponse.json({ ok: true, warning: 'usuario no encontrado' })
-  }
-
-  // Idempotente: si ya estaba aprobado, no se reenvía la bienvenida
-  const alreadyApproved = userData.user.app_metadata?.stoicom_approved === true
-
-  const { error } = await admin.auth.admin.updateUserById(userId, {
-    app_metadata: {
-      ...userData.user.app_metadata,
-      stoicom_approved: true,
-      stoicom_plan: 'founder',
-      stoicom_paid_at: userData.user.app_metadata?.stoicom_paid_at || new Date().toISOString(),
-      stoicom_mp_payment: payment.id,
-    },
-  })
-  if (error) {
-    console.error('Error aprobando comprador MP:', error)
+  // Misma aprobación que usa el retorno del checkout (helper compartido)
+  const outcome = await approveMpFounder(payment)
+  if (outcome === 'error') {
     // 500: Mercado Pago reintenta el webhook
     return NextResponse.json({ error: 'No se pudo aprobar al comprador' }, { status: 500 })
   }
-
-  if (!alreadyApproved) {
-    const email = userData.user.email || payment.payerEmail
-    if (email) {
-      const appUrl = process.env.APP_URL || 'https://stoicom.app'
-      try {
-        await sendEmail(email, welcomeEmail({ name: email.split('@')[0], appUrl }))
-      } catch (err) {
-        console.error('Error enviando bienvenida al comprador MP:', err)
-      }
-      await markLeadConverted(email)
-      await markLeadConverted(payment.payerEmail)
-    }
-  }
-
-  return NextResponse.json({ ok: true, approved: userId })
+  return NextResponse.json({ ok: true, outcome, user: payment.externalReference })
 }
