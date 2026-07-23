@@ -57,11 +57,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: type || 'sin tipo' })
   }
 
-  const payment = await getPayment(config, dataId)
-  if (!payment) {
-    // No se pudo leer: 500 para que MP reintente más tarde
-    return NextResponse.json({ error: 'No se pudo verificar el pago' }, { status: 500 })
+  const lookup = await getPayment(config, dataId)
+  if (!lookup.ok) {
+    // 404 (id inexistente, p.ej. el simulador) → 200 y no reintentar.
+    // Error transitorio → 500 para que MP reintente más tarde.
+    return NextResponse.json(
+      { ok: !lookup.retryable, ignored: 'pago no verificable' },
+      { status: lookup.retryable ? 500 : 200 }
+    )
   }
+  const payment = lookup.payment
 
   if (payment.status !== 'approved') {
     return NextResponse.json({ ok: true, ignored: `status ${payment.status}` })

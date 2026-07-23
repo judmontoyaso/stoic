@@ -56,6 +56,14 @@ invitación. Las tres puertas escriben la misma marca de aprobación
 - **Firma HMAC obligatoria.** Se valida el header `x-signature` contra el
   manifiesto `id:...;request-id:...;ts:...;`. Sin `MERCADOPAGO_WEBHOOK_SECRET`
   no se puede validar y se rechaza (401), nunca se procesa a ciegas.
+- **La preferencia NO lleva `notification_url` a propósito.** Si se pone, MP
+  manda una notificación IPN por esa URL que puede llegar **sin firmar**, y el
+  webhook la rechaza (401) → el pago no aprueba la cuenta (nos pasó en la primera
+  prueba real). Sin `notification_url`, MP usa solo el webhook del panel (Your
+  integrations → app → Webhooks), que llega firmado y apunta al mismo endpoint.
+- **404 vs error transitorio.** Si `GET /payments/{id}` da 404 (id inexistente,
+  típico del simulador de MP) el webhook responde 200 para que MP no reintente en
+  vano; si es un fallo transitorio (red, 5xx), responde 500 para que reintente.
 - **Idempotente.** MP reintenta y manda varias notificaciones por pago. Aprobar
   dos veces es inofensivo; la bienvenida solo sale la primera (se mira si el
   usuario ya estaba aprobado).

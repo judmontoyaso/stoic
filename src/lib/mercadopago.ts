@@ -75,7 +75,12 @@ export async function createPreference(opts: {
       failure: `${base}/auth/verify?pago=fallido`,
     },
     auto_return: 'approved',
-    notification_url: `${base}/api/webhooks/mercadopago`,
+    // NO se pone notification_url a propósito. Si se pone, MP manda una
+    // notificación IPN por esa URL que puede venir SIN firmar, y el
+    // webhook la rechaza (401) → el pago no aprueba la cuenta. Dejándolo
+    // fuera, MP usa solo el webhook configurado en el panel (Your
+    // integrations → app → Webhooks), que llega firmado con x-signature
+    // y sí se valida. Ese webhook apunta al mismo endpoint.
     statement_descriptor: 'STOICOM',
   }
 
@@ -113,16 +118,31 @@ export interface MpPayment {
   payerEmail: string | null
 }
 
+// Resultado de consultar un pago:
+//   - ok: el pago existe, se procesa.
+//   - not_found: el id no corresponde a un pago (p.ej. el simulador de MP
+//     con un id falso). No es un error nuestro → el webhook responde 200
+//     para que MP no reintente en vano.
+//   - error: fallo transitorio (red, 5xx, token) → el webhook responde
+//     500 para que MP reintente más tarde.
+export type PaymentLookup =
+  | { ok: true; payment: MpPayment }
+  | { ok: false; retryable: boolean }
+
 // Consulta el pago para conocer su estado real. El webhook solo trae el
 // id; nunca se confía en un "status" que venga en la notificación.
-export async function getPayment(config: MpConfig, paymentId: string): Promise<MpPayment | null> {
+export async function getPayment(config: MpConfig, paymentId: string): Promise<PaymentLookup> {
   try {
     const res = await fetch(`${MP_API}/v1/payments/${paymentId}`, {
       headers: { Authorization: `Bearer ${config.accessToken}` },
     })
+    if (res.status === 404) {
+      // Id inexistente (típico del simulador): no reintentar
+      return { ok: false, retryable: false }
+    }
     if (!res.ok) {
       console.error('Mercado Pago: no se pudo leer el pago', paymentId, res.status)
-      return null
+      return { ok: false, retryable: true }
     }
     const p = (await res.json()) as {
       id: number
@@ -131,14 +151,17 @@ export async function getPayment(config: MpConfig, paymentId: string): Promise<M
       payer?: { email?: string | null }
     }
     return {
-      id: p.id,
-      status: p.status,
-      externalReference: p.external_reference ?? null,
-      payerEmail: p.payer?.email ?? null,
+      ok: true,
+      payment: {
+        id: p.id,
+        status: p.status,
+        externalReference: p.external_reference ?? null,
+        payerEmail: p.payer?.email ?? null,
+      },
     }
   } catch (err) {
     console.error('Error leyendo el pago de Mercado Pago:', err)
-    return null
+    return { ok: false, retryable: true }
   }
 }
 
