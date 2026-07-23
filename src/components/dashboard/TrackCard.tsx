@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Flame, Target, CheckCircle2, Zap, Play, BookOpen, Award, ChevronDown, ChevronUp } from 'lucide-react'
+import { Flame, Target, Zap, Play, BookOpen, Award, ChevronDown, ChevronUp } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
 import { track as trackEvent } from '@/lib/analytics'
 import DailyReading from '@/components/DailyReading'
-import { Card, ModuleBadge } from '@/components/ui'
+import { Card, CompleteButton, ModuleBadge } from '@/components/ui'
 import {
   currentDayNumber,
   currentStreak,
@@ -197,17 +197,14 @@ export default function TrackCard({ state, today }: TrackCardProps) {
               {programDay.rationale}
             </p>
           )}
-          <button
+          <CompleteButton
+            completed={isDone}
             onClick={() => handleToggleToday(dayNumber)}
-            className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${
-              isDone
-                ? 'bg-[var(--primary-gold)]/15 text-[var(--primary-gold)] border border-[var(--primary-gold)]/40'
-                : 'bg-[var(--primary-gold)] text-[#0a0a0f] hover:opacity-90'
-            }`}
-          >
-            <CheckCircle2 className="w-4 h-4" />
-            {isDone ? 'Completado hoy — tocar para deshacer' : 'Marcar día como completado'}
-          </button>
+            labelDone="Completado hoy — tocar para deshacer"
+            labelTodo="Marcar día como completado"
+            doneVariant="gold"
+            className="mt-4"
+          />
         </div>
       ) : (
         <p className="text-sm text-slate-500 italic">No hay contenido para este día. Ejecuta los seeds V2 en Supabase.</p>

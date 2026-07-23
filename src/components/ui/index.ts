@@ -1,4 +1,5 @@
 export { default as Card } from './Card'
+export { default as CompleteButton } from './CompleteButton'
 export { default as EmptyState } from './EmptyState'
 export { default as LoadingScreen } from './LoadingScreen'
 export { default as ModuleBadge } from './ModuleBadge'

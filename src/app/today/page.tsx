@@ -6,7 +6,7 @@
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
-import { CheckCircle2, Circle, Moon, Sparkles, Target } from 'lucide-react'
+import { Moon, Sparkles, Target } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB, type DailyReflection } from '@/lib/db'
 import { getToday, formatDate } from '@/lib/utils'
@@ -14,7 +14,7 @@ import { getQuoteForDay } from '@/lib/quotes'
 import { currentDayNumber, currentStreak } from '@/lib/program'
 import DailyReading from '@/components/DailyReading'
 import QuoteCard from '@/components/dashboard/QuoteCard'
-import { Card, EmptyState, LoadingScreen, ModuleBadge, PageHeader } from '@/components/ui'
+import { Card, CompleteButton, EmptyState, LoadingScreen, ModuleBadge, PageHeader } from '@/components/ui'
 import { useStoicSync } from '@/hooks/useStoicSync'
 import type { Track, ProgramDay, ProgramWeek, DayLog, JournalEntry } from '@/types'
 
@@ -176,24 +176,13 @@ export default function TodayPage() {
                     )}
                   </div>
 
-                  <button
+                  <CompleteButton
+                    completed={item.completedToday}
                     onClick={() => handleToggle(item)}
-                    className={`w-full py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-                      item.completedToday
-                        ? 'bg-emerald-500/10 border border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
-                        : 'bg-[var(--primary-gold)] text-[#0a0a0f] hover:opacity-90'
-                    }`}
-                  >
-                    {item.completedToday ? (
-                      <>
-                        <CheckCircle2 className="w-4 h-4" /> Día {item.dayNumber} completado
-                      </>
-                    ) : (
-                      <>
-                        <Circle className="w-4 h-4" /> Marcar día como completado
-                      </>
-                    )}
-                  </button>
+                    labelDone={`Día ${item.dayNumber} completado`}
+                    labelTodo="Marcar día como completado"
+                    doneVariant="emerald"
+                  />
 
                   <DailyReading trackId={item.track.id} dayNumber={item.dayNumber} />
                 </>
