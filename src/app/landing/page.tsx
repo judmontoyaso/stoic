@@ -61,9 +61,10 @@ export default function LandingPage() {
           <span style={{ color: GOLD }}>Con los demás y contigo.</span>
         </h1>
         <p className="mt-8 max-w-xl mx-auto text-base md:text-lg leading-relaxed text-slate-400">
-          Un ejercicio concreto cada día, a la hora que tú elijas. Sin frases de
-          taza, sin atajos: percepción, acción y voluntad, entrenadas como
-          entrenaban los estoicos — por escrito y contra el reloj de un día real.
+          Un ejercicio real cada día para dejar de sonar dubitativo, escuchar de
+          verdad y sostener la conversación difícil. Sin frases de taza, sin
+          atajos: percepción, acción y voluntad, entrenadas como los estoicos —
+          por escrito y contra el reloj de un día real.
         </p>
         <div className="mt-10">
           <p className="mb-5 text-sm font-bold text-slate-200">

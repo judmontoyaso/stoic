@@ -23,17 +23,22 @@ reales del track Comunicación Estoica.
 
 ## Video 1 — Día 1: "Grábate 3 minutos" (línea base)
 
-**Gancho (texto en pantalla):** "Nadie soporta el paso 1 de este programa"
+**Gancho (texto en pantalla):** "El día 1 de este programa es grabarte y odiarlo"
 
 **Audio (ElevenLabs):**
-> El día uno de mi programa de comunicación no fue un consejo. Fue una orden incómoda:
-> grábate tres minutos hablando de tu trabajo, sin preparar nada.
-> Después míralo dos veces. La primera, solo escucha: cuenta tus muletillas.
+> Grábate tres minutos hablando de tu trabajo. Sin preparar nada.
+> Ahora míralo. Dos veces.
+> La primera, tapa la pantalla y solo escucha: cuenta tus muletillas.
 > La segunda, quita el volumen y solo mira: tu postura, tus manos, tus ojos.
-> Duele. Y por eso funciona: es el diagnóstico más honesto que existe —
-> lo que el mundo ve y tú no.
-> Ese video se guarda. En el día ochenta y seis lo vuelves a ver, y ahí está la prueba.
-> Día uno de noventa. Esto apenas empieza.
+> Vas a querer apagarlo. Por eso funciona.
+> Es el diagnóstico más honesto que existe: lo que el mundo ve, y tú no.
+> Ese video se guarda. En el día ochenta y seis lo vuelves a ver —
+> y ahí está la prueba de que cambiaste.
+> Día uno de noventa. Apenas empieza.
+
+_Nota de refinamiento (skill marketing): el hook abre con la orden ("Grábate")
+en la palabra 1, no con contexto. "Vas a querer apagarlo. Por eso funciona"
+condensa el dolor + el porqué en una sola línea._
 
 **Capturas:** Programa → Día 1 "Video de línea base" (tarjeta completa con instrucciones); dashboard con el track iniciado.
 
@@ -137,7 +142,12 @@ reales del track Comunicación Estoica.
 
 ## Cierre estándar de TODOS los videos (últimos 4-6 segundos)
 Captura de la app (el día correspondiente) + voz:
-> "Es el programa StoiCom: noventa días, un ejercicio al día. Link en la bio."
+> "Los primeros siete días son gratis, uno por día en tu correo. Link en la bio."
+
+_Nota (skill marketing): el CTA en contenido frío es SIEMPRE el gancho gratis
+de 7 días, nunca "compra". La venta de fundador ocurre después, cuando ya
+probaron. El cierre viejo ("noventa días, un ejercicio al día") describía el
+producto pero no daba un siguiente paso de baja fricción._
 
 ## Orden de publicación
 1 → 2 → 3 → 5 → 12, un video cada 2 días. Los tres primeros forman la
