@@ -6,14 +6,19 @@ import toast from 'react-hot-toast'
 import { createClient } from '@/utils/supabase/client'
 import { track } from '@/lib/analytics'
 
-// Primera entrada con Google: dos puertas, una sola vez.
+// Primera entrada con Google: hasta tres puertas, una sola vez.
 //   1. Código de invitación (gratis, beta privada)
-//   2. Compra fundador vía Lemon Squeezy (pago único; el webhook aprueba)
+//   2. Fundador vía Mercado Pago (LatAm: tarjeta, PSE, OXXO; el webhook aprueba)
+//   3. Fundador vía Lemon Squeezy (internacional/USD; el webhook aprueba)
+// Cada pasarela aparece solo si está habilitada por su env pública.
+
+const MP_ENABLED = process.env.NEXT_PUBLIC_MERCADOPAGO_ENABLED === 'true'
 
 export default function VerifyPage() {
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null)
+  const [mpLoading, setMpLoading] = useState(false)
 
   useEffect(() => {
     const base = process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL
@@ -25,6 +30,24 @@ export default function VerifyPage() {
       setCheckoutUrl(`${base}${sep}${params}`)
     })
   }, [])
+
+  const handleMercadoPago = async () => {
+    setMpLoading(true)
+    try {
+      const res = await fetch('/api/checkout/mercadopago', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok && data.initPoint) {
+        window.location.href = data.initPoint
+      } else {
+        toast.error(data.error || 'No se pudo iniciar el pago')
+        setMpLoading(false)
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error('No se pudo iniciar el pago')
+      setMpLoading(false)
+    }
+  }
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -108,22 +131,35 @@ export default function VerifyPage() {
 
         </form>
 
-        {checkoutUrl && (
+        {(MP_ENABLED || checkoutUrl) && (
           <div className="space-y-3 pt-2 border-t border-[var(--border-color)]">
             <p className="text-[10px] text-slate-500 text-center uppercase tracking-widest font-bold">
-              ¿Sin código?
+              ¿Sin código? Hazte fundador
             </p>
-            <a
-              href={checkoutUrl}
-              className="block w-full py-2.5 rounded-lg border border-[var(--primary-gold)]/50 text-center text-sm font-bold text-[var(--primary-gold)] hover:bg-[var(--primary-gold)]/10 transition-colors"
-            >
-              Hazte fundador — pago único
-            </a>
             <p className="text-[10px] text-slate-500 text-center leading-relaxed">
-              Acceso de por vida al programa completo. El pago se procesa en
-              Lemon Squeezy; al confirmarse, tu cuenta entra sola (recarga esta
-              página al volver).
+              Pago único, acceso de por vida al programa completo. Al confirmarse
+              el pago tu cuenta entra sola (recarga esta página al volver).
             </p>
+
+            {MP_ENABLED && (
+              <button
+                type="button"
+                onClick={handleMercadoPago}
+                disabled={mpLoading}
+                className="block w-full py-2.5 rounded-lg bg-[var(--primary-gold)] text-[#0a0a0f] text-center text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {mpLoading ? 'Abriendo pago…' : 'Pagar con Mercado Pago'}
+              </button>
+            )}
+
+            {checkoutUrl && (
+              <a
+                href={checkoutUrl}
+                className="block w-full py-2.5 rounded-lg border border-[var(--primary-gold)]/50 text-center text-sm font-bold text-[var(--primary-gold)] hover:bg-[var(--primary-gold)]/10 transition-colors"
+              >
+                {MP_ENABLED ? 'Pagar con tarjeta internacional' : 'Hazte fundador — pago único'}
+              </a>
+            )}
           </div>
         )}
 
