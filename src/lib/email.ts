@@ -464,7 +464,9 @@ export function leadDripEmail(opts: {
   quote: { text: string; author: string }
   appUrl: string
   unsubscribeUrl: string
-  checkoutUrl: string | null
+  // URL para hacerse fundador (la página de entrada; el pago real se
+  // elige tras iniciar sesión). null = todavía no se puede comprar.
+  founderUrl: string | null
 }): EmailContent {
   const isLast = opts.dayNumber >= 7
 
@@ -492,10 +494,10 @@ export function leadDripEmail(opts: {
       <p style="margin:0;font-size:12px;font-weight:700;color:#d4b45f;text-align:right;">— ${opts.quote.author}</p>
     </div>`
 
-  // El cierre solo aparece cuando hay checkout configurado: sin él, la
-  // oferta sería una promesa que la app todavía no puede cumplir.
+  // El cierre con oferta solo aparece si ya se puede comprar (founderUrl).
+  // Sin eso, sería una promesa que la app todavía no puede cumplir.
   const closing =
-    isLast && opts.checkoutUrl
+    isLast && opts.founderUrl
       ? paragraph(
           'Hasta aquí llegan los siete días de muestra. Quedan 83 en el track de Comunicación, más los 90 de Práctica Interna: la app con tu calendario real, el diario con examen nocturno, la lección diaria escrita para tu día exacto y los correos a la hora que elijas.'
         ) +
@@ -503,7 +505,10 @@ export function leadDripEmail(opts: {
           <p style="margin:0 0 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#d4b45f;">Acceso de fundador</p>
           <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};">Un solo pago, acceso de por vida y a todo lo que venga después. Sin suscripción y sin renovaciones.</p>
         </div>` +
-        button('Ser fundador', opts.checkoutUrl)
+        button('Entrar y hacerme fundador', opts.founderUrl) +
+        paragraph(
+          'Entras con tu cuenta de Google y eliges el pago; tu acceso queda activo al instante.'
+        )
       : isLast
         ? paragraph(
             'Hasta aquí llegan los siete días de muestra. El programa completo — 90 días por track, la app con tu calendario real y el diario con examen nocturno — abre muy pronto. Te aviso por aquí en cuanto esté.'
@@ -534,7 +539,7 @@ export async function sendEmail(to: string, content: EmailContent): Promise<bool
     console.error('RESEND_API_KEY no configurada en las variables de entorno.')
     return false
   }
-  const from = process.env.EMAIL_FROM || `StoiCom <no-reply@notifications.juanmontoya.me>`
+  const from = process.env.EMAIL_FROM || `StoiCom <no-reply@notifications.stoicom.app>`
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',

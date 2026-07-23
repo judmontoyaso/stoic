@@ -111,16 +111,16 @@ export async function sendDripDay(
     return false
   }
 
-  // El día 7 solo vende si la tienda puede cobrarle a un desconocido.
-  // Tener URL no basta: un checkout de Lemon Squeezy en test mode existe
-  // y responde, pero solo acepta pagos del dueño de la tienda. Mandar
-  // ahí al lead quemaría el correo de más intención de la secuencia.
-  // Por eso el interruptor es explícito y el estado seguro es el de por
-  // defecto: cuando LS verifique la tienda, LEMONSQUEEZY_LIVE=true.
-  const checkoutUrl =
+  // El día 7 solo ofrece comprar si YA se puede cobrar a un desconocido:
+  // Mercado Pago habilitado (rail LatAm) o Lemon Squeezy verificado. El
+  // correo no lleva a un checkout directo (el lead aún no es usuario, no
+  // hay user_id): lleva a /login, donde tras entrar con Google elige el
+  // pago. Estado seguro por defecto: sin pasarela activa, no se ofrece
+  // (el correo dice "abre pronto" en vez de mandar a un checkout muerto).
+  const canSell =
+    process.env.NEXT_PUBLIC_MERCADOPAGO_ENABLED === 'true' ||
     process.env.LEMONSQUEEZY_LIVE === 'true'
-      ? process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL || null
-      : null
+  const founderUrl = canSell ? `${appUrl()}/login` : null
 
   const ok = await sendEmail(
     lead.email,
@@ -134,7 +134,7 @@ export async function sendDripDay(
       quote: getQuoteForDay(dayNumber),
       appUrl: appUrl(),
       unsubscribeUrl: unsubscribeUrl(lead.token),
-      checkoutUrl,
+      founderUrl,
     })
   )
 
