@@ -160,6 +160,10 @@ export default function VerifyPage() {
                 {MP_ENABLED ? 'Pagar con tarjeta internacional' : 'Hazte fundador — pago único'}
               </a>
             )}
+            <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+              Garantía de 7 días. Consulta la{' '}
+              <a href="/reembolsos" className="text-[var(--primary-gold)] hover:underline">política de reembolsos</a>.
+            </p>
           </div>
         )}
 

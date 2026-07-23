@@ -3,6 +3,7 @@ import crypto from 'node:crypto'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { sendEmail, welcomeEmail } from '@/lib/email'
 import { markLeadConverted } from '@/lib/leads'
+import { recordPayment } from '@/lib/payments'
 
 // Webhook de Lemon Squeezy: al confirmarse una orden pagada, aprueba al
 // usuario (misma marca que el código de acceso) y registra el plan.
@@ -36,7 +37,16 @@ export async function POST(request: Request) {
 
   let payload: {
     meta?: { custom_data?: { user_id?: string } }
-    data?: { attributes?: { status?: string; user_email?: string; identifier?: string } }
+    data?: {
+      id?: string
+      attributes?: {
+        status?: string
+        user_email?: string
+        identifier?: string
+        total?: number | null // en centavos
+        currency?: string | null
+      }
+    }
   }
   try {
     payload = JSON.parse(raw)
@@ -98,6 +108,20 @@ export async function POST(request: Request) {
     await markLeadConverted(email)
     await markLeadConverted(payload.data?.attributes?.user_email)
   }
+
+  // Registro interno del pago (idempotente; no bloquea la aprobación).
+  // LS reporta el total en centavos → a unidades de la moneda.
+  const total = payload.data?.attributes?.total
+  await recordPayment({
+    provider: 'lemonsqueezy',
+    providerPaymentId: payload.data?.attributes?.identifier || payload.data?.id || `ls-${userId}`,
+    userId,
+    email: email || null,
+    amount: typeof total === 'number' ? total / 100 : null,
+    currency: payload.data?.attributes?.currency || null,
+    status: 'approved',
+    plan: 'founder',
+  })
 
   return NextResponse.json({ ok: true, approved: userId })
 }

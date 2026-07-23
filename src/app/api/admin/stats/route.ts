@@ -123,6 +123,37 @@ export async function GET() {
         }
       })()
 
+  // Ingresos. Tolera que supabase_v10_payments.sql no esté ejecutado.
+  const { data: paymentRows, error: paymentsError } = await supabase
+    .from('payments')
+    .select('provider, amount, currency, status, email, created_at')
+    .order('created_at', { ascending: false })
+  const payments = paymentsError
+    ? null
+    : (() => {
+        const rows = paymentRows || []
+        const approved = rows.filter(p => p.status === 'approved')
+        // Ingresos por moneda (COP y USD no se suman entre sí)
+        const byCurrency: Record<string, number> = {}
+        for (const p of approved) {
+          const cur = p.currency || '¿?'
+          byCurrency[cur] = (byCurrency[cur] || 0) + (Number(p.amount) || 0)
+        }
+        return {
+          count: approved.length,
+          refunded: rows.filter(p => p.status === 'refunded').length,
+          byCurrency,
+          recent: rows.slice(0, 8).map(p => ({
+            provider: p.provider,
+            amount: p.amount,
+            currency: p.currency,
+            status: p.status,
+            email: p.email,
+            date: String(p.created_at).slice(0, 10),
+          })),
+        }
+      })()
+
   // Eventos de los últimos 30 días agrupados por nombre
   const eventCounts: Record<string, number> = {}
   for (const e of eventsRes.data || []) {
@@ -139,6 +170,7 @@ export async function GET() {
     },
     users: perUser,
     leads,
+    payments,
     events30d: eventCounts,
   })
 }

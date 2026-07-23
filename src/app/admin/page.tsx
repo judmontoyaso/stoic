@@ -35,6 +35,20 @@ interface AdminStats {
     new30d: number
     bySource: Record<string, number>
   } | null
+  // null mientras no se haya ejecutado supabase_v10_payments.sql
+  payments: {
+    count: number
+    refunded: number
+    byCurrency: Record<string, number>
+    recent: {
+      provider: string
+      amount: number | null
+      currency: string | null
+      status: string
+      email: string | null
+      date: string
+    }[]
+  } | null
   events30d: Record<string, number>
 }
 
@@ -129,6 +143,54 @@ export default function AdminPage() {
           </tbody>
         </table>
       </Card>
+
+      {stats.payments && (
+        <Card className="p-5">
+          <h2 className="text-sm font-bold text-[var(--foreground)] mb-1">Ingresos</h2>
+          <p className="text-xs text-slate-500 mb-4">
+            {stats.payments.count} pago{stats.payments.count === 1 ? '' : 's'} aprobado{stats.payments.count === 1 ? '' : 's'}
+            {stats.payments.refunded > 0 ? ` · ${stats.payments.refunded} reembolsado${stats.payments.refunded === 1 ? '' : 's'}` : ''}
+          </p>
+          <div className="flex flex-wrap gap-3 mb-4">
+            {Object.entries(stats.payments.byCurrency).map(([cur, total]) => (
+              <div key={cur} className="p-3 rounded-lg border border-[var(--border-color)]">
+                <p className="text-lg font-bold text-[var(--primary-gold)]">
+                  {total.toLocaleString('es-CO')} {cur}
+                </p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider">Recaudado</p>
+              </div>
+            ))}
+          </div>
+          {stats.payments.recent.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead className="text-slate-500 text-left">
+                  <tr>
+                    <th className="py-1.5 pr-4">Fecha</th>
+                    <th className="py-1.5 pr-4">Correo</th>
+                    <th className="py-1.5 pr-4">Monto</th>
+                    <th className="py-1.5 pr-4">Pasarela</th>
+                    <th className="py-1.5">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.payments.recent.map((p, i) => (
+                    <tr key={i} className="border-t border-[var(--border-color)]">
+                      <td className="py-2 pr-4 whitespace-nowrap">{p.date}</td>
+                      <td className="py-2 pr-4">{p.email || '—'}</td>
+                      <td className="py-2 pr-4 whitespace-nowrap">
+                        {p.amount != null ? `${p.amount.toLocaleString('es-CO')} ${p.currency || ''}` : '—'}
+                      </td>
+                      <td className="py-2 pr-4">{p.provider}</td>
+                      <td className="py-2">{p.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
 
       {stats.leads && (
         <Card className="p-5">

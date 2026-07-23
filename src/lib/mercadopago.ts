@@ -118,6 +118,8 @@ export interface MpPayment {
   status: string
   externalReference: string | null
   payerEmail: string | null
+  amount: number | null
+  currency: string | null
 }
 
 // Resultado de consultar un pago:
@@ -151,6 +153,8 @@ export async function getPayment(config: MpConfig, paymentId: string): Promise<P
       status: string
       external_reference?: string | null
       payer?: { email?: string | null }
+      transaction_amount?: number | null
+      currency_id?: string | null
     }
     return {
       ok: true,
@@ -159,6 +163,8 @@ export async function getPayment(config: MpConfig, paymentId: string): Promise<P
         status: p.status,
         externalReference: p.external_reference ?? null,
         payerEmail: p.payer?.email ?? null,
+        amount: p.transaction_amount ?? null,
+        currency: p.currency_id ?? null,
       },
     }
   } catch (err) {

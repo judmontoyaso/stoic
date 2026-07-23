@@ -18,6 +18,7 @@ function isPublicPath(pathname: string): boolean {
     pathname === '/suscripcion' ||
     pathname === '/terms' ||
     pathname === '/privacy' ||
+    pathname === '/reembolsos' ||
     pathname === '/favicon.ico' ||
     pathname === '/favicon.png' ||
     pathname === '/sculpture.png' ||

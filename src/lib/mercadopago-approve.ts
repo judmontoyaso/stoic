@@ -10,6 +10,7 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { sendEmail, welcomeEmail } from '@/lib/email'
 import { markLeadConverted } from '@/lib/leads'
+import { recordPayment } from '@/lib/payments'
 import type { MpPayment } from '@/lib/mercadopago'
 
 export type ApproveOutcome =
@@ -57,8 +58,21 @@ export async function approveMpFounder(payment: MpPayment): Promise<ApproveOutco
     return 'error'
   }
 
+  const email = userData.user.email || payment.payerEmail
+
+  // Registro interno del pago (idempotente; no bloquea la aprobación)
+  await recordPayment({
+    provider: 'mercadopago',
+    providerPaymentId: String(payment.id),
+    userId,
+    email,
+    amount: payment.amount,
+    currency: payment.currency,
+    status: payment.status,
+    plan: 'founder',
+  })
+
   if (!alreadyApproved) {
-    const email = userData.user.email || payment.payerEmail
     if (email) {
       const appUrl = process.env.APP_URL || 'https://stoicom.app'
       try {
