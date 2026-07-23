@@ -3,6 +3,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import Sidebar from "@/components/Sidebar"
 import MobileTabBar from "@/components/MobileTabBar"
+import PageTransition from "@/components/PageTransition"
 import RegisterSW from "@/components/RegisterSW"
 import { Toaster } from "react-hot-toast"
 
@@ -90,7 +91,7 @@ export default async function RootLayout({
         <main
           className={`flex-1 overflow-y-auto h-screen md:h-auto ${isLoginPage ? '' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0'}`}
         >
-          {children}
+          <PageTransition>{children}</PageTransition>
         </main>
         {!isLoginPage && <MobileTabBar />}
       </body>
