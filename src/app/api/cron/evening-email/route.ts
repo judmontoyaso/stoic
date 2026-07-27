@@ -4,6 +4,7 @@ import { eveningReviewEmail, sendEmail, type EveningTrackStatus } from '@/lib/em
 import { sendPushToUser } from '@/lib/push'
 import { getApprovedUsers, type ApprovedUser } from '@/lib/recipients'
 import { getPrefsMap, localParts, markEmailSent, DEFAULT_EMAIL_PREFS } from '@/lib/prefs-server'
+import { deadlineFrom, outOfTime } from '@/lib/cron-budget'
 
 // Cron nocturno: a CADA usuario aprobado le pregunta si completó SU día
 // (según su user_tracks y sus day_logs) y trae el examen nocturno de
@@ -18,7 +19,15 @@ import { getPrefsMap, localParts, markEmailSent, DEFAULT_EMAIL_PREFS } from '@/l
 // header "Authorization: Bearer <CRON_SECRET>" o query ?secret=
 // ?to= o ?date= fuerzan el envío saltando horario y dedupe (pruebas).
 
-export const maxDuration = 60
+// 300 como el matutino: este cron también recorre TODA la base de forma
+// secuencial. Vía /api/cron/emails hereda el presupuesto del lote; los 60
+// anteriores solo aplicaban si se llamaba suelto, y ahí se quedaba corto.
+export const maxDuration = 300
+
+/** Presupuesto propio si el cron se llama suelto (no vía /api/cron/emails). */
+const OWN_BUDGET_MS = 280_000
+/** Coste de la iteración más lenta: consultas + correo + push (sin IA). */
+const PER_USER_RESERVE_MS = 10_000
 
 function dayNumberFor(startDate: string, dateStr: string, durationDays: number): number | null {
   const start = new Date(startDate + 'T00:00:00Z')
@@ -154,10 +163,23 @@ export async function GET(request: Request) {
   let sent = 0
   let failed = 0
   let skipped = 0
+  let deferred = 0
+  let processed = 0
   const push = { sent: 0, failed: 0, removed: 0 }
   const detail: { email: string; tracks: number; sent: boolean; skipped?: string }[] = []
 
+  const deadline = deadlineFrom(request, OWN_BUDGET_MS)
+
   for (const user of users) {
+    // Se corta ANTES de empezar al usuario, nunca a mitad: sin
+    // markEmailSent, la siguiente pasada del cron lo recoge.
+    if (!forced && outOfTime(deadline, PER_USER_RESERVE_MS)) {
+      deferred = users.length - processed
+      console.warn(`Presupuesto agotado: ${deferred} usuarios quedan para la próxima pasada`)
+      break
+    }
+    processed++
+
     const prefs = prefsMap.get(user.id) || { ...DEFAULT_EMAIL_PREFS }
     const { date: localDate, hour: localHour } = localParts(prefs.timezone)
 
@@ -211,5 +233,5 @@ export async function GET(request: Request) {
     push.removed += p.removed
   }
 
-  return NextResponse.json({ ok: true, recipients: users.length, sent, failed, skipped, detail, push })
+  return NextResponse.json({ ok: true, recipients: users.length, sent, failed, skipped, deferred, detail, push })
 }

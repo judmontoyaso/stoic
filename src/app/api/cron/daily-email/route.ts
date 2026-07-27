@@ -7,6 +7,8 @@ import { getOrCreateDailyReading } from '@/lib/readings'
 import { sendPushToUser } from '@/lib/push'
 import { getApprovedUsers, type ApprovedUser } from '@/lib/recipients'
 import { getPrefsMap, localParts, markEmailSent, DEFAULT_EMAIL_PREFS } from '@/lib/prefs-server'
+import { deadlineFrom, outOfTime } from '@/lib/cron-budget'
+import type { AIDailyReflection } from '@/lib/ai'
 
 // Endpoint de Cron diario: envía a CADA usuario aprobado el ejercicio del
 // día según SU fecha de inicio (user_tracks). La lectura queda cacheada
@@ -22,6 +24,11 @@ import { getPrefsMap, localParts, markEmailSent, DEFAULT_EMAIL_PREFS } from '@/l
 // ?to= o ?date= fuerzan el envío saltando horario y dedupe (pruebas).
 
 export const maxDuration = 300
+
+/** Presupuesto propio si el cron se llama suelto (no vía /api/cron/emails). */
+const OWN_BUDGET_MS = 280_000
+/** Coste de la iteración más lenta: llamada a IA (~30s) + correo + push. */
+const PER_USER_RESERVE_MS = 45_000
 
 const MODULE_LABELS: Record<string, string> = {
   perception: 'Percepción',
@@ -166,10 +173,27 @@ export async function GET(request: Request) {
   let sent = 0
   let failed = 0
   let skipped = 0
+  let deferred = 0
+  let processed = 0
+  let sinTrack = 0
   const push = { sent: 0, failed: 0, removed: 0 }
   const detail: { email: string; tracks: number; sent: boolean; skipped?: string }[] = []
 
+  const deadline = deadlineFrom(request, OWN_BUDGET_MS)
+  // La reflexión solo depende de (track, día): los usuarios que van en el
+  // mismo día del mismo track comparten una única llamada a IA por pasada.
+  const reflectionCache = new Map<string, AIDailyReflection | null>()
+
   for (const user of users) {
+    // Se corta ANTES de empezar al usuario, nunca a mitad: sin
+    // markEmailSent, la siguiente pasada del cron lo recoge.
+    if (!forced && outOfTime(deadline, PER_USER_RESERVE_MS)) {
+      deferred = users.length - processed
+      console.warn(`Presupuesto agotado: ${deferred} usuarios quedan para la próxima pasada`)
+      break
+    }
+    processed++
+
     const prefs = prefsMap.get(user.id) || { ...DEFAULT_EMAIL_PREFS }
     const { date: localDate, hour: localHour } = localParts(prefs.timezone)
 
@@ -189,23 +213,34 @@ export async function GET(request: Request) {
     const dateStr = forceDate || localDate
     const blocks = await buildBlocksForUser(supabase, user.id, dateStr)
     if (blocks.length === 0) {
+      // Aprobado pero sin fecha de inicio: no recibe NADA, ni hoy ni nunca,
+      // hasta que elija track en la app. Se cuenta para que deje de ser mudo.
+      sinTrack++
       detail.push({ email: user.email, tracks: 0, sent: false, skipped: 'sin programa activo' })
       continue
     }
 
     const quote = getQuoteForDay(blocks[0].dayNumber)
 
-    // Reflexión IA (opcional) alimentada con los ejercicios reales del usuario
-    const aiReflection = await generateDailyReflection({
-      dayNumber: blocks[0].dayNumber,
-      phase: Math.min(3, Math.ceil(blocks[0].dayNumber / 30)),
-      phaseLabel: blocks.map(b => `${b.trackName}: ${b.title}`).join(' | '),
-      quote,
-      habits: blocks.map(b => ({ name: `${b.trackName} — ${b.title}`, description: b.instructions })),
-      challenge: blocks[0].weeklyChallenge
-        ? { title: blocks[0].weeklyChallenge.title, description: blocks[0].weeklyChallenge.description }
-        : null,
-    })
+    // Reflexión IA (opcional) alimentada con los ejercicios reales del
+    // usuario. Sus entradas se derivan por completo de (track, día), así
+    // que la cohorte que va en el mismo punto del programa la comparte:
+    // una llamada a IA por cohorte y pasada, no una por usuario.
+    const cohortKey = blocks.map(b => `${b.trackName}#${b.dayNumber}`).join('|')
+    let aiReflection = reflectionCache.get(cohortKey)
+    if (aiReflection === undefined) {
+      aiReflection = await generateDailyReflection({
+        dayNumber: blocks[0].dayNumber,
+        phase: Math.min(3, Math.ceil(blocks[0].dayNumber / 30)),
+        phaseLabel: blocks.map(b => `${b.trackName}: ${b.title}`).join(' | '),
+        quote,
+        habits: blocks.map(b => ({ name: `${b.trackName} — ${b.title}`, description: b.instructions })),
+        challenge: blocks[0].weeklyChallenge
+          ? { title: blocks[0].weeklyChallenge.title, description: blocks[0].weeklyChallenge.description }
+          : null,
+      })
+      reflectionCache.set(cohortKey, aiReflection)
+    }
 
     // Persistir el consejo del mentor: la app lo muestra en "Hoy"
     if (aiReflection) {
@@ -254,5 +289,5 @@ export async function GET(request: Request) {
     push.removed += p.removed
   }
 
-  return NextResponse.json({ ok: true, recipients: users.length, sent, failed, skipped, detail, push })
+  return NextResponse.json({ ok: true, recipients: users.length, sent, failed, skipped, deferred, sinTrack, detail, push })
 }
