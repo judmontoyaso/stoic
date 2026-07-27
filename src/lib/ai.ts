@@ -243,7 +243,7 @@ const TECHNIQUE_NOTES: { match: RegExp; note: string }[] = [
     note: 'Incantación vs. afirmación (Robbins): la afirmación en frío la rechaza el cerebro por falsa. La incantación involucra cuerpo, voz e intensidad a la vez: el estado no se declara, se ejecuta.',
   },
   {
-    match: /interrupción de patrón|interrupcion de patron|protocolo de 5 pasos|sustitución uno a uno|sustitucion uno a uno/i,
+    match: /interrupción de patrón|interrupcion de patron|protocolo de 5 pasos|sustitución uno a uno|sustitucion uno a uno|condicionamiento: repetir/i,
     note: 'Condicionamiento Neuro-Asociativo (Robbins), 6 pasos: decidir qué quieres y qué lo impide; conseguir apalancamiento asociando dolor inmediato a seguir igual; interrumpir el patrón físicamente; crear una alternativa que cubra la MISMA necesidad; condicionarla por repetición; probarla a futuro. Un patrón no se elimina, se reemplaza.',
   },
   {
@@ -251,46 +251,64 @@ const TECHNIQUE_NOTES: { match: RegExp; note: string }[] = [
     note: 'Ganancia secundaria (Robbins): el patrón destructivo persiste porque cubre una necesidad real. Quitar la conducta sin cubrir la necesidad la devuelve, o la sustituye por otra peor.',
   },
   {
-    match: /dolor y placer|palanca/i,
+    match: /dolor y placer/i,
     note: 'Dolor y placer (Robbins): la conducta persiste por lo que el cerebro asoció a evitar dolor o ganar placer AHORA. Se cambia reasignando esas asociaciones de forma visceral e inmediata, no discutiéndolas.',
   },
   {
-    match: /preguntas de poder|pregunta de francotirador|preguntas? matutina/i,
+    match: /preguntas de poder|pregunta de francotirador/i,
     note: 'Preguntas de calidad (Robbins): pensar es preguntar y responder. La pregunta determina qué sale a buscar el cerebro. "¿Por qué siempre me pasa esto?" ordena buscar pruebas de impotencia.',
   },
   {
-    match: /VAK|canal|representacional/i,
+    match: /canal vak|cambia el canal/i,
     note: 'Sistemas representacionales (Robbins): cada quien procesa en visual, auditivo o kinestésico y lo delata al hablar ("no lo veo claro" / "no me suena" / "no me siento cómodo"). Hablar en su canal multiplica la comprensión sin cambiar el contenido.',
   },
   {
-    match: /priming|fisiología|fisiologia|respiración táctica|respiracion tactica|lenguaje corporal|ritmo/i,
+    match: /priming matutino|respiración táctica|respiracion tactica|lenguaje corporal|ritmo a la mitad/i,
     note: 'Fisiología como vía rápida al estado (Robbins): postura, respiración y ritmo no solo expresan el estado, lo fabrican. Por eso se interviene antes del evento, no durante.',
   },
   {
-    match: /ancla/i,
+    match: /primera decisión|primera decision|contrato sagrado|contrato 2\.0/i,
+    note: 'Momentos de decisión (Robbins): una decisión real es aquella tras la cual actúas de inmediato y cierras las alternativas. Si no hubo acción inmediata, era una preferencia disfrazada.',
+  },
+  {
+    match: /matching sutil/i,
+    note: 'Rapport (Robbins): la sintonía se construye igualando lo no verbal —ritmo, volumen, postura— antes que el argumento. Primero acompasas, después conduces; si el otro no te sigue, aún tocaba acompasar.',
+  },
+  {
+    match: /metáfora|metafora/i,
+    note: 'Metáforas (Robbins): la metáfora con la que describes un ámbito ("negociar es una guerra" vs. "un rompecabezas a dos manos") gobierna qué conductas te parecen razonables en él. No se discute la conducta: se cambia la metáfora que la produce.',
+  },
+  // Técnicas documentadas en docs/FRAMEWORKS_ROBBINS.md que ningún día usa
+  // todavía. Los patrones son deliberadamente específicos para que solo
+  // disparen si algún día futuro se nombra por la técnica.
+  {
+    match: /anclaje de estado|instalar un ancla|ancla de estado/i,
     note: 'Anclaje (Robbins): un estímulo sensorial único y repetible, instalado en el PICO de un estado intenso, devuelve ese estado en segundos al dispararlo. Si se instala después del pico, no prende.',
   },
   {
-    match: /marco|reencuadre|redefinición|redefinicion/i,
+    match: /redefinición del marco|redefinicion del marco|reencuadre/i,
     note: 'Redefinición del marco (Robbins): de contexto (la misma conducta vale distinto en otro escenario) o de contenido (el hecho es idéntico, cambia lo que significa). Es la disciplina del asentimiento estoica vuelta herramienta de conversación.',
   },
   {
     match: /metaprograma/i,
     note: 'Metaprogramas (Robbins): filtros con los que alguien decide a qué atiende — hacia/desde, interno/externo, semejanza/diferencia, general/detalle. Detectarlos cambia cómo le presentas lo mismo.',
   },
-  {
-    match: /rapport|espejeo|compenetración|compenetracion/i,
-    note: 'Rapport (Robbins): la sintonía se construye igualando lo no verbal —ritmo, volumen, postura— antes que el argumento. Primero acompasas, después conduces; si el otro no te sigue, aún tocaba acompasar.',
-  },
-  {
-    match: /regla|valor(es)?\b/i,
-    note: 'Reglas y valores (Robbins): la frustración rara vez viene del valor sino de la REGLA que le pusiste — qué debe pasar para darlo por cumplido. Reglas imposibles garantizan malestar con cualquier resultado.',
-  },
 ]
 
-/** Fichas relevantes para un día concreto (máximo 3, para no inflar el prompt). */
-function techniqueNotesFor(...fields: (string | null)[]): string[] {
-  const haystack = fields.filter(Boolean).join(' ')
+/**
+ * Fichas relevantes para un día concreto (máximo 3, para no inflar el prompt).
+ *
+ * Solo se busca en autor y título, NUNCA en instructions/rationale: son
+ * textos largos donde palabras como "regla", "marco", "valor" o "ancla"
+ * aparecen en su sentido corriente, y matchear ahí metía la mecánica de
+ * Robbins en días de Gallo, Frankl o Marco Aurelio.
+ *
+ * Además se exige que el día cite a Robbins: todas las fichas son suyas,
+ * así que un día de otro referente no debe recibir ninguna.
+ */
+function techniqueNotesFor(sourceAuthor: string | null, title: string | null): string[] {
+  if (!/robbins/i.test(sourceAuthor || '')) return []
+  const haystack = `${sourceAuthor || ''} ${title || ''}`
   const notes: string[] = []
   for (const { match, note } of TECHNIQUE_NOTES) {
     if (match.test(haystack) && !notes.includes(note)) notes.push(note)
@@ -317,7 +335,7 @@ export async function generateDailyReading(opts: {
   quote: { text: string; author: string }
   weeklyChallenge: { title: string; description: string } | null
 }): Promise<{ reading: string; model: string } | null> {
-  const notes = techniqueNotesFor(opts.sourceAuthor, opts.title, opts.instructions, opts.rationale)
+  const notes = techniqueNotesFor(opts.sourceAuthor, opts.title)
 
   const prompt = `
 Datos del día para escribir la lección:

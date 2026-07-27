@@ -28,7 +28,9 @@ Para qué sirve este archivo:
 | **Incantación vs. afirmación** | La afirmación repetida en frío la rechaza el cerebro por falsa. La incantación involucra cuerpo, voz e intensidad emocional a la vez: no se declara el estado, se ejecuta. | PI d37 |
 | **Ganancia secundaria** | Un patrón destructivo se sostiene porque cubre una necesidad real. Si eliminas la conducta sin cubrir la necesidad, vuelve o se sustituye por otra peor. Primero identificas qué te da; después construyes el reemplazo. | PI d6, d44 |
 | **Sistemas representacionales (VAK)** | Cada persona procesa preferentemente en visual, auditivo o kinestésico, y lo delata en su lenguaje ("no lo veo claro" / "no me suena" / "no me siento cómodo"). Hablarle en su canal multiplica la comprensión sin cambiar el contenido. | CE d19 |
-| **Momentos de decisión** | El destino no se moldea en las circunstancias sino en el instante de decidir. Una decisión real es aquella tras la cual actúas de inmediato y cierras las alternativas; si no hay acción inmediata, era una preferencia. | PI d1 |
+| **Momentos de decisión** | El destino no se moldea en las circunstancias sino en el instante de decidir. Una decisión real es aquella tras la cual actúas de inmediato y cierras las alternativas; si no hay acción inmediata, era una preferencia. | PI d1, d31, d88 |
+| **Metáforas** | La metáfora con la que describes un ámbito ("negociar es una guerra" vs. "un rompecabezas a dos manos") gobierna qué conductas te parecen razonables en él. Se cambia la metáfora, no la conducta. | CE d49 |
+| **Rapport y espejeo** | La sintonía se construye igualando lo no verbal —ritmo, volumen, postura— antes que el argumento. Primero acompasas, después conduces; si el otro no sigue, aún tocaba acompasar. | CE d57 |
 
 CE = Comunicación Estoica · PI = Práctica Interna
 
@@ -76,15 +78,7 @@ hechos y desarma la generalización sin confrontar.
 **Por qué encaja:** hermano directo de las preguntas calibradas de Voss que
 ya usa el día 45.
 
-### 5. Rapport y espejeo (cap. 13)
-La compenetración se construye igualando lo no verbal antes que el
-argumento: ritmo, volumen, postura, respiración. Primero acompasas, después
-conduces — si el otro te sigue, hay rapport; si no, seguiste acompasando.
-
-**Por qué encaja:** el programa entrena escucha (d2) pero no el mecanismo
-físico de sintonía.
-
-### 6. Reglas, valores, referencias e identidad ("sistema maestro")
+### 5. Reglas, valores, referencias e identidad ("sistema maestro")
 La frustración casi nunca viene del valor, viene de la **regla** que le
 pusiste: qué tiene que pasar para que sientas que ya lo cumpliste. Reglas
 imposibles garantizan infelicidad con cualquier resultado.
@@ -93,18 +87,13 @@ imposibles garantizan infelicidad con cualquier resultado.
 interno, y explica por qué alguien "cumple" el programa y aun así se siente
 mal.
 
-### 7. Las diez emociones del poder / emociones como señal de acción
+### 6. Las diez emociones del poder / emociones como señal de acción
 Cada emoción dolorosa es un mensaje con una acción asociada, no un defecto
 a suprimir: la culpa señala una norma propia violada, el miedo señala
 preparación pendiente. Se responde a la señal, no se pelea la emoción.
 
 **Por qué encaja:** es estoicismo casi literal (la emoción como juicio) con
 un protocolo operativo encima.
-
-### 8. Metáforas (cap. 10)
-La metáfora con la que describes un ámbito ("la vida es una guerra" vs.
-"un juego") gobierna qué conductas te parecen razonables en él. Cambiarla
-cambia el repertorio disponible.
 
 ---
 
