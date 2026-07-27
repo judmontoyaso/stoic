@@ -160,6 +160,22 @@ export async function GET() {
     eventCounts[e.name] = (eventCounts[e.name] || 0) + 1
   }
 
+  // Embudo público de los últimos 30 días. Sin las vistas no se puede
+  // calcular conversión: contar leads solo dice cuántos entraron, no de
+  // cuántos visitantes — que es lo que decide si vale la pena pagar tráfico.
+  const visitas = eventCounts['landing_view'] || 0
+  const formularios = eventCounts['lead_form_submitted'] || 0
+  const pct = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 1000) / 10 : null)
+  const funnel = {
+    visitasLanding: visitas,
+    formulariosEnviados: formularios,
+    visitasBecas: eventCounts['becas_view'] || 0,
+    aplicacionesBeca: eventCounts['beca_form_submitted'] || 0,
+    // Porcentajes: null cuando no hay base para calcular (no 0, que engaña)
+    conversionVisitaLead: pct(formularios, visitas),
+    conversionLeadFundador: leads ? pct(leads.converted, leads.total) : null,
+  }
+
   return NextResponse.json({
     generatedAt: new Date().toISOString(),
     totals: {
@@ -177,6 +193,7 @@ export async function GET() {
       .filter(u => u.tracks.length === 0)
       .map(u => ({ email: u.email, plan: u.plan })),
     users: perUser,
+    funnel,
     leads,
     payments,
     events30d: eventCounts,

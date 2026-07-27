@@ -1,6 +1,7 @@
 'use client'
 
 import PreferencesForm from '@/components/PreferencesForm'
+import ReferralCodes from '@/components/ReferralCodes'
 import { PageHeader } from '@/components/ui'
 
 // Preferencias del usuario: zona horaria y hora de los correos.
@@ -15,6 +16,7 @@ export default function SettingsPage() {
         subtitle="Zona horaria y horario de tus correos diarios"
       />
       <PreferencesForm afterSaveHref="/settings" />
+      <ReferralCodes />
     </div>
   )
 }

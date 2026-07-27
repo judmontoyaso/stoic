@@ -1,6 +1,7 @@
 import { Cinzel } from 'next/font/google'
 import Link from 'next/link'
 import BecaForm from '@/components/BecaForm'
+import PublicPageView from '@/components/PublicPageView'
 
 // Página pública de aplicación a las becas fundador. No regala acceso:
 // se aplica y el admin decide. La aplicación filtra al curioso y protege
@@ -33,6 +34,7 @@ export const metadata = {
 export default function BecasPage() {
   return (
     <div className={`${cinzel.variable} min-h-screen w-full bg-[#0a0a0f] text-slate-300`}>
+      <PublicPageView name="becas_view" />
       <header className="max-w-3xl mx-auto flex items-center justify-between px-6 py-6">
         <Link href="/landing" className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}

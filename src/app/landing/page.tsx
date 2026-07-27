@@ -1,6 +1,7 @@
 import { Cinzel } from 'next/font/google'
 import Link from 'next/link'
 import LeadForm from '@/components/LeadForm'
+import PublicPageView from '@/components/PublicPageView'
 
 // Landing pública (listada en el proxy): la cara de StoiCom para
 // visitantes sin sesión. Siempre oscura, independiente del tema.
@@ -91,6 +92,7 @@ export default function LandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
       />
+      <PublicPageView name="landing_view" />
       {/* Nav */}
       <header className="max-w-5xl mx-auto flex items-center justify-between px-6 py-6">
         <div className="flex items-center gap-3">

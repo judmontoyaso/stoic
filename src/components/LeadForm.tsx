@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { trackPublic } from '@/lib/analytics-public'
 
 // Captura de correo de la landing. Doble opt-in: aquí solo se pide el
 // correo; el acceso real llega tras confirmar desde el buzón.
@@ -31,6 +32,7 @@ export default function LeadForm({ source = 'landing' }: { source?: string }) {
         setStatus('error')
         return
       }
+      trackPublic('lead_form_submitted', { source })
       setStatus('sent')
     } catch {
       setError('No hay conexión. Inténtalo de nuevo.')

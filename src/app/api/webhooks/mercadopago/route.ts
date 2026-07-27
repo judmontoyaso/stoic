@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { mpConfig, getPayment, verifyWebhookSignature } from '@/lib/mercadopago'
 import { approveMpFounder } from '@/lib/mercadopago-approve'
+import { createClient } from '@supabase/supabase-js'
+import { revokeAccess } from '@/lib/revoke-access'
 
 // Webhook de Mercado Pago: al aprobarse un pago, aprueba al usuario
 // (misma marca app_metadata.stoicom_approved que el código y que LS) y
@@ -65,6 +67,28 @@ export async function POST(request: Request) {
     )
   }
   const payment = lookup.payment
+
+  // Reembolso o contracargo: se retira el acceso. externalReference lleva
+  // el user_id que se colgó de la preferencia al crear el checkout.
+  if (payment.status === 'refunded' || payment.status === 'charged_back') {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (serviceKey) {
+      const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, {
+        db: { schema: 'stoic' },
+      })
+      await revokeAccess(admin, {
+        userId: payment.externalReference,
+        email: payment.payerEmail,
+        reason: `mercadopago:${payment.status}`,
+      })
+      await admin
+        .from('payments')
+        .update({ status: 'refunded' })
+        .eq('provider', 'mercadopago')
+        .eq('provider_payment_id', String(payment.id))
+    }
+    return NextResponse.json({ ok: true, revoked: true })
+  }
 
   if (payment.status !== 'approved') {
     return NextResponse.json({ ok: true, ignored: `status ${payment.status}` })

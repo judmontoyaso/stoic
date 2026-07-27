@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { trackPublic } from '@/lib/analytics-public'
 
 // Formulario de aplicación a las becas fundador (/becas). Misma paleta
 // oscura de la landing. El honeypot "website" filtra bots.
@@ -35,6 +36,7 @@ export default function BecaForm() {
         setStatus('error')
         return
       }
+      trackPublic('beca_form_submitted')
       setStatus('sent')
     } catch {
       setError('No hay conexión. Inténtalo de nuevo.')

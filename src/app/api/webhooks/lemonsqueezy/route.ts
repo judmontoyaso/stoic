@@ -4,6 +4,7 @@ import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { sendEmail, welcomeEmail } from '@/lib/email'
 import { markLeadConverted } from '@/lib/leads'
 import { recordPayment } from '@/lib/payments'
+import { revokeAccess } from '@/lib/revoke-access'
 
 // Webhook de Lemon Squeezy: al confirmarse una orden pagada, aprueba al
 // usuario (misma marca que el código de acceso) y registra el plan.
@@ -55,6 +56,32 @@ export async function POST(request: Request) {
   }
 
   const status = payload.data?.attributes?.status
+
+  // Reembolso: se retira el acceso. Sin esto, quien pedía su dinero de
+  // vuelta conservaba el acceso de por vida y había que quitarlo a mano.
+  if (status === 'refunded') {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (serviceKey) {
+      const admin = createSupabaseAdmin(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, {
+        db: { schema: 'stoic' },
+      })
+      await revokeAccess(admin, {
+        userId: payload.meta?.custom_data?.user_id,
+        email: payload.data?.attributes?.user_email,
+        reason: 'lemonsqueezy:refunded',
+      })
+      const id = payload.data?.id
+      if (id) {
+        await admin
+          .from('payments')
+          .update({ status: 'refunded' })
+          .eq('provider', 'lemonsqueezy')
+          .eq('provider_payment_id', String(id))
+      }
+    }
+    return NextResponse.json({ ok: true, revoked: true })
+  }
+
   if (status !== 'paid') {
     return NextResponse.json({ ok: true, ignored: `status ${status}` })
   }

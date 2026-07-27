@@ -24,6 +24,14 @@ interface AdminStats {
     push: boolean
     prefs: { timezone: string; morning: number; evening: number } | null
   }[]
+  funnel: {
+    visitasLanding: number
+    formulariosEnviados: number
+    visitasBecas: number
+    aplicacionesBeca: number
+    conversionVisitaLead: number | null
+    conversionLeadFundador: number | null
+  }
   // null mientras no se haya ejecutado supabase_v9_leads.sql
   leads: {
     total: number
@@ -93,6 +101,37 @@ export default function AdminPage() {
         <StatCard label={<><Activity className="w-3 h-3" /> Activos últimos 7 días</>} value={stats.totals.active7d} />
         <StatCard label={<><Bell className="w-3 h-3" /> Con notificaciones</>} value={stats.totals.withPush} />
       </div>
+
+      {/* Embudo público: visitas -> correo -> fundador (últimos 30 días) */}
+      <Card className="p-5">
+        <h2 className="text-sm font-bold text-[var(--foreground)] mb-1">Embudo público</h2>
+        <p className="text-xs text-slate-500 mb-4">Últimos 30 días · visitantes sin sesión</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard label="Visitas a la landing" value={stats.funnel.visitasLanding} />
+          <StatCard label="Dejaron su correo" value={stats.funnel.formulariosEnviados} />
+          <StatCard
+            label="Visita → correo"
+            value={
+              stats.funnel.conversionVisitaLead === null
+                ? '—'
+                : `${stats.funnel.conversionVisitaLead}%`
+            }
+          />
+          <StatCard
+            label="Lead → fundador"
+            value={
+              stats.funnel.conversionLeadFundador === null
+                ? '—'
+                : `${stats.funnel.conversionLeadFundador}%`
+            }
+          />
+        </div>
+        {stats.funnel.visitasBecas > 0 && (
+          <p className="mt-4 text-xs text-slate-500">
+            Becas: {stats.funnel.visitasBecas} visitas · {stats.funnel.aplicacionesBeca} aplicaciones
+          </p>
+        )}
+      </Card>
 
       <Card className="p-5 overflow-x-auto">
         <h2 className="text-sm font-bold text-[var(--foreground)] mb-4">Usuarios</h2>
