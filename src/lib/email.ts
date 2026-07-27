@@ -333,6 +333,29 @@ export function welcomeEmail(opts: { name: string; appUrl: string }): EmailConte
   }
 }
 
+// --- Beca fundador otorgada (aplicación aprobada en /admin/becas) ---
+export function becaEmail(opts: { name: string; code: string; appUrl: string }): EmailContent {
+  return {
+    subject: 'Tu beca fundador de StoiCom',
+    html: baseLayout({
+      preheader: 'Una de las 20 becas es tuya. Tu código va adentro.',
+      heading: `${opts.name}, tu beca quedó aprobada`,
+      body:
+        paragraph(
+          'Leímos tu aplicación y una de las becas fundador es tuya: acceso completo al programa de 90 días, de por vida. Este es tu código personal, de un solo uso:'
+        ) +
+        `
+        <div style="margin:20px 0;padding:18px 20px;background:#16161d;border-left:4px solid ${ACCENT};border-radius:0 4px 4px 0;text-align:center;">
+          <p style="margin:0;font-size:22px;letter-spacing:3px;font-weight:bold;color:#d4b45f;font-family:monospace;">${opts.code}</p>
+        </div>` +
+        paragraph(
+          'Cómo entrar: <strong>1)</strong> inicia sesión con Google, <strong>2)</strong> pega el código cuando te lo pida, <strong>3)</strong> elige tu fecha de inicio. El programa se ejecuta, no se lee: el día 1 empieza con tu video de línea base.'
+        ) +
+        button('Activar mi beca', `${opts.appUrl}/login`),
+    }),
+  }
+}
+
 // --- Invitación a la temporada avanzada (usuario que terminó sus 90 días) ---
 export function seasonInviteEmail(opts: { name: string; appUrl: string }): EmailContent {
   return {

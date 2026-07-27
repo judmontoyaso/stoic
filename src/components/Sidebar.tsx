@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Sun,
   Moon,
-  BarChart3
+  BarChart3,
+  Ticket
 } from 'lucide-react'
 import PushToggle from '@/components/PushToggle'
 import { TABS } from '@/components/MobileTabBar'
@@ -76,21 +77,28 @@ export default function Sidebar() {
 
   const renderAdminLink = (isMobile: boolean) => {
     if (!isAdmin) return null
-    const active = pathname === '/admin'
-    return (
-      <Link
-        href="/admin"
-        onClick={() => isMobile && setMobileOpen(false)}
-        className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-          active
-            ? 'bg-[var(--primary-gold)]/10 text-[var(--primary-gold)]'
-            : 'text-slate-500 dark:text-slate-400 hover:text-[var(--foreground)] hover:bg-slate-800/10'
-        }`}
-      >
-        <BarChart3 className={`w-5 h-5 flex-shrink-0 ${active ? 'text-[var(--primary-gold)]' : 'opacity-60'}`} />
-        {(!collapsed || isMobile) && <span className="truncate">Admin</span>}
-      </Link>
-    )
+    const links = [
+      { href: '/admin', label: 'Admin', Icon: BarChart3 },
+      { href: '/admin/becas', label: 'Códigos', Icon: Ticket },
+    ]
+    return links.map(({ href, label, Icon }) => {
+      const active = pathname === href
+      return (
+        <Link
+          key={href}
+          href={href}
+          onClick={() => isMobile && setMobileOpen(false)}
+          className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+            active
+              ? 'bg-[var(--primary-gold)]/10 text-[var(--primary-gold)]'
+              : 'text-slate-500 dark:text-slate-400 hover:text-[var(--foreground)] hover:bg-slate-800/10'
+          }`}
+        >
+          <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-[var(--primary-gold)]' : 'opacity-60'}`} />
+          {(!collapsed || isMobile) && <span className="truncate">{label}</span>}
+        </Link>
+      )
+    })
   }
 
   const renderNavItems = (isMobile = false) => {

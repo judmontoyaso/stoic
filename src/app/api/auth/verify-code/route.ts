@@ -3,6 +3,7 @@ import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { createClient as createServerSupabase } from '@/utils/supabase/server'
 import { sendEmail, welcomeEmail } from '@/lib/email'
 import { markLeadConverted } from '@/lib/leads'
+import { redeemCode } from '@/lib/access-codes'
 
 // Aprueba al usuario logueado si presenta el código de acceso correcto.
 // La aprobación se guarda en app_metadata.stoicom_approved: solo el
@@ -63,7 +64,18 @@ export async function POST(request: Request) {
     )
   }
 
-  if (code !== accessCode) {
+  // Dos llaves abren la puerta: el código compartido (legacy, env) y los
+  // códigos únicos de un solo uso (stoic.access_codes, con campaña).
+  // La campaña queda como stoicom_plan: atribución visible en /admin.
+  let plan: string | null = null
+  if (code === accessCode) {
+    plan = 'code'
+  } else {
+    const campaign = await redeemCode(admin, code, { id: user.id, email: user.email })
+    if (campaign) plan = campaign
+  }
+
+  if (!plan) {
     // Un bloqueo ya vencido reinicia el conteo
     const prior = attempt?.locked_until ? 0 : attempt?.attempts || 0
     const attempts = prior + 1
@@ -88,8 +100,10 @@ export async function POST(request: Request) {
 
   await admin.from('verify_attempts').delete().eq('user_id', user.id)
 
+  // Un fundador que reverifique con código no pierde su plan
+  const finalPlan = user.app_metadata?.stoicom_plan === 'founder' ? 'founder' : plan
   const { error } = await admin.auth.admin.updateUserById(user.id, {
-    app_metadata: { ...user.app_metadata, stoicom_approved: true },
+    app_metadata: { ...user.app_metadata, stoicom_approved: true, stoicom_plan: finalPlan },
   })
 
   if (error) {
