@@ -69,6 +69,7 @@ interface ActiveTrack {
   trackName: string
   startDate: string
   dayNumber: number
+  durationDays: number
 }
 
 async function getActiveTracks(
@@ -87,7 +88,13 @@ async function getActiveTracks(
     if (!ut.start_date || !ut.tracks) continue
     const dayNumber = dayNumberFor(ut.start_date, localDate, ut.tracks.duration_days || 90)
     if (!dayNumber) continue
-    active.push({ trackId: ut.track_id, trackName: ut.tracks.name, startDate: ut.start_date, dayNumber })
+    active.push({
+      trackId: ut.track_id,
+      trackName: ut.tracks.name,
+      startDate: ut.start_date,
+      dayNumber,
+      durationDays: ut.tracks.duration_days || 90,
+    })
   }
   return active
 }
@@ -203,7 +210,7 @@ export async function GET(request: Request) {
         let missedThisWeek = 0
         for (let i = 6; i >= 0; i--) {
           const d = addDays(localDate, -i)
-          if (!dayNumberFor(t.startDate, d, 90)) continue
+          if (!dayNumberFor(t.startDate, d, t.durationDays)) continue
           if (completedDates.has(d)) completedThisWeek++
           else if (d < localDate) missedThisWeek++ // hoy aún no cuenta como perdido
         }

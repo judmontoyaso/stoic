@@ -62,7 +62,7 @@ export async function getOrCreateDailyReading(
   // 2. Datos del día
   const weekNumber = Math.min(13, Math.ceil(dayNumber / 7))
   const [{ data: tracks }, { data: days }, { data: weeks }] = await Promise.all([
-    supabase.from('tracks').select('name').eq('id', trackId).limit(1),
+    supabase.from('tracks').select('name, duration_days').eq('id', trackId).limit(1),
     supabase
       .from('program_days')
       .select('title, instructions, rationale, source_author, module, phase, week')
@@ -99,6 +99,7 @@ export async function getOrCreateDailyReading(
     weeklyChallenge: week
       ? { title: week.challenge_title, description: week.challenge_description }
       : null,
+    durationDays: track.duration_days || 90,
   })
 
   const content = generated?.reading || staticReading(day, week, quote)

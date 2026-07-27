@@ -36,64 +36,25 @@ CE = Comunicación Estoica · PI = Práctica Interna
 
 ---
 
-## Parte 2 — Frameworks NO usados todavía (oportunidades reales)
+## Parte 2 — El track "Influencia" (temporada avanzada, 30 días)
 
-Estos salen de los dos libros y son **directamente de comunicación**, que
-es el track que menos los aprovecha. Ordenados por encaje con el programa.
+Los frameworks que los dos tracks de 90 días no usaban se convirtieron en
+un **tercer track de 30 días** (`supabase_v12_track_influencia.sql`,
+slug `influencia`), pensado como la temporada siguiente para quien termina
+sus primeros 90 días — el día 89 del programa pide literalmente un plan de
+30 días, y este track es la respuesta.
 
-### 1. Anclaje (Poder sin límites, cap. 17) — el hueco más grande
-Un ancla es un estímulo sensorial (un gesto, una palabra, una presión con
-los dedos) unido por repetición a un estado intenso. Después, disparar el
-estímulo devuelve el estado en segundos. Se instala en el pico de la
-emoción, no después, y necesita un estímulo único y repetible.
+| Semana | Framework | Días |
+|---|---|---|
+| 1 · El estado a demanda | **Anclaje** (Poder sin límites, cap. 17): estímulo único instalado en el PICO de un estado intenso; probado en frío, apilado, y disparado antes y durante conversaciones reales. | d1-7 |
+| 2 · El marco manda | **Redefinición del marco** (cap. 16): de contexto y de contenido, reencuadre en voz alta, marco previo, y la versión estoica (asentimiento) en tiempo real. | d8-14 |
+| 3 · Leer al otro | **Precisión del lenguaje** (cap. 12): generalizaciones y comparativos sin vara + **Metaprogramas** (cap. 14): hacia/desde, interno/externo, presentar en el filtro del receptor. | d15-21 |
+| 4 · El sistema maestro | **Reglas y valores** (Controle su destino, cap. 15-16): jerarquía, reglas imposibles, reescritura bajo control propio + **emociones como señal** (cap. 11). | d22-28 |
+| 5 · Integración | Examen de influencia (todas las herramientas en una conversación real) + protocolo permanente. | d29-30 |
 
-**Por qué encaja:** el programa ya entrena estados (d8 priming, d12
-respiración) pero no da forma de *recuperarlos a demanda* justo antes de
-hablar. Es el complemento natural, y es la técnica más accionable que falta.
-
-### 2. Redefinición del marco (cap. 16)
-Dos variantes distintas: **de contexto** (la misma conducta cambia de valor
-en otro escenario: lo que es terquedad en una junta es persistencia en una
-negociación) y **de contenido** (el hecho es idéntico, cambia lo que
-significa). Es la operación estoica de la disciplina del asentimiento
-formulada como herramienta de conversación.
-
-**Por qué encaja:** conecta el módulo `perception` estoico con una técnica
-concreta que se usa hablando con otro, no solo por dentro.
-
-### 3. Metaprogramas (cap. 14)
-Filtros con los que alguien decide a qué presta atención: hacia/desde
-(busca ganar o busca evitar), interno/externo (se valida solo o necesita
-referencia ajena), semejanza/diferencia, general/detalle. Detectarlos en
-dos minutos de conversación cambia cómo le presentas lo mismo.
-
-**Por qué encaja:** es el nivel siguiente al VAK del día 19, y es
-directamente persuasión — el ángulo Voss del programa.
-
-### 4. Precisión del lenguaje (cap. 12)
-Recuperar lo que el otro borró, generalizó o distorsionó: "¿todos?",
-"¿comparado con qué?", "¿quién concretamente?". Devuelve la conversación a
-hechos y desarma la generalización sin confrontar.
-
-**Por qué encaja:** hermano directo de las preguntas calibradas de Voss que
-ya usa el día 45.
-
-### 5. Reglas, valores, referencias e identidad ("sistema maestro")
-La frustración casi nunca viene del valor, viene de la **regla** que le
-pusiste: qué tiene que pasar para que sientas que ya lo cumpliste. Reglas
-imposibles garantizan infelicidad con cualquier resultado.
-
-**Por qué encaja:** es material de la fase de Evaluación y del track
-interno, y explica por qué alguien "cumple" el programa y aun así se siente
-mal.
-
-### 6. Las diez emociones del poder / emociones como señal de acción
-Cada emoción dolorosa es un mensaje con una acción asociada, no un defecto
-a suprimir: la culpa señala una norma propia violada, el miedo señala
-preparación pendiente. Se responde a la señal, no se pelea la emoción.
-
-**Por qué encaja:** es estoicismo casi literal (la emoción como juicio) con
-un protocolo operativo encima.
+Los días llevan la técnica en `source_author`
+("Tony Robbins — anclaje de estado"), que es lo que dispara la ficha de
+mecánica en `TECHNIQUE_NOTES` al generar la lección.
 
 ---
 

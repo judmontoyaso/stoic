@@ -203,7 +203,7 @@ export default function LandingPage() {
           </div>
           <div className="mt-10 grid sm:grid-cols-2 gap-x-12 gap-y-6 max-w-3xl mx-auto">
             {[
-              ['Dos tracks paralelos', 'Comunicación con los demás y diálogo interno. Cada uno con sus 90 días propios; puedes llevar uno o los dos.'],
+              ['Tres tracks, un sistema', 'Comunicación con los demás y diálogo interno, 90 días cada uno. Y al terminar, Influencia: la temporada avanzada de 30 días.'],
               ['Lección diaria escrita', 'Cada día trae una lección completa de 400–550 palabras para ese punto exacto del proceso, no un tip genérico.'],
               ['Diario con examen nocturno', 'Plantillas de mañana y noche basadas en Séneca y Marco Aurelio, con registro de ánimo y su gráfico.'],
               ['Retos semanales y mensuales', '13 retos que suben la apuesta cada semana, y un hito al cierre de cada fase.'],

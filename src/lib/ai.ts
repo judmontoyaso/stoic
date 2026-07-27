@@ -140,7 +140,7 @@ async function callOpenAICompatible<T>(
   }
 }
 
-const REFLECTION_SYSTEM_PROMPT = `Eres el entrenador de un programa estoico de comunicación de 90 días. Escribes el consejo del día: breve, concreto, sin adornos.
+const REFLECTION_SYSTEM_PROMPT = `Eres el entrenador de un programa estoico de comunicación. Escribes el consejo del día: breve, concreto, sin adornos.
 
 Responde estrictamente con un objeto JSON con las claves "reflection" (1 o 2 párrafos en español que aterricen la cita estoica en el ejercicio de hoy) y "actionableTip" (una sola instrucción práctica para ejecutar hoy, en una o dos frases).
 
@@ -151,7 +151,7 @@ Prohibido: "no se trata de X, sino de Y" y sus variantes; tríadas de adjetivos 
 // Las reglas de prosa viven también en .claude/skills/redaccion: si cambias
 // una aquí, cámbiala allá. Ojo: las lecciones ya generadas están cacheadas
 // en stoic.daily_readings — editar este prompt no reescribe lo viejo.
-const READING_SYSTEM_PROMPT = `Escribes la lección diaria de un programa de entrenamiento de comunicación de 90 días con base estoica. Escribes como un entrenador que ya vio fallar a mil personas en lo mismo: sobrio, concreto, sin adornos. No eres un coach motivacional.
+const READING_SYSTEM_PROMPT = `Escribes la lección diaria de un programa de entrenamiento de comunicación con base estoica. Escribes como un entrenador que ya vio fallar a mil personas en lo mismo: sobrio, concreto, sin adornos. No eres un coach motivacional.
 
 Responde estrictamente con un objeto JSON con una sola clave "reading": un texto en español de 400 a 550 palabras, dividido en 4-6 párrafos separados por saltos de línea dobles (\\n\\n), con esta estructura invisible (sin subtítulos ni numeración):
 1. Un gancho concreto: una escena específica y reconocible relacionada con el ejercicio del día (nunca empieces con "Hoy...", "Imagina..." ni "En un mundo...").
@@ -278,9 +278,9 @@ const TECHNIQUE_NOTES: { match: RegExp; note: string }[] = [
     match: /metáfora|metafora/i,
     note: 'Metáforas (Robbins): la metáfora con la que describes un ámbito ("negociar es una guerra" vs. "un rompecabezas a dos manos") gobierna qué conductas te parecen razonables en él. No se discute la conducta: se cambia la metáfora que la produce.',
   },
-  // Técnicas documentadas en docs/FRAMEWORKS_ROBBINS.md que ningún día usa
-  // todavía. Los patrones son deliberadamente específicos para que solo
-  // disparen si algún día futuro se nombra por la técnica.
+  // Técnicas del track Influencia (30 días). Sus días llevan el nombre de
+  // la técnica en source_author ("Tony Robbins — anclaje de estado"), así
+  // que los patrones disparan por autor sin falsos positivos en otros tracks.
   {
     match: /anclaje de estado|instalar un ancla|ancla de estado/i,
     note: 'Anclaje (Robbins): un estímulo sensorial único y repetible, instalado en el PICO de un estado intenso, devuelve ese estado en segundos al dispararlo. Si se instala después del pico, no prende.',
@@ -292,6 +292,18 @@ const TECHNIQUE_NOTES: { match: RegExp; note: string }[] = [
   {
     match: /metaprograma/i,
     note: 'Metaprogramas (Robbins): filtros con los que alguien decide a qué atiende — hacia/desde, interno/externo, semejanza/diferencia, general/detalle. Detectarlos cambia cómo le presentas lo mismo.',
+  },
+  {
+    match: /precisión del lenguaje|precision del lenguaje/i,
+    note: 'Precisión del lenguaje (Robbins): las generalizaciones ("siempre", "todos", "imposible") y los comparativos sin vara ("muy caro", "mejor") borran la información que contradice. La pregunta de precisión ("¿quiénes exactamente?", "¿comparado con qué?") no discute la frase: le pide al mapa que muestre el territorio.',
+  },
+  {
+    match: /reglas y valores/i,
+    note: 'Reglas y valores (Robbins): la frustración casi nunca viene del valor sino de la REGLA que le pusiste — qué tiene que pasar para darlo por cumplido. Reglas imposibles o que dependen de otros garantizan malestar; una regla reescrita bajo tu control convierte el valor de lotería en rutina.',
+  },
+  {
+    match: /emoción como señal|emocion como senal/i,
+    note: 'La emoción como señal (Robbins): cada emoción dolorosa es un mensaje con acción asociada, no un defecto a suprimir — la culpa señala una norma propia violada, el miedo preparación pendiente, la frustración un método agotado. Se atiende la señal; suprimirla es matar al mensajero.',
   },
 ]
 
@@ -334,13 +346,15 @@ export async function generateDailyReading(opts: {
   sourceAuthor: string | null
   quote: { text: string; author: string }
   weeklyChallenge: { title: string; description: string } | null
+  /** Duración del track. El de Influencia dura 30, no 90. */
+  durationDays?: number
 }): Promise<{ reading: string; model: string } | null> {
   const notes = techniqueNotesFor(opts.sourceAuthor, opts.title)
 
   const prompt = `
 Datos del día para escribir la lección:
 - Track del programa: ${opts.trackName}
-- Día: ${opts.dayNumber} de 90 (fase ${opts.phase}, semana ${opts.weekNumber}${opts.weekTheme ? `: ${opts.weekTheme}` : ''})
+- Día: ${opts.dayNumber} de ${opts.durationDays || 90} (fase ${opts.phase}, semana ${opts.weekNumber}${opts.weekTheme ? `: ${opts.weekTheme}` : ''})
 - Módulo estoico: ${opts.module}
 - Ejercicio de hoy: ${opts.title}
 - Instrucciones del ejercicio: ${opts.instructions}
