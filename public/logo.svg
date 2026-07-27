@@ -1,11 +1,8 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="112" fill="url(#g)"/>
-  <path d="M112 344 L208 248 L288 296 L392 160" stroke="#ffffff" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M304 160 H392 V248" stroke="#ffffff" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#10b981"/>
-      <stop offset="1" stop-color="#047857"/>
-    </linearGradient>
-  </defs>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Logo StoiCom (mismo diseño que icon.svg): negro + oro, serif romana -->
+  <rect width="512" height="512" rx="112" fill="#0a0a0f"/>
+  <rect x="14" y="14" width="484" height="484" rx="98" fill="none" stroke="#c9a84c" stroke-opacity="0.45" stroke-width="12"/>
+  <text x="256" y="268" text-anchor="middle" dominant-baseline="central"
+        font-family="Georgia, 'Times New Roman', serif" font-size="330" font-weight="bold"
+        fill="#c9a84c">S</text>
 </svg>

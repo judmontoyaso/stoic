@@ -25,8 +25,13 @@ export const metadata: Metadata = {
     title: "StoiCom",
   },
   icons: {
-    icon: "/logo.svg",
-    apple: "/logo.svg",
+    // SVG de marca como principal; PNG de la escultura como respaldo.
+    // (logo.svg/icon.svg eran un gráfico verde de plantilla — no StoiCom.)
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
   }
 }
 
