@@ -167,7 +167,15 @@ export async function GET() {
       activeUsers: perUser.filter(u => u.tracks.length > 0).length,
       withPush: perUser.filter(u => u.push).length,
       active7d: perUser.filter(u => u.lastActivity && u.lastActivity >= since7).length,
+      // Aprobados que nunca eligieron fecha de inicio: los cuatro crons los
+      // saltan en silencio, así que no reciben NADA. Si alguno pagó, está
+      // pagando por correos que nunca le llegan.
+      sinTrack: perUser.filter(u => u.tracks.length === 0).length,
     },
+    // Lista explícita para poder actuar sobre ellos, no solo contarlos
+    sinTrack: perUser
+      .filter(u => u.tracks.length === 0)
+      .map(u => ({ email: u.email, plan: u.plan })),
     users: perUser,
     leads,
     payments,

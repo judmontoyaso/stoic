@@ -23,6 +23,8 @@ export const maxDuration = 120
 
 const WEEKLY_HOUR = 17
 const RESCUE_HOUR = 12
+/** Hora local para el correo de activación (aprobado que nunca eligió track) */
+const WELCOME_HOUR = 10
 const RESCUE_AFTER_DAYS = 3
 const RESCUE_COOLDOWN_DAYS = 4
 const QUOTE_HOUR = 12
@@ -132,9 +134,18 @@ export async function GET(request: Request) {
   }
   const prefsMap = await getPrefsMap(supabase)
 
+  // V11: si la columna no existe, se avisa en la respuesta en vez de fallar
+  const { error: v11Error } = await supabase
+    .from('user_prefs')
+    .select('last_welcome_sent')
+    .limit(1)
+  const welcomeColumn = !v11Error
+
   let weeklySent = 0
   let rescueSent = 0
   let quotePushSent = 0
+  let welcomeSent = 0
+  let sinTrack = 0
   const detail: { email: string; welcome?: string; weekly?: string; rescue?: string; quote?: string }[] = []
 
   for (const user of users) {
@@ -150,7 +161,24 @@ export async function GET(request: Request) {
     }
 
     const activeTracks = await getActiveTracks(supabase, user.id, localDate)
-    if (activeTracks.length === 0) continue
+    if (activeTracks.length === 0) {
+      // Aprobado y sin fecha de inicio: hasta V11 esto era un `continue`
+      // mudo y el usuario no recibía NADA nunca. Ahora se le invita a
+      // elegir cuándo empieza — no se le inscribe por él, porque los días
+      // perdidos del programa no se reorganizan.
+      sinTrack++
+      if (welcomeColumn && localHour >= WELCOME_HOUR && prefs.last_welcome_sent !== localDate) {
+        const ok = await sendEmail(user.email, welcomeEmail({ name: user.email.split('@')[0], appUrl }))
+        entry.welcome = ok ? 'activación enviada' : 'falló'
+        if (ok) {
+          welcomeSent++
+          await markEmailSent(supabase, user.id, 'last_welcome_sent', localDate, prefs)
+        }
+      } else if (!welcomeColumn) {
+        entry.welcome = 'pendiente: ejecuta supabase_v11_welcome.sql'
+      }
+      continue
+    }
 
     // Logs completados del usuario (una query para ambos correos)
     const { data: logs } = await supabase
@@ -296,5 +324,14 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, weeklySent, rescueSent, quotePushSent, detail })
+  return NextResponse.json({
+    ok: true,
+    weeklySent,
+    rescueSent,
+    quotePushSent,
+    welcomeSent,
+    sinTrack,
+    welcomeColumn: welcomeColumn || 'falta supabase_v11_welcome.sql',
+    detail,
+  })
 }

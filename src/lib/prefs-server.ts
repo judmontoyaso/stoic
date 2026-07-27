@@ -20,6 +20,8 @@ export interface EmailPrefs {
   last_weekly_sent: string | null
   last_rescue_sent: string | null
   last_quote_sent: string | null
+  /** V11: correo de activación a aprobados sin track. null si falta la columna. */
+  last_welcome_sent: string | null
 }
 
 export const DEFAULT_EMAIL_PREFS: EmailPrefs = {
@@ -31,6 +33,7 @@ export const DEFAULT_EMAIL_PREFS: EmailPrefs = {
   last_weekly_sent: null,
   last_rescue_sent: null,
   last_quote_sent: null,
+  last_welcome_sent: null,
 }
 
 /** Preferencias de todos los usuarios (una sola query por corrida del cron) */
@@ -57,6 +60,7 @@ export async function getPrefsMap(supabase: AnySupabaseClient): Promise<Map<stri
         last_weekly_sent: row.last_weekly_sent ?? null,
         last_rescue_sent: row.last_rescue_sent ?? null,
         last_quote_sent: row.last_quote_sent ?? null,
+        last_welcome_sent: row.last_welcome_sent ?? null,
       })
     }
   } catch (err) {
@@ -98,7 +102,7 @@ export function localParts(
 export async function markEmailSent(
   supabase: AnySupabaseClient,
   userId: string,
-  field: 'last_morning_sent' | 'last_evening_sent' | 'last_weekly_sent' | 'last_rescue_sent' | 'last_quote_sent',
+  field: 'last_morning_sent' | 'last_evening_sent' | 'last_weekly_sent' | 'last_rescue_sent' | 'last_quote_sent' | 'last_welcome_sent',
   localDate: string,
   prefs: EmailPrefs
 ): Promise<void> {
