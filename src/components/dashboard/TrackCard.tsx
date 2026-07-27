@@ -75,6 +75,11 @@ export default function TrackCard({ state, today }: TrackCardProps) {
             {track.name}
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">{track.description}</p>
+          {track.slug === 'influencia' && (
+            <p className="text-xs mt-2 text-[var(--primary-gold)]">
+              Temporada avanzada: pensada para después de completar un track de 90 días.
+            </p>
+          )}
         </div>
         <div className="mt-auto pt-4 border-t border-[var(--border-color)] flex flex-col sm:flex-row gap-3 sm:items-end">
           <div className="flex-1">
@@ -94,7 +99,7 @@ export default function TrackCard({ state, today }: TrackCardProps) {
             className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--primary-gold)] text-[#0a0a0f] text-sm font-bold hover:opacity-90 transition-opacity"
           >
             <Play className="w-4 h-4" />
-            Iniciar 90 días
+            Iniciar {track.duration_days} días
           </button>
         </div>
         <p className="text-[10px] text-slate-500">
@@ -116,7 +121,7 @@ export default function TrackCard({ state, today }: TrackCardProps) {
         <h2 className="text-lg font-bold text-[var(--foreground)]">{track.name}</h2>
         {finished ? (
           <>
-            <p className="text-sm text-slate-500">Programa de 90 días finalizado. {completedCount} días completados.</p>
+            <p className="text-sm text-slate-500">Programa de {track.duration_days} días finalizado. {completedCount} días completados.</p>
             <Link href="/evaluation" className="inline-flex items-center gap-2 text-sm font-bold text-[var(--primary-gold)] hover:underline">
               <Award className="w-4 h-4" />
               Ver evaluación final

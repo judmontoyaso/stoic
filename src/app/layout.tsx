@@ -15,6 +15,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.APP_URL || 'https://stoicom.app'),
   title: "StoiComunicación - Hábitos y Habilidades de Comunicación",
   description: "Entrena tus habilidades de comunicación y forma hábitos estoicos para liderar y conectar mejor. App instalable (PWA) con base de datos sincronizada.",
   manifest: "/manifest.json",

@@ -28,6 +28,8 @@ function isPublicPath(pathname: string): boolean {
     pathname === '/favicon.png' ||
     pathname === '/sculpture.png' ||
     pathname === '/manifest.json' ||
+    pathname === '/robots.txt' ||
+    pathname === '/sitemap.xml' ||
     pathname === '/sw.js'
   )
 }

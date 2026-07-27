@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { sendEmail, weeklySummaryEmail, rescueEmail, welcomeEmail, type WeeklyTrackSummary } from '@/lib/email'
+import { sendEmail, weeklySummaryEmail, rescueEmail, welcomeEmail, seasonInviteEmail, type WeeklyTrackSummary } from '@/lib/email'
 import { sendPushToUser } from '@/lib/push'
 import { getQuoteForDay } from '@/lib/quotes'
 import { getApprovedUsers, type ApprovedUser } from '@/lib/recipients'
@@ -169,14 +169,27 @@ export async function GET(request: Request) {
 
     const activeTracks = await getActiveTracks(supabase, user.id, localDate)
     if (activeTracks.length === 0) {
-      // Aprobado y sin fecha de inicio: hasta V11 esto era un `continue`
-      // mudo y el usuario no recibía NADA nunca. Ahora se le invita a
-      // elegir cuándo empieza — no se le inscribe por él, porque los días
-      // perdidos del programa no se reorganizan.
+      // Aprobado y sin track ACTIVO. Dos casos distintos:
+      // - nunca eligió fecha de inicio → correo de activación (bienvenida)
+      // - terminó su programa y no ha empezado otro → invitación a la
+      //   temporada avanzada (Influencia)
+      // Hasta V11 ambos eran un `continue` mudo: no recibían nada nunca.
+      // No se le inscribe por él: los días perdidos no se reorganizan.
       sinTrack++
       if (welcomeColumn && localHour >= WELCOME_HOUR && prefs.last_welcome_sent !== localDate) {
-        const ok = await sendEmail(user.email, welcomeEmail({ name: user.email.split('@')[0], appUrl }))
-        entry.welcome = ok ? 'activación enviada' : 'falló'
+        const { data: started } = await supabase
+          .from('user_tracks')
+          .select('start_date, tracks(duration_days)')
+          .eq('user_id', user.id)
+          .not('start_date', 'is', null)
+        const finished = ((started || []) as unknown as { start_date: string; tracks: { duration_days: number | null } | null }[])
+          .some(t => localDate > addDays(t.start_date, (t.tracks?.duration_days || 90) - 1))
+
+        const mail = finished
+          ? seasonInviteEmail({ name: user.email.split('@')[0], appUrl })
+          : welcomeEmail({ name: user.email.split('@')[0], appUrl })
+        const ok = await sendEmail(user.email, mail)
+        entry.welcome = ok ? (finished ? 'temporada 2 enviada' : 'activación enviada') : 'falló'
         if (ok) {
           welcomeSent++
           await markEmailSent(supabase, user.id, 'last_welcome_sent', localDate, prefs)

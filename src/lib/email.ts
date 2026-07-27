@@ -333,6 +333,31 @@ export function welcomeEmail(opts: { name: string; appUrl: string }): EmailConte
   }
 }
 
+// --- Invitación a la temporada avanzada (usuario que terminó sus 90 días) ---
+export function seasonInviteEmail(opts: { name: string; appUrl: string }): EmailContent {
+  return {
+    subject: 'Terminaste los 90 días. Empieza la temporada avanzada',
+    html: baseLayout({
+      preheader: 'Influencia: 30 días de anclaje, marcos y precisión del lenguaje.',
+      heading: `${opts.name}, el día 90 no era el final`,
+      body:
+        paragraph(
+          'Completaste un programa que la mayoría abandona en la semana dos. Eso te da acceso a lo que sigue: <strong>Influencia</strong>, la temporada avanzada de 30 días.'
+        ) +
+        `
+        <div style="margin:20px 0;padding:16px 20px;background:#16161d;border-left:4px solid ${ACCENT};border-radius:0 4px 4px 0;">
+          <p style="margin:0 0 10px;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};"><strong style="color:#d4b45f;">Semana 1</strong> — anclaje: tu mejor estado, disponible a demanda antes de hablar.</p>
+          <p style="margin:0 0 10px;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};"><strong style="color:#d4b45f;">Semanas 2-3</strong> — el marco de la conversación y la precisión del lenguaje: quién define de qué se habla, y cómo desarmar un "siempre" con una pregunta.</p>
+          <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};"><strong style="color:#d4b45f;">Semanas 4-5</strong> — metaprogramas, tus reglas reescritas y el examen final: una conversación real con todo el sistema.</p>
+        </div>` +
+        paragraph(
+          'Mismo formato que ya conoces: un ejercicio al día, lección completa, días perdidos visibles. Elige tu fecha de inicio y arranca.'
+        ) +
+        button('Iniciar la temporada avanzada', `${opts.appUrl}/welcome`),
+    }),
+  }
+}
+
 // --- Resumen semanal del domingo ---
 export interface WeeklyTrackSummary {
   trackName: string

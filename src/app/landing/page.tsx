@@ -7,10 +7,68 @@ import LeadForm from '@/components/LeadForm'
 
 const cinzel = Cinzel({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-cinzel' })
 
+const TITLE = 'StoiCom · 90 días de entrenamiento estoico de comunicación'
+const DESCRIPTION =
+  'El programa de 90 días que entrena cómo hablas — con los demás y contigo mismo. Un ejercicio al día, filosofía estoica aplicada, sin trampas. Primeros 7 días gratis por correo.'
+
 export const metadata = {
-  title: 'StoiCom · 90 días de entrenamiento estoico',
-  description:
-    'El programa de 90 días que entrena cómo hablas — con los demás y contigo mismo. Un ejercicio al día, filosofía estoica aplicada, sin trampas.',
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: '/landing' },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: '/landing',
+    siteName: 'StoiCom',
+    locale: 'es_CO',
+    type: 'website',
+    images: [{ url: '/icon-512.png', width: 512, height: 512, alt: 'StoiCom' }],
+  },
+  twitter: {
+    card: 'summary',
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ['/icon-512.png'],
+  },
+  robots: { index: true, follow: true },
+}
+
+// Datos estructurados: solo lo verificable públicamente.
+const JSON_LD = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      name: 'StoiCom',
+      url: 'https://stoicom.app/landing',
+      logo: 'https://stoicom.app/icon-512.png',
+    },
+    {
+      '@type': 'WebSite',
+      name: 'StoiCom',
+      url: 'https://stoicom.app/landing',
+      inLanguage: 'es',
+    },
+    {
+      '@type': 'Course',
+      name: 'StoiCom — Entrenamiento estoico de comunicación',
+      description:
+        'Programa de 90 días con un ejercicio diario de comunicación basado en filosofía estoica aplicada, más una temporada avanzada de 30 días.',
+      provider: { '@type': 'Organization', name: 'StoiCom', url: 'https://stoicom.app/landing' },
+      inLanguage: 'es',
+      hasCourseInstance: {
+        '@type': 'CourseInstance',
+        courseMode: 'online',
+        courseWorkload: 'PT15M',
+      },
+      offers: {
+        '@type': 'Offer',
+        category: 'Paid',
+        price: '59',
+        priceCurrency: 'USD',
+      },
+    },
+  ],
 }
 
 const GOLD = '#c9a84c'
@@ -29,6 +87,10 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 export default function LandingPage() {
   return (
     <div className={`${cinzel.variable} min-h-screen w-full bg-[#0a0a0f] text-slate-300`}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+      />
       {/* Nav */}
       <header className="max-w-5xl mx-auto flex items-center justify-between px-6 py-6">
         <div className="flex items-center gap-3">
