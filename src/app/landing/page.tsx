@@ -174,32 +174,41 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="max-w-5xl mx-auto px-6 pt-14 pb-20 md:pt-24 md:pb-28 text-center">
-        <Eyebrow>Programa Guiado · Filosofía Estoica & Alto Rendimiento</Eyebrow>
+      <section className="relative overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/mosaico.png"
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none select-none absolute inset-0 w-full h-full object-cover opacity-[0.08]"
+        />
+        <div className="relative max-w-5xl mx-auto px-6 pt-14 pb-20 md:pt-24 md:pb-28 text-center">
+          <Eyebrow>Programa Guiado · Filosofía Estoica & Alto Rendimiento</Eyebrow>
 
-        <h1
-          className={`${cinzel.className} mt-6 text-4xl md:text-6xl leading-[1.15] text-slate-100`}
-        >
-          Entrena cómo hablas.
-          <br />
-          <span style={{ color: GOLD }}>Con los demás y contigo.</span>
-        </h1>
+          <h1
+            className={`${cinzel.className} mt-6 text-4xl md:text-6xl leading-[1.15] text-slate-100`}
+          >
+            Entrena cómo hablas.
+            <br />
+            <span style={{ color: GOLD }}>Con los demás y contigo.</span>
+          </h1>
 
-        <p className="mt-8 max-w-xl mx-auto text-base md:text-lg leading-relaxed text-slate-400">
-          Un ejercicio real cada día para dejar de sonar dubitativo, escuchar de verdad y sostener la conversación difícil. Sin frases de taza, sin atajos: percepción, acción y voluntad, entrenadas como los estoicos — por escrito y contra el reloj de un día real.
-        </p>
-
-        <div className="mt-10">
-          <p className="mb-5 text-sm font-bold text-slate-200">
-            Empieza gratis: los primeros 7 días del programa, en tu correo.
+          <p className="mt-8 max-w-xl mx-auto text-base md:text-lg leading-relaxed text-slate-400">
+            Un ejercicio real cada día para dejar de sonar dubitativo, escuchar de verdad y sostener la conversación difícil. Sin frases de taza, sin atajos: percepción, acción y voluntad, entrenadas como los estoicos — por escrito y contra el reloj de un día real.
           </p>
-          <LeadForm source="landing-hero" />
-          <p className="mt-6 text-xs text-slate-500">
-            ¿Ya tienes acceso?{' '}
-            <Link href="/login" className="underline hover:text-slate-300 transition-colors">
-              Entrar con Google
-            </Link>
-          </p>
+
+          <div className="mt-10">
+            <p className="mb-5 text-sm font-bold text-slate-200">
+              Empieza gratis: los primeros 7 días del programa, en tu correo.
+            </p>
+            <LeadForm source="landing-hero" />
+            <p className="mt-6 text-xs text-slate-500">
+              ¿Ya tienes acceso?{' '}
+              <Link href="/login" className="underline hover:text-slate-300 transition-colors">
+                Entrar con Google
+              </Link>
+            </p>
+          </div>
         </div>
       </section>
 
@@ -538,6 +547,45 @@ export default function LandingPage() {
         <p className="mt-4 text-xs tracking-[0.3em] uppercase" style={{ color: GOLD }}>
           Zenón de Citio
         </p>
+      </section>
+
+      {/* Memento Mori / Memento Vivere */}
+      <section className="border-t border-slate-900 bg-[#0d0d13] py-16 md:py-24">
+        <div className="max-w-5xl mx-auto px-6 grid md:grid-cols-2 gap-8">
+          <div>
+            <video
+              src="/memento_mori_video.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full max-h-[520px] object-cover rounded-lg border border-[#c9a84c]/25"
+            />
+            <h3 className={`${cinzel.className} mt-5 text-xl text-slate-100`}>
+              Memento Mori
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              Vas a morir. No sabes cuándo. El estoico se lo repite cada mañana para no aplazar la conversación difícil hasta &ldquo;después&rdquo;.
+            </p>
+          </div>
+
+          <div>
+            <video
+              src="/memento_vivere_video.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full max-h-[520px] object-cover rounded-lg border border-[#c9a84c]/25"
+            />
+            <h3 className={`${cinzel.className} mt-5 text-xl text-slate-100`}>
+              Memento Vivere
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              Y mientras tanto, vives. Hoy es el único día del programa que tienes enfrente — el de mañana todavía no existe.
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* CTA final */}
