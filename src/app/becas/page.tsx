@@ -3,17 +3,17 @@ import Link from 'next/link'
 import BecaForm from '@/components/BecaForm'
 import PublicPageView from '@/components/PublicPageView'
 
-// Página pública de aplicación a las becas fundador. No regala acceso:
-// se aplica y el admin decide. La aplicación filtra al curioso y protege
-// el precio — no es autoservicio, es mérito.
+// Convocatoria pública a las Becas Fundador StoiCom.
+// No es un obsequio pasivo ni un gancho publicitario: es un pacto de mérito y disciplina
+// para personas comprometidas con transformar su voz y su pensamiento.
 
 const cinzel = Cinzel({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-cinzel' })
 
 const GOLD = '#c9a84c'
 
-const TITLE = 'Becas fundador · StoiCom'
+const TITLE = 'Becas Fundador · StoiCom | Entrenamiento Estoico de Comunicación'
 const DESCRIPTION =
-  '20 becas de acceso completo al programa de 90 días de entrenamiento estoico de comunicación. Se aplica, no se compra.'
+  'Convocatoria a las 20 Becas Fundador de acceso vitalicio completo al programa de comunicación estoica: 210 prácticas diarias, 3 tracks y herramientas de templanza.'
 
 export const metadata = {
   title: TITLE,
@@ -33,15 +33,17 @@ export const metadata = {
 
 export default function BecasPage() {
   return (
-    <div className={`${cinzel.variable} min-h-screen w-full bg-[#0a0a0f] text-slate-300`}>
+    <div className={`${cinzel.variable} min-h-screen w-full bg-[#0a0a0f] text-slate-300 font-sans selection:bg-[#c9a84c]/30 selection:text-slate-100`}>
       <PublicPageView name="becas_view" />
-      <header className="max-w-3xl mx-auto flex items-center justify-between px-6 py-6">
-        <Link href="/landing" className="flex items-center gap-3">
+
+      {/* Header */}
+      <header className="max-w-4xl mx-auto flex items-center justify-between px-6 py-6">
+        <Link href="/landing" className="flex items-center gap-3 group">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/sculpture.png"
-            alt=""
-            className="w-9 h-9 rounded-full object-cover border border-[#c9a84c]/40"
+            alt="StoiCom"
+            className="w-9 h-9 rounded-full object-cover border border-[#c9a84c]/40 group-hover:border-[#c9a84c] transition-colors"
           />
           <span className={`${cinzel.className} text-lg tracking-[0.2em] text-slate-100`}>
             STOI<span style={{ color: GOLD }}>COM</span>
@@ -49,49 +51,62 @@ export default function BecasPage() {
         </Link>
         <Link
           href="/login"
-          className="text-xs font-bold tracking-wider uppercase px-4 py-2 rounded border border-[#c9a84c]/40 text-slate-200 hover:bg-[#c9a84c]/10 transition-colors"
+          className="text-xs font-bold tracking-wider uppercase px-4 py-2 rounded border border-[#c9a84c]/40 text-slate-200 hover:bg-[#c9a84c]/10 hover:border-[#c9a84c] transition-all"
         >
-          Entrar
+          Iniciar Sesión
         </Link>
       </header>
 
+      {/* Hero & Manifesto Section */}
       <section className="max-w-3xl mx-auto px-6 pt-10 pb-20 md:pt-16">
-        <p
-          className={`${cinzel.className} text-[11px] tracking-[0.35em] uppercase text-center`}
-          style={{ color: GOLD }}
-        >
-          20 becas · acceso de por vida
-        </p>
-        <h1
-          className={`${cinzel.className} mt-6 text-3xl md:text-5xl leading-[1.15] text-slate-100 text-center`}
-        >
-          No se compra.
-          <br />
-          <span style={{ color: GOLD }}>Se aplica.</span>
-        </h1>
+        <div className="text-center space-y-4">
+          <p
+            className={`${cinzel.className} text-[11px] md:text-xs tracking-[0.35em] uppercase`}
+            style={{ color: GOLD }}
+          >
+            Convocatoria Abierta · 20 Becas Fundador con Acceso Vitalicio
+          </p>
 
-        <div className="mt-8 max-w-xl mx-auto space-y-4 text-center text-slate-400 leading-relaxed">
-          <p>
-            Veinte personas entran gratis al programa completo: 90 días de entrenamiento
-            diario de comunicación, la temporada avanzada, y acceso de por vida. Lo mismo
-            que paga un fundador.
-          </p>
-          <p className="text-slate-500 text-sm">
-            A cambio no pido dinero: pido que lo ejecutes. El día 1 es grabarte tres minutos
-            hablando y mirarlo dos veces. Si eso ya te da pereza, esta beca no es para ti —
-            y no pasa nada, los primeros 7 días siguen gratis para todos.
-          </p>
+          <h1
+            className={`${cinzel.className} text-3xl sm:text-4xl md:text-5xl leading-[1.2] text-slate-100 font-normal`}
+          >
+            La serenidad y el poder de tu palabra <br className="hidden sm:inline" />
+            <span style={{ color: GOLD }}>no se compran; se conquistan.</span>
+          </h1>
         </div>
 
+        <div className="mt-8 space-y-6 text-slate-300 leading-relaxed text-base md:text-lg font-light">
+          <p>
+            En momentos determinantes, la duda o el impulso suelen nublar la claridad de lo que deseas expresar. 
+            Dominar el arte de hablar con firmeza, serenidad y verdadera convicción no es un don innato reservado a unos pocos: 
+            es una disciplina diaria que transforma de raíz tu relación con los demás y la voz con la que te diriges a ti mismo.
+          </p>
+
+          <p>
+            Sabemos que el deseo sincero de superación no siempre coincide con la capacidad económica inmediata. 
+            Por esa razón, abrimos la convocatoria para <strong className="text-slate-100 font-medium">20 Becas Fundador de Acceso Vitalicio Completo</strong> a nuestra plataforma. 
+            Quienes resulten seleccionados recibirán el mismo nivel de membresía que nuestros miembros de pago: un recorrido riguroso que abarca{' '}
+            <span style={{ color: GOLD }} className="font-semibold">210 prácticas diarias divididas en 3 tracks evolutivos</span>, el módulo de <em>Influencia & Liderazgo</em>, el diario estoico de reflexión nocturna y los retos semanales.
+          </p>
+
+          <div className="border-l-2 border-[#c9a84c]/60 pl-5 py-2 my-8 bg-[#111118]/60 rounded-r-xl">
+            <p className="text-slate-300 text-sm md:text-base italic leading-relaxed">
+              «Esta beca no es una limosna de marketing ni una concesión sin compromiso; es un pacto de mérito y trabajo personal. Buscamos a 20 personas dispuestas a enfrentarse a su propia voz, grabarse sin juzgarse con severidad estéril y ejercitar la templanza cada día.»
+            </p>
+          </div>
+        </div>
+
+        {/* Form Component */}
         <div className="mt-12">
           <BecaForm />
         </div>
 
-        <div className="mt-10 text-center">
-          <p className="text-xs text-slate-500">
-            ¿Prefieres probar antes?{' '}
-            <Link href="/landing" className="underline hover:text-slate-300" style={{ color: GOLD }}>
-              Los primeros 7 días, gratis por correo
+        {/* Footer Navigation */}
+        <div className="mt-14 text-center border-t border-slate-800/80 pt-8">
+          <p className="text-xs md:text-sm text-slate-400">
+            ¿Prefieres conocer el entrenamiento antes de postular?{' '}
+            <Link href="/landing" className="underline hover:text-slate-200 font-medium transition-colors" style={{ color: GOLD }}>
+              Explora los 7 días de lecciones gratuitas por correo
             </Link>
           </p>
         </div>
@@ -99,3 +114,4 @@ export default function BecasPage() {
     </div>
   )
 }
+
