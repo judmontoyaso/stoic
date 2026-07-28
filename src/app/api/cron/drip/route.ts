@@ -13,8 +13,13 @@ import { serviceClient, sendDripDay, DRIP_LENGTH, type Lead } from '@/lib/leads'
 export const maxDuration = 120
 
 // Los leads no declaran zona horaria: se envía a una hora fija que cae
-// en la mañana de América y la tarde de Europa.
-const SEND_HOUR_UTC = 13
+// en la mañana de América y el mediodía de Europa.
+//
+// OJO: debe ser <= la hora del cron más temprano de vercel.json (hoy
+// 11:00 UTC). Estaba en 13 y los dos crons de Vercel (11:00 y 01:30)
+// quedaban por debajo del umbral: la secuencia NUNCA salía por esa vía,
+// solo si n8n estaba vivo. Si se cambia una, hay que revisar la otra.
+const SEND_HOUR_UTC = 11
 // Tope por pasada: el plan gratuito de Resend tiene un límite diario y
 // los correos del programa (usuarios de pago) tienen prioridad sobre estos.
 const MAX_PER_RUN = 40

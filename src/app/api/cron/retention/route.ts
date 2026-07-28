@@ -27,6 +27,14 @@ const RESCUE_HOUR = 12
 const WELCOME_HOUR = 10
 const RESCUE_AFTER_DAYS = 3
 const RESCUE_COOLDOWN_DAYS = 4
+/**
+ * Tope de silencio tras el cual se deja de insistir. Sin esto, quien
+ * abandonaba en el día 10 recibía un "vuelve" cada 4 días hasta el día
+ * 90 — unos 20 correos a alguien que ya se fue. Eso gana marcas de spam,
+ * y las marcas de spam le quitan entrega a los que SÍ están activos.
+ * Con 14 días: tres intentos (~día 3, 7 y 11 de silencio) y se suelta.
+ */
+const RESCUE_MAX_SILENT_DAYS = 14
 const QUOTE_HOUR = 12
 
 function isAuthorized(request: Request, secret: string | null): boolean {
@@ -333,6 +341,7 @@ export async function GET(request: Request) {
       (localHour >= RESCUE_HOUR &&
         programAge >= RESCUE_AFTER_DAYS &&
         sinceLast >= RESCUE_AFTER_DAYS &&
+        sinceLast <= RESCUE_MAX_SILENT_DAYS &&
         cooldownOk)
     ) {
       const trackInfos: { trackName: string; dayNumber: number; title: string }[] = []
