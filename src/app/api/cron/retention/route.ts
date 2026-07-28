@@ -176,26 +176,45 @@ export async function GET(request: Request) {
       // Hasta V11 ambos eran un `continue` mudo: no recibían nada nunca.
       // No se le inscribe por él: los días perdidos no se reorganizan.
       sinTrack++
-      if (welcomeColumn && localHour >= WELCOME_HOUR && prefs.last_welcome_sent !== localDate) {
-        const { data: started } = await supabase
-          .from('user_tracks')
-          .select('start_date, tracks(duration_days)')
-          .eq('user_id', user.id)
-          .not('start_date', 'is', null)
-        const finished = ((started || []) as unknown as { start_date: string; tracks: { duration_days: number | null } | null }[])
-          .some(t => localDate > addDays(t.start_date, (t.tracks?.duration_days || 90) - 1))
+      if (!welcomeColumn) {
+        entry.welcome = 'pendiente: ejecuta supabase_v11_welcome.sql'
+        continue
+      }
+      if (localHour < WELCOME_HOUR) continue
 
-        const mail = finished
+      // Fecha en que terminó su último programa (null si nunca empezó uno).
+      const { data: started } = await supabase
+        .from('user_tracks')
+        .select('start_date, tracks(duration_days)')
+        .eq('user_id', user.id)
+        .not('start_date', 'is', null)
+      const finales = ((started || []) as unknown as { start_date: string; tracks: { duration_days: number | null } | null }[])
+        .map(t => addDays(t.start_date, (t.tracks?.duration_days || 90) - 1))
+        .filter(fin => localDate > fin)
+        .sort()
+      const finReciente = finales.length ? finales[finales.length - 1] : null
+
+      // ESTOS CORREOS SE MANDAN UNA SOLA VEZ, no todos los días. El dedupe
+      // por fecha local sirve para los correos diarios (matutino, nocturno):
+      // aquí volvía a disparar cada día al cambiar la fecha. Ahora:
+      //  - nunca empezó   -> activación, solo si nunca se le mandó nada
+      //  - ya terminó uno -> temporada avanzada, solo si el último aviso es
+      //    anterior a su fecha de fin (así el de activación no lo bloquea,
+      //    y al enviarlo la marca queda posterior y no se repite)
+      const debeActivacion = !finReciente && !prefs.last_welcome_sent
+      const debeTemporada =
+        !!finReciente && (!prefs.last_welcome_sent || prefs.last_welcome_sent < finReciente)
+
+      if (debeActivacion || debeTemporada) {
+        const mail = debeTemporada
           ? seasonInviteEmail({ name: user.email.split('@')[0], appUrl })
           : welcomeEmail({ name: user.email.split('@')[0], appUrl })
         const ok = await sendEmail(user.email, mail)
-        entry.welcome = ok ? (finished ? 'temporada 2 enviada' : 'activación enviada') : 'falló'
+        entry.welcome = ok ? (debeTemporada ? 'temporada 2 enviada' : 'activación enviada') : 'falló'
         if (ok) {
           welcomeSent++
           await markEmailSent(supabase, user.id, 'last_welcome_sent', localDate, prefs)
         }
-      } else if (!welcomeColumn) {
-        entry.welcome = 'pendiente: ejecuta supabase_v11_welcome.sql'
       }
       continue
     }
