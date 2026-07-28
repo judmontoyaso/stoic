@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Check, ShieldCheck, Sparkles, Lock, CreditCard } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Check, ShieldCheck, Sparkles, Lock, CreditCard, Globe } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface PricingSectionProps {
@@ -9,17 +9,30 @@ interface PricingSectionProps {
 }
 
 export default function PricingSection({ onSelectFreeTrial }: PricingSectionProps) {
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly')
+  const [currency, setCurrency] = useState<'COP' | 'USD'>('COP')
 
-  const handleCheckoutClick = (planName: string) => {
+  useEffect(() => {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+      if (tz.includes('Bogota') || tz.includes('America/Bogota') || tz.includes('Colombia')) {
+        setCurrency('COP')
+      } else {
+        setCurrency('USD')
+      }
+    } catch {
+      setCurrency('COP')
+    }
+  }, [])
+
+  const handleLemonCheckout = () => {
     toast(
       (t) => (
         <div className="flex flex-col gap-1 text-xs">
           <span className="font-bold text-[#c9a84c] flex items-center gap-1.5">
-            <Lock className="w-3.5 h-3.5" /> Verificación de pasarela en proceso
+            <Lock className="w-3.5 h-3.5" /> Verificación Lemon Squeezy en proceso
           </span>
           <span>
-            La integración con Lemon Squeezy para el plan <strong>{planName}</strong> está lista en el sistema. Los pagos se activarán apenas concluya la verificación de la cuenta.
+            El pago internacional de <strong>$60 USD</strong> está configurado en la plataforma. Se habilitará públicamente tan pronto concluya la verificación de la pasarela.
           </span>
           <button
             onClick={() => {
@@ -43,49 +56,84 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
     )
   }
 
+  const handleMercadoPagoCheckout = () => {
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-1 text-xs">
+          <span className="font-bold text-[#c9a84c] flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" /> Pago con Mercado Pago ($199.900 COP)
+          </span>
+          <span>
+            Inicia sesión con Google para activar tu cuenta e ingresar al checkout oficial de Mercado Pago (PSE, Tarjetas, Nequi).
+          </span>
+          <a
+            href="/login"
+            className="mt-2 inline-block text-center py-1.5 px-3 rounded bg-[#c9a84c] text-[#0a0a0f] font-bold"
+          >
+            Ir al inicio de sesión →
+          </a>
+        </div>
+      ),
+      {
+        duration: 6000,
+        style: {
+          background: '#111116',
+          color: '#e2e8f0',
+          border: '1px solid rgba(201, 168, 76, 0.4)',
+        },
+      }
+    )
+  }
+
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-12">
+    <div className="w-full max-w-4xl mx-auto space-y-12">
       {/* Header Precios */}
       <div className="text-center space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c9a84c]/10 border border-[#c9a84c]/30 text-[11px] font-bold tracking-widest text-[#c9a84c] uppercase">
-          <Sparkles className="w-3.5 h-3.5" /> 3 Tracks · 210 Ejercicios Prácticos · IA
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#c9a84c]/10 border border-[#c9a84c]/30 text-[11px] font-bold tracking-widest text-[#c9a84c] uppercase">
+          <Sparkles className="w-3.5 h-3.5" /> Acceso Completo de Por Vida
         </div>
         <h2 className="text-3xl md:text-4xl font-bold text-slate-100">
-          Invierte en tu maestría comunicativa y fortaleza mental
+          Una sola inversión para transformar tu forma de hablar
         </h2>
         <p className="max-w-xl mx-auto text-sm md:text-base text-slate-400">
-          Comienza gratis 7 días por correo. Cuando desees ingresar al sistema completo con los 3 tracks, evaluación con IA y app PWA, elige la mejor opción.
+          Comienza gratis los primeros 7 días por correo. Cuando estés listo para dominar el programa completo de 210 prácticas, obtén tu acceso permanente.
         </p>
 
-        {/* Toggle Mensual / Anual */}
-        <div className="pt-4 flex items-center justify-center gap-3">
-          <span className={`text-xs font-semibold ${billingCycle === 'monthly' ? 'text-slate-100' : 'text-slate-500'}`}>
-            Pago Mensual
-          </span>
-          <button
-            type="button"
-            onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-            className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-slate-800 transition-colors duration-200 ease-in-out focus:outline-none"
-            role="switch"
-            aria-checked={billingCycle === 'yearly'}
-          >
-            <span
-              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-[#c9a84c] shadow-lg ring-0 transition duration-200 ease-in-out ${
-                billingCycle === 'yearly' ? 'translate-x-5' : 'translate-x-0'
+        {/* Selector de Moneda */}
+        <div className="pt-2 flex items-center justify-center gap-3">
+          <Globe className="w-4 h-4 text-[#c9a84c]" />
+          <span className="text-xs text-slate-400">Moneda preferida:</span>
+          <div className="inline-flex rounded-lg border border-slate-800 bg-[#0a0a0f] p-1">
+            <button
+              type="button"
+              onClick={() => setCurrency('COP')}
+              className={`px-3 py-1 text-xs font-bold rounded transition-colors ${
+                currency === 'COP'
+                  ? 'bg-[#c9a84c] text-[#0a0a0f]'
+                  : 'text-slate-400 hover:text-slate-200'
               }`}
-            />
-          </button>
-          <span className={`text-xs font-semibold flex items-center gap-1.5 ${billingCycle === 'yearly' ? 'text-slate-100' : 'text-slate-500'}`}>
-            Pago Anual <span className="px-2 py-0.5 rounded text-[10px] bg-[#c9a84c]/20 text-[#c9a84c] font-bold">Ahorra 50%</span>
-          </span>
+            >
+              $199.900 COP (Mercado Pago / PSE)
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrency('USD')}
+              className={`px-3 py-1 text-xs font-bold rounded transition-colors ${
+                currency === 'USD'
+                  ? 'bg-[#c9a84c] text-[#0a0a0f]'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              $60 USD (Lemon Squeezy / Int.)
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Grid de Tarjetas de Precios */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-        
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch max-w-3xl mx-auto">
         {/* Card 1: Prueba Gratis */}
-        <div className="rounded-xl border border-slate-800 bg-[#0d0d13] p-6 flex flex-col justify-between hover:border-slate-700 transition-all">
+        <div className="rounded-xl border border-slate-800 bg-[#0d0d13] p-7 flex flex-col justify-between hover:border-slate-700 transition-all">
           <div className="space-y-4">
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-slate-200">Prueba de 7 Días</h3>
@@ -93,18 +141,18 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
             </div>
             <div className="flex items-baseline gap-1">
               <span className="text-3xl font-extrabold text-slate-100">$0</span>
-              <span className="text-xs text-slate-500">/ 7 días</span>
+              <span className="text-xs text-slate-500">/ 7 días gratis</span>
             </div>
-            <ul className="space-y-2.5 pt-2 text-xs text-slate-400">
-              <li className="flex items-center gap-2">
+            <ul className="space-y-3 pt-3 text-xs text-slate-400">
+              <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                7 lecciones fundamentales en tu correo
+                7 lecciones fundamentales escritas para ti
               </li>
-              <li className="flex items-center gap-2">
+              <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Ejercicios diarios de comunicación estoica
+                Ejercicios diarios de comunicación práctica
               </li>
-              <li className="flex items-center gap-2">
+              <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
                 Sin tarjeta de crédito requerida
               </li>
@@ -113,137 +161,102 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
           <button
             type="button"
             onClick={onSelectFreeTrial}
-            className="mt-6 w-full py-2.5 px-4 rounded-lg border border-slate-700 text-slate-200 text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-colors"
+            className="mt-8 w-full py-3 px-4 rounded-lg border border-slate-700 text-slate-200 text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-colors"
           >
             Empezar Gratis Ahora
           </button>
         </div>
 
-        {/* Card 2: Plan Suscripción (Mensual / Anual) */}
-        <div className="rounded-xl border border-slate-800 bg-[#0d0d13] p-6 flex flex-col justify-between hover:border-slate-700 transition-all">
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <h3 className="text-lg font-bold text-slate-200">
-                {billingCycle === 'yearly' ? 'Plan Anual' : 'Plan Mensual'}
-              </h3>
-              <p className="text-xs text-slate-500">Acceso completo a la Web & PWA Pura</p>
-            </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold text-slate-100">
-                {billingCycle === 'yearly' ? '$29.99' : '$4.99'}
-              </span>
-              <span className="text-xs text-slate-500">
-                USD / {billingCycle === 'yearly' ? 'año' : 'mes'}
-              </span>
-            </div>
-            <ul className="space-y-2.5 pt-2 text-xs text-slate-400">
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Los 3 Tracks completados (210 Prácticas)
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Evaluación inicial e Insights con IA
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Examen Nocturno Séneca + Mood Chart
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                13 Retos Semanales + Tracker de Hábitos
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Notificaciones Web Push a tu hora
-              </li>
-            </ul>
-          </div>
-          <div className="mt-6 space-y-2">
-            <button
-              type="button"
-              onClick={() => handleCheckoutClick(billingCycle === 'yearly' ? 'Anual ($29.99)' : 'Mensual ($4.99)')}
-              className="w-full py-2.5 px-4 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-slate-750 transition-colors"
-            >
-              <CreditCard className="w-4 h-4 text-[#c9a84c]" />
-              Suscribirse con Lemon Squeezy
-            </button>
-            <p className="text-[10px] text-center text-slate-500 flex items-center justify-center gap-1">
-              <Lock className="w-3 h-3 text-[#c9a84c]" /> Verificación de pasarela en proceso
-            </p>
-          </div>
-        </div>
-
-        {/* Card 3: Pase Fundador Lifetime (Destacado) */}
-        <div className="relative rounded-xl border-2 border-[#c9a84c]/60 bg-[#111118] p-6 flex flex-col justify-between shadow-[0_10px_40px_-15px_rgba(201,168,76,0.25)]">
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-[#c9a84c] text-[#0a0a0f] text-[10px] font-black uppercase tracking-widest">
-            Edición Fundador · Pago Único
+        {/* Card 2: Pase de Acceso Completo (Pago Único) */}
+        <div className="relative rounded-xl border-2 border-[#c9a84c]/60 bg-[#111118] p-7 flex flex-col justify-between shadow-[0_10px_40px_-15px_rgba(201,168,76,0.25)]">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-[#c9a84c] text-[#0a0a0f] text-[10px] font-black uppercase tracking-widest">
+            Acceso Vitalicio · Pago Único
           </div>
 
           <div className="space-y-4 pt-2">
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-slate-100 flex items-center justify-between">
-                <span>Pase Fundador</span>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-[#c9a84c]/20 text-[#c9a84c]">Por Vida</span>
+                <span>Pase de Acceso Completo</span>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-[#c9a84c]/20 text-[#c9a84c]">
+                  Sin mensualidades
+                </span>
               </h3>
-              <p className="text-xs text-slate-400">Limitado a los primeros 100 usuarios</p>
+              <p className="text-xs text-slate-400">
+                {currency === 'COP'
+                  ? 'Mercado Pago (PSE, Tarjeta de Crédito/Débito, Nequi)'
+                  : 'Lemon Squeezy (Tarjeta Internacional / PayPal)'}
+              </p>
             </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold text-[#c9a84c]">$59</span>
-              <span className="text-xs text-slate-400">USD / de por vida</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-3xl font-extrabold text-[#c9a84c]">
+                {currency === 'COP' ? '$199.900' : '$60'}
+              </span>
+              <span className="text-xs text-slate-400">
+                {currency === 'COP' ? 'COP / Pago único' : 'USD / Pago único'}
+              </span>
             </div>
             <ul className="space-y-2.5 pt-2 text-xs text-slate-300">
-              <li className="flex items-center gap-2">
+              <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Acceso VITALICIO a los 3 Tracks (210 días)
+                Acceso vitalicio a los 3 Tracks (210 prácticas)
               </li>
-              <li className="flex items-center gap-2">
+              <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Incluye Track Avanzado: &ldquo;Influencia & PNL&rdquo;
+                Incluye Track Avanzado: &ldquo;Influencia & Liderazgo&rdquo;
               </li>
-              <li className="flex items-center gap-2">
+              <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Coaching e Insights ilimitados con IA
+                Sistema de Diagnóstico y Feedback Adaptativo
               </li>
-              <li className="flex items-center gap-2">
+              <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Todas las futuras actualizaciones sin pagar jamás un centavo extra
+                Diario nocturno de Séneca + 13 Retos Semanales
               </li>
-              <li className="flex items-center gap-2">
+              <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Insignia exclusiva de Fundador en tu perfil
+                App PWA instalable en iOS, Android y PC
               </li>
             </ul>
           </div>
 
-          <div className="mt-6 space-y-2">
-            <button
-              type="button"
-              onClick={() => handleCheckoutClick('Fundador Lifetime ($59)')}
-              className="w-full py-3 px-4 rounded-lg bg-[#c9a84c] text-[#0a0a0f] text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-            >
-              <CreditCard className="w-4 h-4" />
-              Obtener Pase Fundador
-            </button>
+          <div className="mt-8 space-y-2">
+            {currency === 'COP' ? (
+              <button
+                type="button"
+                onClick={handleMercadoPagoCheckout}
+                className="w-full py-3 px-4 rounded-lg bg-[#c9a84c] text-[#0a0a0f] text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+              >
+                <CreditCard className="w-4 h-4" />
+                Pagar $199.900 COP con Mercado Pago
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleLemonCheckout}
+                className="w-full py-3 px-4 rounded-lg bg-[#c9a84c] text-[#0a0a0f] text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+              >
+                <CreditCard className="w-4 h-4" />
+                Pagar $60 USD con Lemon Squeezy
+              </button>
+            )}
             <p className="text-[10px] text-center text-slate-500 flex items-center justify-center gap-1">
-              <Lock className="w-3 h-3 text-[#c9a84c]" /> Verificación Lemon Squeezy pendiente
+              <Lock className="w-3 h-3 text-[#c9a84c]" /> Garantía de 7 días. Pago cifrado seguro.
             </p>
           </div>
         </div>
-
       </div>
 
       {/* Nota de Seguridad & Garantía */}
-      <div className="rounded-lg border border-slate-800 bg-[#0d0d13] p-4 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+      <div className="rounded-lg border border-slate-800 bg-[#0d0d13] p-5 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left max-w-3xl mx-auto">
         <div className="flex items-center gap-3">
           <ShieldCheck className="w-8 h-8 text-[#c9a84c] shrink-0" />
           <div>
             <p className="text-xs font-bold text-slate-200">Garantía Incondicional de 7 Días</p>
-            <p className="text-[11px] text-slate-400">Si el programa no satisface tus expectativas, solicitas el reembolso total sin preguntas.</p>
+            <p className="text-[11px] text-slate-400">Prueba el programa sin riesgo. Si no cumple tus expectativas, solicitas el reembolso total.</p>
           </div>
         </div>
         <div className="text-[11px] text-slate-500">
-          Procesamiento de pago cifrado SSL vía Lemon Squeezy (Merchant of Record).
+          Pagos procesados de forma cifrada en Mercado Pago (COP) y Lemon Squeezy (USD).
         </div>
       </div>
     </div>

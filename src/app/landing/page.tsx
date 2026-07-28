@@ -5,13 +5,13 @@ import PublicPageView from '@/components/PublicPageView'
 import PricingSection from '@/components/landing/PricingSection'
 import FAQAccordion from '@/components/landing/FAQAccordion'
 import { FAQS } from '@/data/faqs'
-import { Sparkles, MessageSquare, Shield, Zap, BookOpen, Brain, Smartphone, CalendarCheck, CheckCircle2, Bot, Layers } from 'lucide-react'
+import { Sparkles, MessageSquare, Shield, Zap, BookOpen, Brain, Smartphone, CalendarCheck, CheckCircle2, UserCheck, Layers } from 'lucide-react'
 
 const cinzel = Cinzel({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-cinzel' })
 
-const TITLE = 'StoiCom · 90 Días de Entrenamiento Estoico de Comunicación y Liderazgo'
+const TITLE = 'StoiCom · Entrenamiento Estoico de Comunicación & Psicología de Alto Rendimiento'
 const DESCRIPTION =
-  'El programa de 90 días que entrena cómo hablas — con los demás y contigo mismo. Un ejercicio al día, filosofía estoica aplicada de Marco Aurelio y Séneca. Primeros 7 días gratis por correo.'
+  'El sistema de 210 ejercicios prácticos (3 Tracks) que fusiona la Filosofía Estoica con la Psicología de Alto Rendimiento, PNL y Evaluación Adaptativa. Entrena cómo hablas con los demás y contigo mismo.'
 
 export const metadata = {
   title: TITLE,
@@ -20,7 +20,7 @@ export const metadata = {
     'comunicación estoica',
     'psicología de alto rendimiento',
     'PNL estoica',
-    'coaching con IA',
+    'mentoría adaptativa',
     'inteligencia emocional',
     'entrenamiento de oratoria',
     'conversaciones difíciles',
@@ -72,11 +72,18 @@ const JSON_LD = {
       name: 'StoiCom App (PWA)',
       operatingSystem: 'iOS, Android, Windows, macOS',
       applicationCategory: 'EducationalApplication',
-      offers: {
-        '@type': 'Offer',
-        price: '4.99',
-        priceCurrency: 'USD',
-      },
+      offers: [
+        {
+          '@type': 'Offer',
+          price: '199900',
+          priceCurrency: 'COP',
+        },
+        {
+          '@type': 'Offer',
+          price: '60',
+          priceCurrency: 'USD',
+        },
+      ],
     },
     {
       '@type': 'Course',
@@ -91,9 +98,9 @@ const JSON_LD = {
         courseWorkload: 'PT15M',
       },
       offers: [
-        { '@type': 'Offer', category: 'Trial', price: '0', priceCurrency: 'USD' },
-        { '@type': 'Offer', category: 'Subscription', price: '29.99', priceCurrency: 'USD' },
-        { '@type': 'Offer', category: 'Lifetime', price: '59', priceCurrency: 'USD' },
+        { '@type': 'Offer', category: 'Trial', price: '0', priceCurrency: 'COP' },
+        { '@type': 'Offer', category: 'Lifetime', price: '199900', priceCurrency: 'COP' },
+        { '@type': 'Offer', category: 'Lifetime', price: '60', priceCurrency: 'USD' },
       ],
     },
     {
@@ -213,7 +220,7 @@ export default function LandingPage() {
               Filosofía Estoica + Psicología de Alto Rendimiento
             </h2>
             <p className="mt-4 text-sm md:text-base text-slate-400 max-w-xl mx-auto leading-relaxed">
-              Unimos los principios antiguos de Marco Aurelio, Séneca y Epicteto con herramientas avanzadas de PNL y psicología moderna (Tríada Emocional, Condicionamiento Neuro-Asociativo NAC y Reencuadre de Marcos).
+              Unimos los principios antiguos de Marco Aurelio, Séneca y Epicteto con herramientas avanzadas de PNL y psicología moderna (Tríada Emocional, Condicionamiento Neuro-Asociativo y Reencuadre de Marcos).
             </p>
           </div>
 
@@ -416,30 +423,98 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Qué incluye */}
-      <section className="border-y border-[#c9a84c]/15 bg-[#0d0d13]">
-        <div className="max-w-5xl mx-auto px-6 py-16 md:py-20">
-          <div className="text-center">
-            <Eyebrow>Qué incluye la plataforma</Eyebrow>
+      {/* Evaluación & Diagnóstico Personalizado */}
+      <section className="border-t border-slate-900 bg-[#0d0d13] py-16 md:py-24">
+        <div className="max-w-5xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+          <div className="space-y-6">
+            <Eyebrow>Acompañamiento Personalizado</Eyebrow>
+            <h2 className={`${cinzel.className} text-2xl md:text-3xl text-slate-100 leading-snug`}>
+              Evaluación Diagnóstica y Retroalimentación
+            </h2>
+            <p className="text-sm leading-relaxed text-slate-400">
+              StoiCom adapta la experiencia a tu nivel real. Evaluamos tu punto de partida en comunicación y monitoreamos tu avance:
+            </p>
+            <ul className="space-y-3 text-xs text-slate-300">
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-[#c9a84c] shrink-0 mt-0.5" />
+                <span><strong>Evaluación Inicial:</strong> Diagnóstico que identifica tus fortalezas comunicativas y tus sesgos impulsivos.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-[#c9a84c] shrink-0 mt-0.5" />
+                <span><strong>Análisis de Diario:</strong> Retroalimentación semanal basada en el examen de Séneca y tus reflexiones.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-[#c9a84c] shrink-0 mt-0.5" />
+                <span><strong>Sistema Adaptativo:</strong> Ajuste continuo de recomendaciones según tus progresos prácticos.</span>
+              </li>
+            </ul>
           </div>
-          <div className="mt-10 grid sm:grid-cols-2 gap-x-12 gap-y-6 max-w-3xl mx-auto">
-            {[
-              ['Tres tracks, un sistema', 'Comunicación con los demás, diálogo interno y la temporada avanzada Influencia (210 prácticas).'],
-              ['Evaluación e IA (DeepSeek)', 'Diagnóstico continuo de competencias comunicativas y retroalimentación personalizada sobre tu diario.'],
-              ['Lección diaria escrita', 'Cada día trae una lección completa de 400–550 palabras para ese punto exacto del proceso.'],
-              ['Diario con examen nocturno', 'Plantillas de mañana y noche basadas en Séneca y Marco Aurelio, con registro de ánimo y su gráfico.'],
-              ['Retos semanales y hábitos', '13 retos de campo cada 7 días más monitoreo de hábitos estoicos (duchas frías, ayuno de quejas).'],
-              ['App PWA Multi-dispositivo', 'Instálala en iPhone, Android o PC. Notificaciones Push y correos en tu zona horaria exacta.'],
-            ].map(([title, body]) => (
-              <div key={title} className="flex gap-3">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: GOLD }} />
-                <div>
-                  <p className="text-sm font-bold text-slate-200">{title}</p>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-500">{body}</p>
-                </div>
-              </div>
-            ))}
+
+          <div className="rounded-xl border border-slate-800 bg-[#111116] p-6 space-y-4">
+            <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
+              <UserCheck className="w-5 h-5 text-[#c9a84c]" />
+              <span className="text-xs font-bold text-slate-200">Sistema de Mentoría StoiCom</span>
+            </div>
+            <div className="text-xs leading-relaxed text-slate-400 space-y-3">
+              <p className="p-3 rounded bg-slate-900/60 border border-slate-800 text-slate-300">
+                &ldquo;Tu examen de anoche refleja avance en la escucha activa. Para tu práctica de hoy, mantén la postura erguida antes de intervenir en la conversación tensa.&rdquo;
+              </p>
+              <p className="text-[11px] text-slate-500 text-right">
+                Retroalimentación generada según tu avance en el diario.
+              </p>
+            </div>
           </div>
+        </div>
+      </section>
+
+      {/* Plataforma PWA & Funcionalidades Completas */}
+      <section className="max-w-5xl mx-auto px-6 py-16 md:py-24">
+        <div className="text-center space-y-3 mb-12">
+          <Eyebrow>Herramientas de la App</Eyebrow>
+          <h2 className={`${cinzel.className} text-2xl md:text-3xl text-slate-100`}>
+            Todo lo que incluye la Plataforma
+          </h2>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[
+            {
+              icon: <Layers className="w-5 h-5 text-[#c9a84c]" />,
+              title: '13 Retos Semanales',
+              body: 'Desafíos de campo cada 7 días con entregables concretos para llevar la práctica al mundo real.',
+            },
+            {
+              icon: <CheckCircle2 className="w-5 h-5 text-[#c9a84c]" />,
+              title: 'Tracker de Hábitos Estoicos',
+              body: 'Monitoreo diario de hábitos clave: duchas frías, silencio consciente, ayuno de quejas.',
+            },
+            {
+              icon: <Smartphone className="w-5 h-5 text-[#c9a84c]" />,
+              title: 'PWA Multi-dispositivo',
+              body: 'Instálala en iPhone, Android o PC. Funciona de manera fluida como una app nativa.',
+            },
+            {
+              icon: <CalendarCheck className="w-5 h-5 text-[#c9a84c]" />,
+              title: 'Calendario Honesto',
+              body: 'Seguimiento de racha y días perdidos sin trampas. El calendario no miente para consolarte.',
+            },
+            {
+              icon: <Sparkles className="w-5 h-5 text-[#c9a84c]" />,
+              title: 'Horario Personalizado',
+              body: 'Correos matutinos y notificaciones push a la hora exacta que elijas y en tu zona horaria.',
+            },
+            {
+              icon: <Shield className="w-5 h-5 text-[#c9a84c]" />,
+              title: 'Gráfico de Estados de Ánimo',
+              body: 'Registra y analiza tu nivel de claridad y calma a lo largo de las 12 semanas del programa.',
+            },
+          ].map((item, i) => (
+            <div key={i} className="rounded-xl border border-slate-800 bg-[#0d0d13] p-6 space-y-3">
+              <div>{item.icon}</div>
+              <h3 className="text-sm font-bold text-slate-200">{item.title}</h3>
+              <p className="text-xs leading-relaxed text-slate-400">{item.body}</p>
+            </div>
+          ))}
         </div>
       </section>
 
