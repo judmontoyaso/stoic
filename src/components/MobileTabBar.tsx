@@ -3,9 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-// Barra de pestañas inferior para móvil/PWA standalone.
-// Las 5 rutas principales; el resto vive en el drawer del header
-// (el Sidebar usa TABS para no repetirlas allí).
 export const TABS = [
   { label: 'Hoy', path: '/today', icon: '/icons/time.png' },
   { label: 'Calendario', path: '/calendar', icon: '/icons/earth.png' },
@@ -16,6 +13,19 @@ export const TABS = [
 
 export default function MobileTabBar() {
   const pathname = usePathname()
+
+  const isPublicPage =
+    !pathname ||
+    pathname === '/login' ||
+    pathname === '/landing' ||
+    pathname === '/becas' ||
+    pathname === '/suscripcion' ||
+    pathname === '/terms' ||
+    pathname === '/privacy' ||
+    pathname === '/reembolsos' ||
+    pathname.startsWith('/auth/')
+
+  if (isPublicPage) return null
 
   return (
     <nav

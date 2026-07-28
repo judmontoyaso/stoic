@@ -25,22 +25,35 @@ export default function Sidebar() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [isAdmin, setIsAdmin] = useState(false)
 
+  // Si estamos en una ruta pública, el sidebar no se renderiza bajo ningún motivo
+  const isPublicPage =
+    !pathname ||
+    pathname === '/login' ||
+    pathname === '/landing' ||
+    pathname === '/becas' ||
+    pathname === '/suscripcion' ||
+    pathname === '/terms' ||
+    pathname === '/privacy' ||
+    pathname === '/reembolsos' ||
+    pathname.startsWith('/auth/')
+
   useEffect(() => {
+    if (isPublicPage) return
     fetch('/api/admin/me')
       .then(res => res.json())
       .then(data => setIsAdmin(!!data.admin))
       .catch(() => {})
-  }, [])
+  }, [isPublicPage])
 
   useEffect(() => {
     const saved = localStorage.getItem('theme') as 'dark' | 'light' | null
     const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     const initialTheme = saved || (systemDark ? 'dark' : 'light')
-    // Sincroniza con localStorage tras montar: en SSR no hay window
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(initialTheme)
     document.documentElement.classList.toggle('dark', initialTheme === 'dark')
   }, [])
+
+  if (isPublicPage) return null
 
   const toggleTheme = () => {
     const nextTheme = theme === 'dark' ? 'light' : 'dark'
@@ -75,12 +88,6 @@ export default function Sidebar() {
     collapsed: { width: 70 },
   }
 
-  /**
-   * Clases del ítem de menú. Colapsado quedan 38px útiles (70 de ancho
-   * menos el padding del sidebar): con px-3 solo sobran 14px para un
-   * icono de 20, así que el navegador lo comprime. Colapsado se centra
-   * el icono sin padding lateral y cabe holgado.
-   */
   const itemClass = (active: boolean, isMobile: boolean) => {
     const compacto = collapsed && !isMobile
     return [
@@ -116,8 +123,6 @@ export default function Sidebar() {
   }
 
   const renderNavItems = (isMobile = false) => {
-    // En móvil la barra inferior ya tiene las rutas principales:
-    // el drawer solo muestra el resto (Recursos, Evaluación)
     const tabPaths = new Set(TABS.map(t => t.path))
     const items = isMobile ? menuItems.filter(i => !tabPaths.has(i.path)) : menuItems
     return items.map((item) => {
@@ -242,14 +247,8 @@ export default function Sidebar() {
         animate={collapsed ? 'collapsed' : 'expanded'}
         variants={sidebarVariants}
         transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
-        // overflow-x-hidden (no overflow-hidden): recorta el desborde
-        // lateral de la animación de colapso, pero deja que el nav de
-        // adentro pueda hacer scroll vertical.
         className="hidden md:flex flex-col bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] h-screen sticky top-0 p-4 flex-shrink-0 overflow-x-hidden"
       >
-        {/* Logo. Colapsado (70px - 32px de padding = 38px útiles) no caben
-            logo + botón en fila: el logo va arriba y el botón debajo,
-            ambos centrados. Sin esto el logo se salía del borde. */}
         {!collapsed ? (
           <div className="flex items-center justify-between mb-8 mt-2">
             <Link href="/" className="flex items-center gap-2">
@@ -279,17 +278,11 @@ export default function Sidebar() {
           </div>
         )}
 
-        {/* Navigation. min-h-0 es imprescindible: un flex item trae
-            min-height:auto y sin esto NO se encoge por debajo de su
-            contenido — el nav crecía y empujaba el pie (notificaciones,
-            tema, cerrar sesión) fuera de la pantalla. Con admin son 10
-            ítems y en portátiles no cabían. */}
         <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-2 sidebar-scroll">
           {renderNavItems(false)}
           {renderAdminLink(false)}
         </nav>
 
-        {/* Footer: flex-shrink-0 para que nunca lo comprima el nav */}
         <div className="flex-shrink-0 pt-4 border-t border-[var(--border-color)] flex flex-col gap-2 items-center">
           <PushToggle collapsed={collapsed} />
           <button

@@ -25,8 +25,6 @@ export const metadata: Metadata = {
     title: "StoiCom",
   },
   icons: {
-    // SVG de marca como principal; PNG de la escultura como respaldo.
-    // (logo.svg/icon.svg eran un gráfico verde de plantilla — no StoiCom.)
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
       { url: "/favicon.png", sizes: "32x32", type: "image/png" },
@@ -50,13 +48,17 @@ export default async function RootLayout({
 }>) {
   const headersList = await headers()
   const pathname = headersList.get('x-pathname') || ''
-  // Pantallas sin sidebar: autenticación y páginas públicas
-  const isLoginPage =
+
+  // Pantallas públicas / sin sesión que NUNCA deben mostrar sidebar ni tabbar
+  const isPublicPage =
     pathname === '/login' ||
-    pathname.startsWith('/auth/') ||
     pathname === '/landing' ||
+    pathname === '/becas' ||
+    pathname === '/suscripcion' ||
     pathname === '/terms' ||
-    pathname === '/privacy'
+    pathname === '/privacy' ||
+    pathname === '/reembolsos' ||
+    pathname.startsWith('/auth/')
 
   return (
     <html lang="es" className="scroll-smooth">
@@ -93,13 +95,13 @@ export default async function RootLayout({
             },
           }}
         />
-        {!isLoginPage && <Sidebar />}
+        {!isPublicPage && <Sidebar />}
         <main
-          className={`flex-1 overflow-y-auto h-screen md:h-auto ${isLoginPage ? '' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0'}`}
+          className={`flex-1 overflow-y-auto h-screen md:h-auto ${isPublicPage ? '' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0'}`}
         >
           <PageTransition>{children}</PageTransition>
         </main>
-        {!isLoginPage && <MobileTabBar />}
+        {!isPublicPage && <MobileTabBar />}
       </body>
     </html>
   )
