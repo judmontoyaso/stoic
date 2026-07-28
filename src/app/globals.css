@@ -64,6 +64,26 @@ body {
   background: var(--primary-gold-hover);
 }
 
+/* Scroll del menú lateral: discreto, sobre el fondo del sidebar y sin
+   pulgar visible hasta que se pasa el cursor. Solo aparece cuando hay
+   más ítems de los que caben (p. ej. con los enlaces de admin). */
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.sidebar-scroll:hover {
+  scrollbar-color: var(--border-color) transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+.sidebar-scroll:hover::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+}
+
 /* PrimeReact Theme overrides to match the Gold theme */
 .p-component {
   font-family: var(--font-inter), sans-serif !important;

@@ -188,11 +188,11 @@ export default function Sidebar() {
                 <img src="/sculpture.png" className="w-8 h-8 rounded-full object-cover border border-[#c9a84c]/30" alt="StoiCom Logo" />
                 <span className="font-bold text-[var(--foreground)] tracking-wider">StoiCom</span>
               </div>
-              <nav className="flex-1 space-y-2">
+              <nav className="flex-1 min-h-0 overflow-y-auto space-y-2 sidebar-scroll">
                 {renderNavItems(true)}
                 {renderAdminLink(true)}
               </nav>
-              <div className="pt-4 border-t border-[var(--border-color)] flex flex-col gap-3">
+              <div className="flex-shrink-0 pt-4 border-t border-[var(--border-color)] flex flex-col gap-3">
                 <PushToggle />
                 <button
                   onClick={toggleTheme}
@@ -231,7 +231,10 @@ export default function Sidebar() {
         animate={collapsed ? 'collapsed' : 'expanded'}
         variants={sidebarVariants}
         transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
-        className="hidden md:flex flex-col bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] h-screen sticky top-0 p-4 flex-shrink-0 overflow-hidden"
+        // overflow-x-hidden (no overflow-hidden): recorta el desborde
+        // lateral de la animación de colapso, pero deja que el nav de
+        // adentro pueda hacer scroll vertical.
+        className="hidden md:flex flex-col bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] h-screen sticky top-0 p-4 flex-shrink-0 overflow-x-hidden"
       >
         {/* Logo. Colapsado (70px - 32px de padding = 38px útiles) no caben
             logo + botón en fila: el logo va arriba y el botón debajo,
@@ -265,14 +268,18 @@ export default function Sidebar() {
           </div>
         )}
 
-        {/* Navigation */}
-        <nav className="flex-1 space-y-2">
+        {/* Navigation. min-h-0 es imprescindible: un flex item trae
+            min-height:auto y sin esto NO se encoge por debajo de su
+            contenido — el nav crecía y empujaba el pie (notificaciones,
+            tema, cerrar sesión) fuera de la pantalla. Con admin son 10
+            ítems y en portátiles no cabían. */}
+        <nav className="flex-1 min-h-0 overflow-y-auto space-y-2 sidebar-scroll">
           {renderNavItems(false)}
           {renderAdminLink(false)}
         </nav>
 
-        {/* Footer */}
-        <div className="pt-4 border-t border-[var(--border-color)] flex flex-col gap-2 items-center">
+        {/* Footer: flex-shrink-0 para que nunca lo comprima el nav */}
+        <div className="flex-shrink-0 pt-4 border-t border-[var(--border-color)] flex flex-col gap-2 items-center">
           <PushToggle collapsed={collapsed} />
           <button
             onClick={toggleTheme}
