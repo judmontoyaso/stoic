@@ -64,34 +64,35 @@ export default function BecasPage() {
             className={`${cinzel.className} text-[11px] md:text-xs tracking-[0.35em] uppercase`}
             style={{ color: GOLD }}
           >
-            Convocatoria Abierta · 20 Becas Fundador con Acceso Vitalicio
+            20 becas fundador · acceso de por vida
           </p>
 
           <h1
             className={`${cinzel.className} text-3xl sm:text-4xl md:text-5xl leading-[1.2] text-slate-100 font-normal`}
           >
-            La serenidad y el poder de tu palabra <br className="hidden sm:inline" />
-            <span style={{ color: GOLD }}>no se compran; se conquistan.</span>
+            No se compra.
+            <br className="hidden sm:inline" />
+            <span style={{ color: GOLD }}> Se aplica.</span>
           </h1>
         </div>
 
         <div className="mt-8 space-y-6 text-slate-300 leading-relaxed text-base md:text-lg font-light">
           <p>
-            En momentos determinantes, la duda o el impulso suelen nublar la claridad de lo que deseas expresar. 
-            Dominar el arte de hablar con firmeza, serenidad y verdadera convicción no es un don innato reservado a unos pocos: 
-            es una disciplina diaria que transforma de raíz tu relación con los demás y la voz con la que te diriges a ti mismo.
+            Veinte personas entran gratis al programa completo. El mismo acceso que paga un
+            fundador: 210 ejercicios diarios en tres tracks, el diario con el examen nocturno,
+            los retos semanales y la temporada avanzada de Influencia. De por vida.
           </p>
 
           <p>
-            Sabemos que el deseo sincero de superación no siempre coincide con la capacidad económica inmediata. 
-            Por esa razón, abrimos la convocatoria para <strong className="text-slate-100 font-medium">20 Becas Fundador de Acceso Vitalicio Completo</strong> a nuestra plataforma. 
-            Quienes resulten seleccionados recibirán el mismo nivel de membresía que nuestros miembros de pago: un recorrido riguroso que abarca{' '}
-            <span style={{ color: GOLD }} className="font-semibold">210 prácticas diarias divididas en 3 tracks evolutivos</span>, el módulo de <em>Influencia & Liderazgo</em>, el diario estoico de reflexión nocturna y los retos semanales.
+            No pido dinero. Pido que lo ejecutes. El día 1 es grabarte tres minutos hablando y
+            mirarlo dos veces: una escuchando, otra mirando. Vas a odiarlo. Ese es el punto —
+            es el diagnóstico más honesto que existe, y el que nadie hace.
           </p>
 
           <div className="border-l-2 border-[#c9a84c]/60 pl-5 py-2 my-8 bg-[#111118]/60 rounded-r-xl">
             <p className="text-slate-300 text-sm md:text-base italic leading-relaxed">
-              «Esta beca no es una limosna de marketing ni una concesión sin compromiso; es un pacto de mérito y trabajo personal. Buscamos a 20 personas dispuestas a enfrentarse a su propia voz, grabarse sin juzgarse con severidad estéril y ejercitar la templanza cada día.»
+              «Si te da pereza grabarte, esta beca no es para ti. Y no pasa nada: los primeros
+              siete días siguen siendo gratis para todo el mundo.»
             </p>
           </div>
         </div>

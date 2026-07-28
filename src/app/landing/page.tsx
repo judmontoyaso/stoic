@@ -5,30 +5,30 @@ import PublicPageView from '@/components/PublicPageView'
 import PricingSection from '@/components/landing/PricingSection'
 import FAQAccordion from '@/components/landing/FAQAccordion'
 import { FAQS } from '@/data/faqs'
+import { FOUNDER_PRICE } from '@/lib/pricing'
 import { Sparkles, MessageSquare, Shield, Zap, BookOpen, Brain, Smartphone, CalendarCheck, CheckCircle2, UserCheck, Layers } from 'lucide-react'
 
 const cinzel = Cinzel({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-cinzel' })
 
-const TITLE = 'StoiCom · Entrenamiento Estoico de Comunicación & Psicología de Alto Rendimiento'
+const TITLE = 'StoiCom · Entrenamiento estoico de comunicación, un ejercicio al día'
 const DESCRIPTION =
-  'El sistema de 210 ejercicios prácticos (3 Tracks) que fusiona la Filosofía Estoica con la Psicología de Alto Rendimiento, PNL y Evaluación Adaptativa. Entrena cómo hablas con los demás y contigo mismo.'
+  '210 ejercicios diarios en 3 tracks: comunicación con los demás, diálogo interno e influencia. Estoicismo aplicado y frameworks de Robbins y Voss, con una lección escrita cada día. Primeros 7 días gratis por correo.'
 
 export const metadata = {
   title: TITLE,
   description: DESCRIPTION,
   keywords: [
     'comunicación estoica',
-    'psicología de alto rendimiento',
-    'PNL estoica',
-    'mentoría adaptativa',
-    'inteligencia emocional',
-    'entrenamiento de oratoria',
+    'entrenamiento de comunicación',
+    'hablar en público',
     'conversaciones difíciles',
+    'escucha activa',
     'diario estoico',
+    'examen nocturno de Séneca',
     'Marco Aurelio',
-    'Séneca',
     'Epicteto',
-    'Tony Robbins frameworks',
+    'anclaje de estado',
+    'reencuadre',
     'liderazgo e influencia',
   ],
   alternates: { canonical: 'https://stoicom.app/landing' },
@@ -59,7 +59,7 @@ const JSON_LD = {
       name: 'StoiCom',
       url: 'https://stoicom.app',
       logo: 'https://stoicom.app/icon-512.png',
-      description: 'Sistema de entrenamiento estoico de comunicación, PNL y alto rendimiento.',
+      description: 'Entrenamiento diario de comunicación con estoicismo aplicado y frameworks de Robbins, Voss y Holiday.',
     },
     {
       '@type': 'WebSite',
@@ -73,23 +73,15 @@ const JSON_LD = {
       operatingSystem: 'iOS, Android, Windows, macOS',
       applicationCategory: 'EducationalApplication',
       offers: [
-        {
-          '@type': 'Offer',
-          price: '199900',
-          priceCurrency: 'COP',
-        },
-        {
-          '@type': 'Offer',
-          price: '60',
-          priceCurrency: 'USD',
-        },
+        { '@type': 'Offer', price: String(FOUNDER_PRICE.cop), priceCurrency: 'COP' },
+        { '@type': 'Offer', price: String(FOUNDER_PRICE.usd), priceCurrency: 'USD' },
       ],
     },
     {
       '@type': 'Course',
       name: 'Sistema Estoico de Comunicación, Maestría Interna e Influencia',
       description:
-        'Programa completo con 3 Tracks (210 ejercicios prácticos): 1) Comunicación Interpersonal, 2) Maestría Interna & Diario, 3) Influencia & Liderazgo con PNL.',
+        'Programa completo con 3 tracks (210 ejercicios prácticos): 1) Comunicación con los demás, 2) Diálogo interno y diario, 3) Influencia y liderazgo.',
       provider: { '@type': 'Organization', name: 'StoiCom', url: 'https://stoicom.app' },
       inLanguage: 'es',
       hasCourseInstance: {
@@ -99,8 +91,8 @@ const JSON_LD = {
       },
       offers: [
         { '@type': 'Offer', category: 'Trial', price: '0', priceCurrency: 'COP' },
-        { '@type': 'Offer', category: 'Lifetime', price: '199900', priceCurrency: 'COP' },
-        { '@type': 'Offer', category: 'Lifetime', price: '60', priceCurrency: 'USD' },
+        { '@type': 'Offer', category: 'Lifetime', price: String(FOUNDER_PRICE.cop), priceCurrency: 'COP' },
+        { '@type': 'Offer', category: 'Lifetime', price: String(FOUNDER_PRICE.usd), priceCurrency: 'USD' },
       ],
     },
     {
@@ -211,7 +203,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Sección La Fusión Estoicismo + PNL / Alto Rendimiento */}
+      {/* Sección: estoicismo + frameworks modernos, citados por su autor */}
       <section id="metodologia" className="border-y border-[#c9a84c]/15 bg-[#0d0d13]">
         <div className="max-w-5xl mx-auto px-6 py-16 md:py-24">
           <div className="text-center">
@@ -220,7 +212,7 @@ export default function LandingPage() {
               Filosofía Estoica + Psicología de Alto Rendimiento
             </h2>
             <p className="mt-4 text-sm md:text-base text-slate-400 max-w-xl mx-auto leading-relaxed">
-              Unimos los principios antiguos de Marco Aurelio, Séneca y Epicteto con herramientas avanzadas de PNL y psicología moderna (Tríada Emocional, Condicionamiento Neuro-Asociativo y Reencuadre de Marcos).
+              Marco Aurelio, Séneca y Epicteto pusieron la disciplina. Robbins, Voss y Holiday pusieron las técnicas con nombre: la Tríada, el condicionamiento neuro-asociativo, el etiquetado emocional, la redefinición del marco. Cada ejercicio dice de dónde sale.
             </p>
           </div>
 
@@ -427,25 +419,25 @@ export default function LandingPage() {
       <section className="border-t border-slate-900 bg-[#0d0d13] py-16 md:py-24">
         <div className="max-w-5xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <Eyebrow>Acompañamiento Personalizado</Eyebrow>
+            <Eyebrow>Medición honesta</Eyebrow>
             <h2 className={`${cinzel.className} text-2xl md:text-3xl text-slate-100 leading-snug`}>
-              Evaluación Diagnóstica y Retroalimentación
+              La prueba la das tú
             </h2>
             <p className="text-sm leading-relaxed text-slate-400">
-              StoiCom adapta la experiencia a tu nivel real. Evaluamos tu punto de partida en comunicación y monitoreamos tu avance:
+              Nada de puntajes inventados. Tu avance se mide con lo que grabas, lo que escribes y los días que cumpliste:
             </p>
             <ul className="space-y-3 text-xs text-slate-300">
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-[#c9a84c] shrink-0 mt-0.5" />
-                <span><strong>Evaluación Inicial:</strong> Diagnóstico que identifica tus fortalezas comunicativas y tus sesgos impulsivos.</span>
+                <span><strong>Día 1 contra día 86:</strong> te grabas tres minutos el primer día. Vuelves a grabarte al final. Esa comparación es la prueba, y es tuya.</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-[#c9a84c] shrink-0 mt-0.5" />
-                <span><strong>Análisis de Diario:</strong> Retroalimentación semanal basada en el examen de Séneca y tus reflexiones.</span>
+                <span><strong>Resumen semanal:</strong> cada domingo recibes tus días cumplidos, los perdidos, tu racha real y el ánimo medio de tu diario.</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-[#c9a84c] shrink-0 mt-0.5" />
-                <span><strong>Sistema Adaptativo:</strong> Ajuste continuo de recomendaciones según tus progresos prácticos.</span>
+                <span><strong>Sin rachas infladas:</strong> el día perdido se marca y se queda marcado. El calendario nunca se reorganiza para hacerte sentir bien.</span>
               </li>
             </ul>
           </div>
@@ -453,14 +445,14 @@ export default function LandingPage() {
           <div className="rounded-xl border border-slate-800 bg-[#111116] p-6 space-y-4">
             <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
               <UserCheck className="w-5 h-5 text-[#c9a84c]" />
-              <span className="text-xs font-bold text-slate-200">Sistema de Mentoría StoiCom</span>
+              <span className="text-xs font-bold text-slate-200">El consejo de cada mañana</span>
             </div>
             <div className="text-xs leading-relaxed text-slate-400 space-y-3">
               <p className="p-3 rounded bg-slate-900/60 border border-slate-800 text-slate-300">
-                &ldquo;Tu examen de anoche refleja avance en la escucha activa. Para tu práctica de hoy, mantén la postura erguida antes de intervenir en la conversación tensa.&rdquo;
+                &ldquo;Hoy bajas el ritmo a la mitad. Vas a sentir que arrastras las palabras: no es verdad, es que estabas corriendo. La aceleración comunica miedo a perder el turno.&rdquo;
               </p>
               <p className="text-[11px] text-slate-500 text-right">
-                Retroalimentación generada según tu avance en el diario.
+                Cada día llega con su lección escrita, de 400 a 550 palabras.
               </p>
             </div>
           </div>

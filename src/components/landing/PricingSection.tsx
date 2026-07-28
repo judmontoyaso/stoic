@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Check, ShieldCheck, Sparkles, CreditCard, Globe } from 'lucide-react'
+import { copLabel, usdLabel } from '@/lib/pricing'
 
 interface PricingSectionProps {
   onSelectFreeTrial?: () => void
@@ -11,16 +12,21 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
   const [currency, setCurrency] = useState<'COP' | 'USD'>('COP')
 
   useEffect(() => {
+    // COP para toda América: Mercado Pago es la única puerta que cobra
+    // hoy (el botón en USD está inactivo hasta que Lemon Squeezy
+    // verifique). Con el filtro anterior, solo Colombia veía la opción
+    // pagable y un visitante de México se quedaba sin ninguna. Su tarjeta
+    // convierte de COP sin problema.
+    let moneda: 'COP' | 'USD' = 'COP'
     try {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
-      if (tz.includes('Bogota') || tz.includes('America/Bogota') || tz.includes('Colombia')) {
-        setCurrency('COP')
-      } else {
-        setCurrency('USD')
-      }
+      if (!tz.startsWith('America/')) moneda = 'USD'
     } catch {
-      setCurrency('COP')
+      // Sin zona horaria: se queda en COP, la que sí cobra
     }
+    // La zona horaria solo existe en el cliente: hay que fijarla al montar
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrency(moneda)
   }, [])
 
   const handleMercadoPagoCheckout = () => {
@@ -55,7 +61,7 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              $199.900 COP (Mercado Pago / PSE)
+              {copLabel} COP (Mercado Pago / PSE)
             </button>
             <button
               type="button"
@@ -66,7 +72,7 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              $60 USD (Lemon Squeezy / Int.)
+              {usdLabel} USD (Lemon Squeezy / Int.)
             </button>
           </div>
         </div>
@@ -131,7 +137,7 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
             </div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-3xl font-extrabold text-[#c9a84c]">
-                {currency === 'COP' ? '$199.900' : '$60'}
+                {currency === 'COP' ? copLabel : usdLabel}
               </span>
               <span className="text-xs text-slate-400">
                 {currency === 'COP' ? 'COP / Pago único' : 'USD / Pago único'}
@@ -148,7 +154,7 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
               </li>
               <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Sistema de Diagnóstico y Feedback Adaptativo
+                Resumen semanal y evaluación de tu progreso real
               </li>
               <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
@@ -169,7 +175,7 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
                 className="w-full py-3 px-4 rounded-lg bg-[#c9a84c] text-[#0a0a0f] text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
               >
                 <CreditCard className="w-4 h-4" />
-                Pagar $199.900 COP con Mercado Pago
+                Pagar {copLabel} COP con Mercado Pago
               </button>
             ) : (
               <button

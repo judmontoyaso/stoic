@@ -53,13 +53,14 @@ export default function BecaForm() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 className="text-xl font-bold text-slate-100">Postulación Recibida</h3>
+        <h3 className="text-xl font-bold text-slate-100">Aplicación recibida</h3>
         <p className="text-sm leading-relaxed text-slate-300">
-          Agradecemos tu honestidad al compartir tu contexto. Leemos detenidamente cada candidatura de manera individual y rigurosa.
+          Las leo todas, una por una. Si la beca sale, el código llega a{' '}
+          <span className="font-semibold text-slate-200">{form.email}</span>.
         </p>
         <p className="text-xs text-slate-400 leading-relaxed">
-          Si tu postulación resulta seleccionada entre las 20 Becas Fundador, nos pondremos en contacto contigo a través de{' '}
-          <span className="font-semibold text-slate-200">{form.email}</span> para otorgarte tu acceso vitalicio completo. Mientras tanto, puedes explorar las lecciones de introducción.
+          Mientras decides esperar o no: los primeros 7 días son gratis para todos y empiezan
+          hoy mismo. No hay razón para quedarte quieto.
         </p>
       </div>
     )
@@ -68,9 +69,9 @@ export default function BecaForm() {
   return (
     <div className="mx-auto max-w-lg rounded-xl border border-slate-800 bg-[#0d0d14] p-6 sm:p-8 shadow-xl">
       <div className="mb-6 space-y-2 text-center sm:text-left">
-        <h3 className="text-lg font-bold text-slate-100">Formulario de Postulación</h3>
+        <h3 className="text-lg font-bold text-slate-100">Aplica a una beca</h3>
         <p className="text-xs text-slate-400 leading-relaxed">
-          Buscamos personas verdaderamente comprometidas a transformar su voz y fortaleza mental. Completa este espacio con franqueza.
+          Cuatro campos. El último es el que decide.
         </p>
       </div>
 
@@ -118,12 +119,12 @@ export default function BecaForm() {
 
         <div>
           <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-            Tu motivación y compromiso <span className="text-[#c9a84c]">*</span>
+            ¿Por qué tú? <span className="text-[#c9a84c]">*</span>
           </label>
           <textarea
             required
             rows={5}
-            placeholder="Cuéntanos con libertad: ¿qué desafío específico enfrentas hoy al comunicarte y qué disposición tienes para asumir los 90 días de entrenamiento con disciplina diaria?"
+            placeholder="Sé concreto: ¿qué conversación se te atraganta hoy? ¿La junta donde te callas, el audio que grabas cinco veces, la charla pendiente que llevas meses aplazando? Y dime qué te hace pensar que vas a cumplir los 90 días."
             value={form.reason}
             onChange={set('reason')}
             className={inputClass}
