@@ -26,7 +26,7 @@ demo y URL del sitio. Todo existe — este doc lo empaqueta.
 > | Tier | Price | What it includes |
 > |---|---|---|
 > | Free email course | $0 | First 7 days of the program, delivered by email (lead magnet) |
-> | Founder — lifetime access | $59 USD, one-time | Full 90-day program (2 parallel tracks), advanced 30-day season, daily personalized emails and push notifications, journal, evaluation dashboard. No subscription, no recurring charges. Limited to the first 100 founders. |
+> | Founder — lifetime access | $59 USD, one-time | Full 90-day program (2 parallel tracks), advanced 30-day season, daily emails and push notifications delivered at each user's own hour and timezone, journal, progress dashboard. No subscription, no recurring charges. Limited to the first 100 founders. |
 >
 > The Lemon Squeezy checkout sells the **Founder lifetime access**
 > ($59 USD one-time). We also accept Mercado Pago for LatAm customers

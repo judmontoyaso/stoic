@@ -11,8 +11,8 @@
 // Si cambias aquí, cambia allá. Los números deben coincidir.
 
 export const FOUNDER_PRICE = {
-  cop: 199900,
-  usd: 60,
+  cop: 199000,
+  usd: 59,
 } as const
 
 /** "$199.900" — formato colombiano, con punto de miles. */
