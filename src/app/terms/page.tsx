@@ -70,8 +70,11 @@ export default function TermsPage() {
       <section className="space-y-2">
         <h2 className="font-bold text-base">6. Contacto</h2>
         <p>
-          Preguntas sobre estos términos: escríbenos al correo desde el que recibes
-          las notificaciones del servicio.
+          Preguntas sobre estos términos, tu cuenta o el servicio:{' '}
+          <a href="mailto:ayuda@stoicom.app" className="font-bold underline">
+            ayuda@stoicom.app
+          </a>
+          . También puedes responder a cualquiera de nuestros correos.
         </p>
       </section>
 

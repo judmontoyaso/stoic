@@ -43,7 +43,11 @@ export default function ReembolsosPage() {
       <section className="space-y-2">
         <h2 className="font-bold text-base">3. Cómo pedir tu reembolso</h2>
         <p>
-          Escríbenos a <strong>hola@stoicom.app</strong> (o responde a cualquiera
+          Escríbenos a{' '}
+          <a href="mailto:ayuda@stoicom.app" className="font-bold underline">
+            ayuda@stoicom.app
+          </a>{' '}
+          (o responde a cualquiera
           de nuestros correos) desde la misma dirección con la que te registraste,
           indicando que quieres el reembolso. No necesitas dar explicaciones. Te
           confirmamos por correo en cuanto lo procesemos.
@@ -75,7 +79,11 @@ export default function ReembolsosPage() {
       <section className="space-y-2">
         <h2 className="font-bold text-base">6. Contacto</h2>
         <p>
-          Cualquier duda sobre reembolsos: <strong>hola@stoicom.app</strong>.
+          Cualquier duda sobre reembolsos:{' '}
+          <a href="mailto:ayuda@stoicom.app" className="font-bold underline">
+            ayuda@stoicom.app
+          </a>
+          .
         </p>
       </section>
 

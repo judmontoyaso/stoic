@@ -2,6 +2,9 @@
 // No importar desde componentes cliente.
 
 const BRAND = 'StoiCom'
+/** Buzón de soporte. Va en el pie de todos los correos: las pasarelas de
+ *  pago exigen un contacto visible y el cliente no debe tener que buscarlo. */
+const SUPPORT_EMAIL = 'ayuda@stoicom.app'
 // Paleta de la landing: negro, dorado y serif romana.
 // Cinzel no carga en clientes de correo: Georgia es el fallback digno.
 const ACCENT = '#c9a84c' // Gold/Amber
@@ -69,6 +72,7 @@ function baseLayout(opts: {
         <tr>
           <td style="padding:20px 32px;border-top:1px solid ${BORDER_LIGHT};font-size:10px;color:#64748b;line-height:1.6;background:#0d0d13;text-transform:uppercase;letter-spacing:1px;">
             ${BRAND} · Programa de 90 días · Un ejercicio al día
+            <br><a href="mailto:${SUPPORT_EMAIL}" style="color:#64748b;text-decoration:underline;">${SUPPORT_EMAIL}</a>
             ${unsubscribeUrl ? `<br><a href="${unsubscribeUrl}" style="color:#64748b;text-decoration:underline;">Darse de baja</a>` : ''}
           </td>
         </tr>

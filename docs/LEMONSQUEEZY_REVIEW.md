@@ -13,6 +13,9 @@ demo y URL del sitio. Todo existe — este doc lo empaqueta.
 > (Terms: https://stoicom.app/terms · Privacy: https://stoicom.app/privacy
 > · Refund policy: https://stoicom.app/reembolsos)
 >
+> **Support contact:** ayuda@stoicom.app (also in the footer of every
+> email we send)
+>
 > **Product:** StoiCom is a 90-day communication training program in
 > Spanish, based on applied Stoic philosophy. Users receive one concrete
 > daily exercise with a full written lesson (morning email + web app),
