@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Check, ShieldCheck, Sparkles, Lock, CreditCard, Globe } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { Check, ShieldCheck, Sparkles, CreditCard, Globe } from 'lucide-react'
 
 interface PricingSectionProps {
   onSelectFreeTrial?: () => void
@@ -24,65 +23,8 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
     }
   }, [])
 
-  const handleLemonCheckout = () => {
-    toast(
-      (t) => (
-        <div className="flex flex-col gap-1 text-xs">
-          <span className="font-bold text-[#c9a84c] flex items-center gap-1.5">
-            <Lock className="w-3.5 h-3.5" /> Verificación Lemon Squeezy en proceso
-          </span>
-          <span>
-            El pago internacional de <strong>$60 USD</strong> está configurado en la plataforma. Se habilitará públicamente tan pronto concluya la verificación de la pasarela.
-          </span>
-          <button
-            onClick={() => {
-              toast.dismiss(t.id)
-              if (onSelectFreeTrial) onSelectFreeTrial()
-            }}
-            className="mt-2 text-left underline font-semibold text-slate-200 hover:text-white"
-          >
-            Prueba los 7 días gratis mientras tanto →
-          </button>
-        </div>
-      ),
-      {
-        duration: 6000,
-        style: {
-          background: '#111116',
-          color: '#e2e8f0',
-          border: '1px solid rgba(201, 168, 76, 0.4)',
-        },
-      }
-    )
-  }
-
   const handleMercadoPagoCheckout = () => {
-    toast(
-      (t) => (
-        <div className="flex flex-col gap-1 text-xs">
-          <span className="font-bold text-[#c9a84c] flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5" /> Pago con Mercado Pago ($199.900 COP)
-          </span>
-          <span>
-            Inicia sesión con Google para activar tu cuenta e ingresar al checkout oficial de Mercado Pago (PSE, Tarjetas, Nequi).
-          </span>
-          <a
-            href="/login"
-            className="mt-2 inline-block text-center py-1.5 px-3 rounded bg-[#c9a84c] text-[#0a0a0f] font-bold"
-          >
-            Ir al inicio de sesión →
-          </a>
-        </div>
-      ),
-      {
-        duration: 6000,
-        style: {
-          background: '#111116',
-          color: '#e2e8f0',
-          border: '1px solid rgba(201, 168, 76, 0.4)',
-        },
-      }
-    )
+    window.location.href = '/login'
   }
 
   return (
@@ -232,15 +174,15 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
             ) : (
               <button
                 type="button"
-                onClick={handleLemonCheckout}
-                className="w-full py-3 px-4 rounded-lg bg-[#c9a84c] text-[#0a0a0f] text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                disabled
+                className="w-full py-3 px-4 rounded-lg bg-slate-800 text-slate-500 border border-slate-700 text-xs font-bold uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <CreditCard className="w-4 h-4" />
-                Pagar $60 USD con Lemon Squeezy
+                <CreditCard className="w-4 h-4 text-slate-600" />
+                Pago en USD Próximamente
               </button>
             )}
-            <p className="text-[10px] text-center text-slate-500 flex items-center justify-center gap-1">
-              <Lock className="w-3 h-3 text-[#c9a84c]" /> Garantía de 7 días. Pago cifrado seguro.
+            <p className="text-[10px] text-center text-slate-500">
+              Garantía incondicional de 7 días. Pago cifrado seguro.
             </p>
           </div>
         </div>
@@ -256,7 +198,7 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
           </div>
         </div>
         <div className="text-[11px] text-slate-500">
-          Pagos procesados de forma cifrada en Mercado Pago (COP) y Lemon Squeezy (USD).
+          Pagos procesados de forma cifrada con Mercado Pago (COP) y Lemon Squeezy (USD).
         </div>
       </div>
     </div>
