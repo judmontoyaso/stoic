@@ -12,32 +12,35 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly')
 
   const handleCheckoutClick = (planName: string) => {
-    toast((t) => (
-      <div className="flex flex-col gap-1 text-xs">
-        <span className="font-bold text-[#c9a84c] flex items-center gap-1.5">
-          <Lock className="w-3.5 h-3.5" /> Verificación de pasarela en proceso
-        </span>
-        <span>
-          La integración con Lemon Squeezy para el plan <strong>{planName}</strong> está lista en el sistema. Los pagos se activarán apenas concluya la verificación de la cuenta.
-        </span>
-        <button
-          onClick={() => {
-            toast.dismiss(t.id)
-            if (onSelectFreeTrial) onSelectFreeTrial()
-          }}
-          className="mt-2 text-left underline font-semibold text-slate-200 hover:text-white"
-        >
-          Prueba los 7 días gratis mientras tanto →
-        </button>
-      </div>
-    ), {
-      duration: 6000,
-      style: {
-        background: '#111116',
-        color: '#e2e8f0',
-        border: '1px solid rgba(201, 168, 76, 0.4)',
-      },
-    })
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-1 text-xs">
+          <span className="font-bold text-[#c9a84c] flex items-center gap-1.5">
+            <Lock className="w-3.5 h-3.5" /> Verificación de pasarela en proceso
+          </span>
+          <span>
+            La integración con Lemon Squeezy para el plan <strong>{planName}</strong> está lista en el sistema. Los pagos se activarán apenas concluya la verificación de la cuenta.
+          </span>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id)
+              if (onSelectFreeTrial) onSelectFreeTrial()
+            }}
+            className="mt-2 text-left underline font-semibold text-slate-200 hover:text-white"
+          >
+            Prueba los 7 días gratis mientras tanto →
+          </button>
+        </div>
+      ),
+      {
+        duration: 6000,
+        style: {
+          background: '#111116',
+          color: '#e2e8f0',
+          border: '1px solid rgba(201, 168, 76, 0.4)',
+        },
+      }
+    )
   }
 
   return (
@@ -45,13 +48,13 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
       {/* Header Precios */}
       <div className="text-center space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c9a84c]/10 border border-[#c9a84c]/30 text-[11px] font-bold tracking-widest text-[#c9a84c] uppercase">
-          <Sparkles className="w-3.5 h-3.5" /> Transparente y sin contratos
+          <Sparkles className="w-3.5 h-3.5" /> 3 Tracks · 210 Ejercicios Prácticos · IA
         </div>
         <h2 className="text-3xl md:text-4xl font-bold text-slate-100">
-          Invierte en tu forma de comunicar
+          Invierte en tu maestría comunicativa y fortaleza mental
         </h2>
         <p className="max-w-xl mx-auto text-sm md:text-base text-slate-400">
-          Comienza gratis 7 días por correo. Cuando quieras el sistema completo de 90 días con diario e IA, elige el plan que mejor se adapte a ti.
+          Comienza gratis 7 días por correo. Cuando desees ingresar al sistema completo con los 3 tracks, evaluación con IA y app PWA, elige la mejor opción.
         </p>
 
         {/* Toggle Mensual / Anual */}
@@ -95,15 +98,15 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
             <ul className="space-y-2.5 pt-2 text-xs text-slate-400">
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                1 lección diaria en tu correo durante 7 días
+                7 lecciones fundamentales en tu correo
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Ejercicios reales de comunicación estoica
+                Ejercicios diarios de comunicación estoica
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Sin necesidad de ingresar tarjeta de crédito
+                Sin tarjeta de crédito requerida
               </li>
             </ul>
           </div>
@@ -123,7 +126,7 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
               <h3 className="text-lg font-bold text-slate-200">
                 {billingCycle === 'yearly' ? 'Plan Anual' : 'Plan Mensual'}
               </h3>
-              <p className="text-xs text-slate-500">Acceso completo a la plataforma web & PWA</p>
+              <p className="text-xs text-slate-500">Acceso completo a la Web & PWA Pura</p>
             </div>
             <div className="flex items-baseline gap-1">
               <span className="text-3xl font-extrabold text-slate-100">
@@ -136,19 +139,23 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
             <ul className="space-y-2.5 pt-2 text-xs text-slate-400">
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Programa completo de 90 días (2 tracks)
+                Los 3 Tracks completados (210 Prácticas)
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Diario estoico con examen nocturno
+                Evaluación inicial e Insights con IA
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Coaching e historial impulsado por IA
+                Examen Nocturno Séneca + Mood Chart
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Notificaciones web push y personalización
+                13 Retos Semanales + Tracker de Hábitos
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
+                Notificaciones Web Push a tu hora
               </li>
             </ul>
           </div>
@@ -188,15 +195,19 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
             <ul className="space-y-2.5 pt-2 text-xs text-slate-300">
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Acceso vitalicio a todos los 90 días
+                Acceso VITALICIO a los 3 Tracks (210 días)
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Incluye temporada avanzada &ldquo;Influencia&rdquo; (30 días)
+                Incluye Track Avanzado: &ldquo;Influencia & PNL&rdquo;
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Todas las futuras actualizaciones y módulos sin cargos extra
+                Coaching e Insights ilimitados con IA
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
+                Todas las futuras actualizaciones sin pagar jamás un centavo extra
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />

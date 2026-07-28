@@ -4,20 +4,22 @@ import LeadForm from '@/components/LeadForm'
 import PublicPageView from '@/components/PublicPageView'
 import PricingSection from '@/components/landing/PricingSection'
 import FAQAccordion, { FAQS } from '@/components/landing/FAQAccordion'
-import { Sparkles, MessageSquare, Shield, Zap, Award, BookOpen, Brain, Users, ArrowRight } from 'lucide-react'
+import { Sparkles, MessageSquare, Shield, Zap, BookOpen, Brain, Flame, Smartphone, CalendarCheck, CheckCircle2, Bot, Layers } from 'lucide-react'
 
 const cinzel = Cinzel({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-cinzel' })
 
-const TITLE = 'StoiCom · 90 Días de Entrenamiento Estoico de Comunicación y Liderazgo'
+const TITLE = 'StoiCom · Entrenamiento Estoico de Comunicación, Alto Rendimiento e IA'
 const DESCRIPTION =
-  'El programa guiado de 90 días que entrena cómo hablas con los demás y contigo mismo. Un ejercicio diario, filosofía estoica aplicada de Marco Aurelio y Séneca. Primeros 7 días gratis por correo.'
+  'El sistema de 210 ejercicios prácticos (3 Tracks) que fusiona la Filosofía Estoica con la Psicología de Alto Rendimiento, PNL y Coaching con IA. Entrena cómo hablas con los demás y contigo mismo.'
 
 export const metadata = {
   title: TITLE,
   description: DESCRIPTION,
   keywords: [
     'comunicación estoica',
-    'desarrollo personal',
+    'psicología de alto rendimiento',
+    'PNL estoica',
+    'coaching con IA',
     'inteligencia emocional',
     'entrenamiento de oratoria',
     'conversaciones difíciles',
@@ -25,7 +27,8 @@ export const metadata = {
     'Marco Aurelio',
     'Séneca',
     'Epicteto',
-    'hablar en público',
+    'Tony Robbins frameworks',
+    'liderazgo e influencia',
   ],
   alternates: { canonical: 'https://stoicom.app/landing' },
   openGraph: {
@@ -55,7 +58,7 @@ const JSON_LD = {
       name: 'StoiCom',
       url: 'https://stoicom.app',
       logo: 'https://stoicom.app/icon-512.png',
-      description: 'Plataforma de entrenamiento estoico de comunicación y diálogo interno.',
+      description: 'Sistema de entrenamiento estoico de comunicación, PNL y alto rendimiento.',
     },
     {
       '@type': 'WebSite',
@@ -65,8 +68,8 @@ const JSON_LD = {
     },
     {
       '@type': 'SoftwareApplication',
-      name: 'StoiCom App',
-      operatingSystem: 'All (Web / PWA)',
+      name: 'StoiCom App (PWA)',
+      operatingSystem: 'iOS, Android, Windows, macOS',
       applicationCategory: 'EducationalApplication',
       offers: {
         '@type': 'Offer',
@@ -76,9 +79,9 @@ const JSON_LD = {
     },
     {
       '@type': 'Course',
-      name: 'Programa Estoico de 90 Días de Comunicación',
+      name: 'Sistema Estoico de Comunicación, Maestría Interna e Influencia',
       description:
-        'Programa guiado de 90 días con 180 ejercicios prácticos divididos en 3 fases: Percepción, Acción y Voluntad.',
+        'Programa completo con 3 Tracks (210 ejercicios prácticos): 1) Comunicación Interpersonal, 2) Maestría Interna & Diario, 3) Influencia & Liderazgo con PNL.',
       provider: { '@type': 'Organization', name: 'StoiCom', url: 'https://stoicom.app' },
       inLanguage: 'es',
       hasCourseInstance: {
@@ -142,6 +145,18 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-4">
             <a
+              href="#metodologia"
+              className="hidden md:inline-block text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              Metodología
+            </a>
+            <a
+              href="#tracks"
+              className="hidden md:inline-block text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              Los 3 Tracks
+            </a>
+            <a
               href="#precios"
               className="hidden sm:inline-block text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
             >
@@ -159,11 +174,11 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative max-w-5xl mx-auto px-6 pt-16 pb-20 md:pt-24 md:pb-28 text-center overflow-hidden">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c9a84c]/10 border border-[#c9a84c]/30 text-[11px] font-bold tracking-widest text-[#c9a84c] uppercase mb-6">
-          <Sparkles className="w-3.5 h-3.5" /> Programa Guiado de 90 Días
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#c9a84c]/10 border border-[#c9a84c]/30 text-[11px] font-bold tracking-widest text-[#c9a84c] uppercase mb-6">
+          <Sparkles className="w-3.5 h-3.5" /> 3 Tracks · 210 Prácticas · PNL Estoica & IA
         </div>
 
-        <Eyebrow>Filosofía Estoica Aplicada a la Vida Real</Eyebrow>
+        <Eyebrow>Filosofía Estoica + Psicología de Alto Rendimiento</Eyebrow>
 
         <h1 className={`${cinzel.className} mt-6 text-4xl md:text-6xl font-bold leading-[1.15] text-slate-100`}>
           Entrena cómo hablas.
@@ -172,8 +187,21 @@ export default function LandingPage() {
         </h1>
 
         <p className="mt-8 max-w-2xl mx-auto text-base md:text-lg leading-relaxed text-slate-400">
-          Un ejercicio práctico cada día para dejar de sonar dubitativo, dominar las conversaciones difíciles y cultivar claridad mental. Sin frases clichés: percepción, acción y voluntad entrenadas contra el reloj de un día real.
+          Un sistema práctico que fusiona la sabiduría estoica de Séneca y Marco Aurelio con psicología de alto rendimiento (PNL, Tríada Emocional y Marcos) y coaching con IA. Domina las conversaciones difíciles, el diálogo interno y la templanza bajo presión.
         </p>
+
+        {/* Features Chips */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-xs font-medium text-slate-400">
+          <span className="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#c9a84c]" /> 210 Ejercicios Diarios
+          </span>
+          <span className="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 flex items-center gap-1.5">
+            <Bot className="w-3.5 h-3.5 text-[#c9a84c]" /> Evaluación con IA
+          </span>
+          <span className="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 flex items-center gap-1.5">
+            <Smartphone className="w-3.5 h-3.5 text-[#c9a84c]" /> App PWA Offline
+          </span>
+        </div>
 
         {/* Lead Capture Box */}
         <div className="mt-10 max-w-md mx-auto bg-[#111118] p-6 rounded-xl border border-[#c9a84c]/20 shadow-xl">
@@ -190,242 +218,270 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 2 Tracks Principales */}
-      <section className="border-t border-[#c9a84c]/15 bg-[#0d0d13] py-16 md:py-24">
+      {/* Sección La Fusión Científica: Estoicismo + PNL / Alto Rendimiento */}
+      <section id="metodologia" className="border-t border-[#c9a84c]/15 bg-[#0d0d13] py-16 md:py-24">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center space-y-3">
-            <Eyebrow>Doble Entrenamiento</Eyebrow>
+            <Eyebrow>Bases Fundamentales</Eyebrow>
             <h2 className={`${cinzel.className} text-2xl md:text-3xl text-slate-100 font-bold`}>
-              Dos Tracks Complementarios
+              La Fusión Estoica de Alto Rendimiento
             </h2>
-            <p className="text-sm text-slate-400 max-w-lg mx-auto">
-              La comunicación externa es solo el reflejo de tu diálogo interno. StoiCom entrena ambas dimensiones simultáneamente.
+            <p className="text-sm text-slate-400 max-w-xl mx-auto">
+              No es filosofía teórica ni autoayuda blanda. StoiCom combina 2 pilares de transformación visceral de conducta.
             </p>
           </div>
 
           <div className="mt-12 grid md:grid-cols-2 gap-8">
-            {/* Track 1 */}
-            <div className="rounded-xl border border-slate-800 bg-[#111116] p-8 space-y-4 hover:border-[#c9a84c]/40 transition-colors">
-              <div className="w-12 h-12 rounded-lg bg-[#c9a84c]/10 border border-[#c9a84c]/30 flex items-center justify-center text-[#c9a84c]">
-                <MessageSquare className="w-6 h-6" />
+            <div className="rounded-xl border border-slate-800 bg-[#111116] p-8 space-y-4">
+              <div className="w-10 h-10 rounded-lg bg-[#c9a84c]/10 border border-[#c9a84c]/30 flex items-center justify-center text-[#c9a84c]">
+                <BookOpen className="w-5 h-5" />
               </div>
               <h3 className={`${cinzel.className} text-xl text-slate-100 font-bold`}>
-                1. Comunicación Interpersonal
+                1. Filosofía Estoica Clásica
               </h3>
               <p className="text-sm leading-relaxed text-slate-400">
-                Aprende a pausar la primera reacción impulsiva, articular respuestas claras bajo presión, escuchar sin interrumpir y comunicar límites firmes con serenidad.
+                Basado en Epicteto, Marco Aurelio y Séneca. Dicotomía del control, examen nocturno de conciencia, amor fati y moderación verbal. Aprende a ver la realidad sin el filtro del juicio automático.
               </p>
-              <ul className="pt-2 space-y-2 text-xs text-slate-400">
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#c9a84c]" />
-                  Auditoría de lenguaje verbal y corporal
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#c9a84c]" />
-                  Gestión de desacuerdos sin reactividad
-                </li>
-              </ul>
             </div>
 
-            {/* Track 2 */}
-            <div className="rounded-xl border border-slate-800 bg-[#111116] p-8 space-y-4 hover:border-[#c9a84c]/40 transition-colors">
-              <div className="w-12 h-12 rounded-lg bg-[#c9a84c]/10 border border-[#c9a84c]/30 flex items-center justify-center text-[#c9a84c]">
-                <Brain className="w-6 h-6" />
+            <div className="rounded-xl border border-slate-800 bg-[#111116] p-8 space-y-4">
+              <div className="w-10 h-10 rounded-lg bg-[#c9a84c]/10 border border-[#c9a84c]/30 flex items-center justify-center text-[#c9a84c]">
+                <Brain className="w-5 h-5" />
               </div>
               <h3 className={`${cinzel.className} text-xl text-slate-100 font-bold`}>
-                2. Maestría Interna & Diario
+                2. Psicología de Alto Rendimiento & PNL
               </h3>
               <p className="text-sm leading-relaxed text-slate-400">
-                El examen nocturno de Séneca. Evalúa objetivamente tus decisiones del día, elimina el autojuicio destructivo y fortalece tu voluntad con disciplinas de sobriedad mental.
+                Inspirado en los desarrollos de Tony Robbins. Aplica la <em>Tríada Emocional</em> (fisiología, foco y lenguaje), <em>Condicionamiento Neuro-Asociativo (NAC)</em>, <em>Vocabulario Transformacional</em> y <em>Anclajes de Estado</em> a demanda.
               </p>
-              <ul className="pt-2 space-y-2 text-xs text-slate-400">
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#c9a84c]" />
-                  Plantillas de journaling matutino y nocturno
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#c9a84c]" />
-                  Registro de estado de ánimo y claridad
-                </li>
-              </ul>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Demostración de un día real del programa */}
-      <section className="max-w-5xl mx-auto px-6 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
-        <div>
-          <Eyebrow>Metodología Diaria</Eyebrow>
-          <h2 className={`${cinzel.className} mt-4 text-2xl md:text-3xl text-slate-100 font-bold leading-snug`}>
-            El programa no se lee.
-            <br />
-            Se ejecuta.
+      {/* Los 3 Tracks Guiados (210 Ejercicios Únicos) */}
+      <section id="tracks" className="max-w-5xl mx-auto px-6 py-16 md:py-24">
+        <div className="text-center space-y-3 mb-12">
+          <Eyebrow>Currículum Completo</Eyebrow>
+          <h2 className={`${cinzel.className} text-2xl md:text-3xl text-slate-100 font-bold`}>
+            Tres Tracks Guiados (210 Prácticas)
           </h2>
-          <ul className="mt-8 space-y-6">
-            <li className="flex gap-4">
-              <span className={`${cinzel.className} text-sm pt-0.5 w-14 shrink-0 text-right font-bold`} style={{ color: GOLD }}>
-                6:00
-              </span>
-              <p className="text-sm leading-relaxed text-slate-400">
-                Llega tu correo matutino con el ejercicio del día y una lección completa escrita para ese momento exacto de tu proceso.
-              </p>
-            </li>
-            <li className="flex gap-4">
-              <span className={`${cinzel.className} text-sm pt-0.5 w-14 shrink-0 text-right font-bold`} style={{ color: GOLD }}>
-                El día
-              </span>
-              <p className="text-sm leading-relaxed text-slate-400">
-                Ejecutas la práctica en la vida real. Lo marcas en la app. Si fallas un día, queda registrado: el calendario es transparente y honesto.
-              </p>
-            </li>
-            <li className="flex gap-4">
-              <span className={`${cinzel.className} text-sm pt-0.5 w-14 shrink-0 text-right font-bold`} style={{ color: GOLD }}>
-                20:00
-              </span>
-              <p className="text-sm leading-relaxed text-slate-400">
-                El examen nocturno estoico: 3 preguntas esenciales por escrito para cerrar el día con serenidad y aprendizaje.
-              </p>
-            </li>
-          </ul>
-        </div>
-
-        {/* Tarjeta de Ejemplo de Ejercicio Real */}
-        <div className="relative">
-          <div className="rounded-xl border border-[#c9a84c]/30 bg-[#111116] p-7 shadow-[0_20px_60px_-20px_rgba(201,168,76,0.15)] space-y-4">
-            <div className="flex items-baseline justify-between">
-              <p className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ color: GOLD }}>
-                Comunicación · Día 12
-              </p>
-              <p className="text-[10px] tracking-wider uppercase text-slate-500">Módulo Percepción</p>
-            </div>
-            <h3 className={`${cinzel.className} text-xl text-slate-100 font-bold`}>
-              Auditoría de la Primera Reacción
-            </h3>
-            <p className="text-sm leading-relaxed text-slate-400">
-              Hoy, en cada conversación tensa, no respondas a la primera frase que se te pase por la cabeza. Toma 3 segundos de silencio deliberado. Anota en la noche: ¿cuántas de tus reacciones iniciales habrían sido impulsivas?
-            </p>
-            <div className="pt-4 border-t border-slate-800">
-              <p className="text-xs leading-relaxed text-slate-500 italic">
-                <span className="not-italic font-bold" style={{ color: GOLD }}>Fundamento estoico: </span>
-                Epicteto señala que entre el estímulo y tu respuesta hay un espacio. Ese espacio es tu libertad de juicio.
-              </p>
-            </div>
-          </div>
-          <p className="mt-3 text-center text-[11px] text-slate-600">
-            Ejercicio real del programa — hay 180 prácticas como esta.
+          <p className="text-sm text-slate-400 max-w-lg mx-auto">
+            Cada día entrega un ejercicio único con su explicación técnica de por qué funciona y cómo aplicarlo en el mundo real.
           </p>
         </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Track 1 */}
+          <div className="rounded-xl border border-slate-800 bg-[#0d0d13] p-6 space-y-4 hover:border-[#c9a84c]/40 transition-colors">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold px-2 py-1 rounded bg-[#c9a84c]/10 text-[#c9a84c] uppercase">90 Días</span>
+              <MessageSquare className="w-5 h-5 text-[#c9a84c]" />
+            </div>
+            <h3 className={`${cinzel.className} text-lg text-slate-100 font-bold`}>
+              Comunicación Interpersonal
+            </h3>
+            <p className="text-xs leading-relaxed text-slate-400">
+              Desarrolla templanza y firmeza en conversaciones de tensión. Pausas de 3 segundos, lenguaje no verbal, escucha profunda y establecimiento de límites sin agresión.
+            </p>
+          </div>
+
+          {/* Track 2 */}
+          <div className="rounded-xl border border-slate-800 bg-[#0d0d13] p-6 space-y-4 hover:border-[#c9a84c]/40 transition-colors">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold px-2 py-1 rounded bg-[#c9a84c]/10 text-[#c9a84c] uppercase">90 Días</span>
+              <Brain className="w-5 h-5 text-[#c9a84c]" />
+            </div>
+            <h3 className={`${cinzel.className} text-lg text-slate-100 font-bold`}>
+              Maestría Interna & Diario
+            </h3>
+            <p className="text-xs leading-relaxed text-slate-400">
+              Domina tu diálogo interno. El examen nocturno de Séneca con 3 preguntas por escrito, gestión de estados de ánimo, gráfico de serenidad y erradicación del autojuicio.
+            </p>
+          </div>
+
+          {/* Track 3 */}
+          <div className="rounded-xl border border-[#c9a84c]/40 bg-[#111118] p-6 space-y-4 shadow-[0_4px_25px_-5px_rgba(201,168,76,0.15)]">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold px-2 py-1 rounded bg-[#c9a84c] text-[#0a0a0f] uppercase">30 Días · Avanzado</span>
+              <Zap className="w-5 h-5 text-[#c9a84c]" />
+            </div>
+            <h3 className={`${cinzel.className} text-lg text-slate-100 font-bold`}>
+              Influencia & Liderazgo
+            </h3>
+            <p className="text-xs leading-relaxed text-slate-400">
+              Temporada avanzada para graduados. Anclajes emocionales a demanda, redefinición de marcos en conversaciones complejas, lectura de metaprogramas y rapport no verbal.
+            </p>
+          </div>
+        </div>
       </section>
 
-      {/* Las tres fases */}
+      {/* Evaluación e Inteligencia Artificial */}
       <section className="border-t border-slate-900 bg-[#0d0d13] py-16 md:py-24">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="text-center space-y-3">
-            <Eyebrow>Progreso Estructurado</Eyebrow>
-            <h2 className={`${cinzel.className} text-2xl md:text-3xl text-slate-100 font-bold`}>
-              Las Tres Fases del Entrenamiento
+        <div className="max-w-5xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+          <div className="space-y-6">
+            <Eyebrow>Tecnología & IA</Eyebrow>
+            <h2 className={`${cinzel.className} text-2xl md:text-3xl text-slate-100 font-bold leading-snug`}>
+              Evaluación Diagnóstica y Coaching con IA
             </h2>
+            <p className="text-sm leading-relaxed text-slate-400">
+              StoiCom no es estático. Cuenta con un motor de Inteligencia Artificial (impulsado por DeepSeek) que analiza tu punto de partida en comunicación estoica y te acompaña en el proceso:
+            </p>
+            <ul className="space-y-3 text-xs text-slate-300">
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-[#c9a84c] shrink-0 mt-0.5" />
+                <span><strong>Evaluación Inicial:</strong> Matriz de diagnóstico que mide tus fortalezas y sesgos emocionales al hablar.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-[#c9a84c] shrink-0 mt-0.5" />
+                <span><strong>Análisis del Diario:</strong> Retroalimentación personalizada sobre tus reflexiones nocturnas.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-[#c9a84c] shrink-0 mt-0.5" />
+                <span><strong>Lectura Adaptativa:</strong> Generación de insights adaptados a tus avances y dificultades reales.</span>
+              </li>
+            </ul>
           </div>
-          <div className="mt-12 grid md:grid-cols-3 gap-6">
-            {[
-              {
-                numeral: 'I',
-                title: 'Percepción (Días 1–30)',
-                body: 'Aprender a ver los eventos y las palabras de los demás tal como son, filtrando la carga emocional inmediata. Entrenar el juicio imparcial.',
-              },
-              {
-                numeral: 'II',
-                title: 'Acción (Días 31–60)',
-                body: 'Comunicación en el mundo real. Ejercicios de asertividad, silencios estratégicos, tono vocal y sostenimiento de conversaciones complejas.',
-              },
-              {
-                numeral: 'III',
-                title: 'Voluntad (Días 61–90)',
-                body: 'Sostener el estándar estoico cuando las circunstancias no acompañan. Consolidación de carácter, hábito y maestría emocional.',
-              },
-            ].map((f) => (
-              <div key={f.numeral} className="rounded-xl border border-slate-800 bg-[#111116] p-6 space-y-3">
-                <span className={`${cinzel.className} text-3xl font-bold`} style={{ color: GOLD }}>
-                  {f.numeral}
-                </span>
-                <h3 className={`${cinzel.className} text-lg text-slate-100 font-bold`}>{f.title}</h3>
-                <p className="text-sm leading-relaxed text-slate-400">{f.body}</p>
-              </div>
-            ))}
+
+          <div className="rounded-xl border border-slate-800 bg-[#111116] p-6 space-y-4">
+            <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
+              <Bot className="w-5 h-5 text-[#c9a84c]" />
+              <span className="text-xs font-bold text-slate-200">Asistente Estoico IA</span>
+            </div>
+            <div className="text-xs leading-relaxed text-slate-400 space-y-3">
+              <p className="p-3 rounded bg-slate-900/60 border border-slate-800 text-slate-300">
+                &ldquo;En tu examen de anoche noté que la prisa en la reunión afectó tu filtro verbal. Aplica la técnica de la Tríada: ajusta tu postura antes de hablar hoy.&rdquo;
+              </p>
+              <p className="text-[11px] text-slate-500 text-right">
+                Insight generado en tiempo real según tu entrada de diario.
+              </p>
+            </div>
           </div>
+        </div>
+      </section>
+
+      {/* Plataforma PWA & Funcionalidades Completas */}
+      <section className="max-w-5xl mx-auto px-6 py-16 md:py-24">
+        <div className="text-center space-y-3 mb-12">
+          <Eyebrow>Herramientas de la App</Eyebrow>
+          <h2 className={`${cinzel.className} text-2xl md:text-3xl text-slate-100 font-bold`}>
+            Todo lo que incluye la Plataforma
+          </h2>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[
+            {
+              icon: <Layers className="w-5 h-5 text-[#c9a84c]" />,
+              title: '13 Retos Semanales',
+              body: 'Desafíos de campo cada 7 días con entregables concretos para llevar la práctica al mundo real.',
+            },
+            {
+              icon: <CheckCircle2 className="w-5 h-5 text-[#c9a84c]" />,
+              title: 'Tracker de Hábitos Estoicos',
+              body: 'Monitoreo diario de hábitos clave: duchas frías, silencio consciente, ayuno de quejas.',
+            },
+            {
+              icon: <Smartphone className="w-5 h-5 text-[#c9a84c]" />,
+              title: 'PWA Multi-dispositivo',
+              body: 'Instálala en iPhone, Android o PC. Funciona de manera fluida como una app nativa.',
+            },
+            {
+              icon: <CalendarCheck className="w-5 h-5 text-[#c9a84c]" />,
+              title: 'Calendario Honesto',
+              body: 'Seguimiento de racha y días perdidos sin trampas. El calendario no miente para consolarte.',
+            },
+            {
+              icon: <Sparkles className="w-5 h-5 text-[#c9a84c]" />,
+              title: 'Horario Personalizado',
+              body: 'Correos matutinos y notificaciones push a la hora exacta que elijas y en tu zona horaria.',
+            },
+            {
+              icon: <Shield className="w-5 h-5 text-[#c9a84c]" />,
+              title: 'Gráfico de Estados de Ánimo',
+              body: 'Registra y analiza tu nivel de claridad y calma a lo largo de las 12 semanas del programa.',
+            },
+          ].map((item, i) => (
+            <div key={i} className="rounded-xl border border-slate-800 bg-[#0d0d13] p-6 space-y-3">
+              <div>{item.icon}</div>
+              <h3 className="text-sm font-bold text-slate-200">{item.title}</h3>
+              <p className="text-xs leading-relaxed text-slate-400">{item.body}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* Tabla Comparativa de Valor */}
-      <section className="max-w-5xl mx-auto px-6 py-16 md:py-24">
-        <div className="text-center space-y-3 mb-12">
-          <Eyebrow>Por qué es diferente</Eyebrow>
-          <h2 className={`${cinzel.className} text-2xl md:text-3xl text-slate-100 font-bold`}>
-            StoiCom vs. Métodos Tradicionales
-          </h2>
-        </div>
+      <section className="border-t border-slate-900 bg-[#0d0d13] py-16 md:py-24">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center space-y-3 mb-12">
+            <Eyebrow>Por qué es superior</Eyebrow>
+            <h2 className={`${cinzel.className} text-2xl md:text-3xl text-slate-100 font-bold`}>
+              StoiCom vs. Métodos Tradicionales
+            </h2>
+          </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[600px]">
-            <thead>
-              <tr className="border-b border-slate-800 text-xs uppercase tracking-wider text-slate-400">
-                <th className="py-4 px-4 font-bold">Característica</th>
-                <th className="py-4 px-4 font-bold text-[#c9a84c]">StoiCom</th>
-                <th className="py-4 px-4 font-bold text-slate-500">Curso de Oratoria ($150+)</th>
-                <th className="py-4 px-4 font-bold text-slate-500">Libros de Autoayuda</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60 text-sm">
-              <tr>
-                <td className="py-4 px-4 font-semibold text-slate-200">Práctica Diaria Guiada</td>
-                <td className="py-4 px-4 text-[#c9a84c] font-bold">✓ 90 días seguidos</td>
-                <td className="py-4 px-4 text-slate-500">Solo teoría en video</td>
-                <td className="py-4 px-4 text-slate-500">Pasivo (solo lectura)</td>
-              </tr>
-              <tr>
-                <td className="py-4 px-4 font-semibold text-slate-200">Filosofía Estoica Aplicada</td>
-                <td className="py-4 px-4 text-[#c9a84c] font-bold">✓ Marco Aurelio / Séneca</td>
-                <td className="py-4 px-4 text-slate-500">No aplica</td>
-                <td className="py-4 px-4 text-slate-500">Teórico sin plan</td>
-              </tr>
-              <tr>
-                <td className="py-4 px-4 font-semibold text-slate-200">Diario & Coaching IA</td>
-                <td className="py-4 px-4 text-[#c9a84c] font-bold">✓ Integrado en la app</td>
-                <td className="py-4 px-4 text-slate-500">Sin seguimiento</td>
-                <td className="py-4 px-4 text-slate-500">No existe</td>
-              </tr>
-              <tr>
-                <td className="py-4 px-4 font-semibold text-slate-200">Formato de Acceso</td>
-                <td className="py-4 px-4 text-[#c9a84c] font-bold">✓ Web + PWA Móvil</td>
-                <td className="py-4 px-4 text-slate-500">Plataforma de video</td>
-                <td className="py-4 px-4 text-slate-500">Físico / PDF</td>
-              </tr>
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[650px]">
+              <thead>
+                <tr className="border-b border-slate-800 text-xs uppercase tracking-wider text-slate-400">
+                  <th className="py-4 px-4 font-bold">Funcionalidad</th>
+                  <th className="py-4 px-4 font-bold text-[#c9a84c]">StoiCom App</th>
+                  <th className="py-4 px-4 font-bold text-slate-500">Curso de Oratoria ($150+)</th>
+                  <th className="py-4 px-4 font-bold text-slate-500">Libros de Filosofía</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60 text-sm">
+                <tr>
+                  <td className="py-4 px-4 font-semibold text-slate-200">Práctica Diaria Guiada</td>
+                  <td className="py-4 px-4 text-[#c9a84c] font-bold">✓ 210 días (3 Tracks)</td>
+                  <td className="py-4 px-4 text-slate-500">Teoría en video pasivo</td>
+                  <td className="py-4 px-4 text-slate-500">Solo lectura</td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-4 font-semibold text-slate-200">Estoicismo + PNL / Alto Rendimiento</td>
+                  <td className="py-4 px-4 text-[#c9a84c] font-bold">✓ Fusión integrada</td>
+                  <td className="py-4 px-4 text-slate-500">No aplica</td>
+                  <td className="py-4 px-4 text-slate-500">Teórico sin método</td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-4 font-semibold text-slate-200">Evaluación & Insights con IA</td>
+                  <td className="py-4 px-4 text-[#c9a84c] font-bold">✓ IA DeepSeek en vivo</td>
+                  <td className="py-4 px-4 text-slate-500">Sin seguimiento</td>
+                  <td className="py-4 px-4 text-slate-500">No existe</td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-4 font-semibold text-slate-200">Examen Nocturno & Mood Chart</td>
+                  <td className="py-4 px-4 text-[#c9a84c] font-bold">✓ Diario de Séneca</td>
+                  <td className="py-4 px-4 text-slate-500">No incluye</td>
+                  <td className="py-4 px-4 text-slate-500">Manual en libreta</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
       {/* Sección de Precios (Lemon Squeezy Integration Ready) */}
-      <section id="precios" className="border-t border-[#c9a84c]/15 bg-[#0d0d13] py-16 md:py-24">
-        <div className="max-w-5xl mx-auto px-6">
-          <PricingSection />
-        </div>
+      <section id="precios" className="max-w-5xl mx-auto px-6 py-16 md:py-24">
+        <PricingSection />
       </section>
 
       {/* Preguntas Frecuentes (FAQ) */}
-      <section className="max-w-5xl mx-auto px-6 py-16 md:py-24">
-        <div className="text-center space-y-3 mb-12">
-          <Eyebrow>Resolviendo tus dudas</Eyebrow>
-          <h2 className={`${cinzel.className} text-2xl md:text-3xl text-slate-100 font-bold`}>
-            Preguntas Frecuentes
-          </h2>
+      <section className="border-t border-slate-900 bg-[#0d0d13] py-16 md:py-24">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center space-y-3 mb-12">
+            <Eyebrow>Resolviendo tus dudas</Eyebrow>
+            <h2 className={`${cinzel.className} text-2xl md:text-3xl text-slate-100 font-bold`}>
+              Preguntas Frecuentes
+            </h2>
+          </div>
+          <FAQAccordion />
         </div>
-        <FAQAccordion />
       </section>
 
       {/* Cita Estoica Final */}
-      <section className="border-t border-slate-900 bg-[#0d0d13] py-16 text-center px-6">
+      <section className="py-16 text-center px-6">
         <div className="max-w-3xl mx-auto space-y-4">
           <p className={`${cinzel.className} text-xl md:text-2xl leading-relaxed text-slate-200 italic`}>
             &ldquo;Tenemos dos oídos y una sola boca para escuchar el doble de lo que hablamos.&rdquo;
@@ -448,7 +504,7 @@ export default function LandingPage() {
               </span>
             </div>
             <p className="text-xs text-slate-500">
-              Programa de 90 días de entrenamiento estoico de comunicación y diálogo interno.
+              Sistema de 210 días de entrenamiento estoico de comunicación, PNL e Inteligencia Artificial.
             </p>
           </div>
 
