@@ -3,8 +3,9 @@ import Link from 'next/link'
 import LeadForm from '@/components/LeadForm'
 import PublicPageView from '@/components/PublicPageView'
 import PricingSection from '@/components/landing/PricingSection'
-import FAQAccordion, { FAQS } from '@/components/landing/FAQAccordion'
-import { Sparkles, MessageSquare, Shield, Zap, BookOpen, Brain, Flame, Smartphone, CalendarCheck, CheckCircle2, Bot, Layers } from 'lucide-react'
+import FAQAccordion from '@/components/landing/FAQAccordion'
+import { FAQS } from '@/data/faqs'
+import { Sparkles, MessageSquare, Shield, Zap, BookOpen, Brain, Smartphone, CalendarCheck, CheckCircle2, Bot, Layers } from 'lucide-react'
 
 const cinzel = Cinzel({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-cinzel' })
 
