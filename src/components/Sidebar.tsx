@@ -75,6 +75,23 @@ export default function Sidebar() {
     collapsed: { width: 70 },
   }
 
+  /**
+   * Clases del ítem de menú. Colapsado quedan 38px útiles (70 de ancho
+   * menos el padding del sidebar): con px-3 solo sobran 14px para un
+   * icono de 20, así que el navegador lo comprime. Colapsado se centra
+   * el icono sin padding lateral y cabe holgado.
+   */
+  const itemClass = (active: boolean, isMobile: boolean) => {
+    const compacto = collapsed && !isMobile
+    return [
+      'flex items-center rounded-lg text-sm font-medium transition-all duration-200 group',
+      compacto ? 'justify-center px-0 py-3' : 'gap-3 px-3 py-3',
+      active
+        ? 'bg-[var(--primary-gold)]/10 text-[var(--primary-gold)]'
+        : 'text-slate-500 dark:text-slate-400 hover:text-[var(--foreground)] hover:bg-slate-800/10',
+    ].join(' ')
+  }
+
   const renderAdminLink = (isMobile: boolean) => {
     if (!isAdmin) return null
     const links = [
@@ -88,11 +105,8 @@ export default function Sidebar() {
           key={href}
           href={href}
           onClick={() => isMobile && setMobileOpen(false)}
-          className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-            active
-              ? 'bg-[var(--primary-gold)]/10 text-[var(--primary-gold)]'
-              : 'text-slate-500 dark:text-slate-400 hover:text-[var(--foreground)] hover:bg-slate-800/10'
-          }`}
+          className={itemClass(active, isMobile)}
+          title={collapsed && !isMobile ? label : undefined}
         >
           <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-[var(--primary-gold)]' : 'opacity-60'}`} />
           {(!collapsed || isMobile) && <span className="truncate">{label}</span>}
@@ -113,11 +127,8 @@ export default function Sidebar() {
           key={item.path}
           href={item.path}
           onClick={() => isMobile && setMobileOpen(false)}
-          className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 group ${
-            active
-              ? 'bg-[var(--primary-gold)]/10 text-[var(--primary-gold)]'
-              : 'text-slate-500 dark:text-slate-400 hover:text-[var(--foreground)] hover:bg-slate-800/10'
-          }`}
+          className={itemClass(active, isMobile)}
+          title={collapsed && !isMobile ? item.label : undefined}
         >
           <img
             src={item.icon}
@@ -188,7 +199,7 @@ export default function Sidebar() {
                 <img src="/sculpture.png" className="w-8 h-8 rounded-full object-cover border border-[#c9a84c]/30" alt="StoiCom Logo" />
                 <span className="font-bold text-[var(--foreground)] tracking-wider">StoiCom</span>
               </div>
-              <nav className="flex-1 min-h-0 overflow-y-auto space-y-2 sidebar-scroll">
+              <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-2 sidebar-scroll">
                 {renderNavItems(true)}
                 {renderAdminLink(true)}
               </nav>
@@ -273,7 +284,7 @@ export default function Sidebar() {
             contenido — el nav crecía y empujaba el pie (notificaciones,
             tema, cerrar sesión) fuera de la pantalla. Con admin son 10
             ítems y en portátiles no cabían. */}
-        <nav className="flex-1 min-h-0 overflow-y-auto space-y-2 sidebar-scroll">
+        <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-2 sidebar-scroll">
           {renderNavItems(false)}
           {renderAdminLink(false)}
         </nav>
