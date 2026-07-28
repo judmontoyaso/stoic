@@ -551,37 +551,41 @@ export default function LandingPage() {
 
       {/* Memento Mori / Memento Vivere */}
       <section className="border-t border-slate-900 bg-[#0d0d13] py-16 md:py-24">
-        <div className="max-w-5xl mx-auto px-6 grid md:grid-cols-2 gap-8">
+        <div className="max-w-3xl mx-auto px-6 grid sm:grid-cols-2 gap-10">
           <div>
-            <video
-              src="/memento_mori_video.mp4"
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="w-full max-h-[520px] object-cover rounded-lg border border-[#c9a84c]/25"
-            />
-            <h3 className={`${cinzel.className} mt-5 text-xl text-slate-100`}>
+            <div className="aspect-[9/16] max-w-[280px] mx-auto overflow-hidden rounded-lg border border-[#c9a84c]/25">
+              <video
+                src="/memento_mori_video.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <h3 className={`${cinzel.className} mt-5 text-xl text-slate-100 text-center`}>
               Memento Mori
             </h3>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+            <p className="mt-2 text-sm leading-relaxed text-slate-400 text-center">
               Vas a morir. No sabes cuándo. El estoico se lo repite cada mañana para no aplazar la conversación difícil hasta &ldquo;después&rdquo;.
             </p>
           </div>
 
           <div>
-            <video
-              src="/memento_vivere_video.mp4"
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="w-full max-h-[520px] object-cover rounded-lg border border-[#c9a84c]/25"
-            />
-            <h3 className={`${cinzel.className} mt-5 text-xl text-slate-100`}>
+            <div className="aspect-[9/16] max-w-[280px] mx-auto overflow-hidden rounded-lg border border-[#c9a84c]/25">
+              <video
+                src="/memento_vivere_video.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <h3 className={`${cinzel.className} mt-5 text-xl text-slate-100 text-center`}>
               Memento Vivere
             </h3>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+            <p className="mt-2 text-sm leading-relaxed text-slate-400 text-center">
               Y mientras tanto, vives. Hoy es el único día del programa que tienes enfrente — el de mañana todavía no existe.
             </p>
           </div>

@@ -9,7 +9,7 @@ function isPublicPath(pathname: string): boolean {
     // públicos. El verificador de instalación de PWA pide los iconos SIN
     // sesión; si el proxy los rebota a /login, la app deja de ser instalable
     // (bug: icon-192/512.png redirigían y no salía la opción de instalar).
-    /\.(png|jpg|jpeg|gif|svg|webp|ico|woff2?)$/i.test(pathname) ||
+    /\.(png|jpg|jpeg|gif|svg|webp|ico|woff2?|mp4|webm)$/i.test(pathname) ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/cron') ||      // manejan su propio token
     pathname.startsWith('/auth/') ||         // callback OAuth + verificación de código
