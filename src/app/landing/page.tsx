@@ -176,10 +176,15 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
+        {/* Textura de fondo al 8%: era un PNG de 2752px y 9,58 MB en el
+            hero, o sea antes del primer pintado. A esa opacidad el detalle
+            no se percibe, así que va en WebP de 1600px (149 KB). */}
         <img
-          src="/mosaico.png"
+          src="/mosaico.webp"
           alt=""
           aria-hidden="true"
+          fetchPriority="low"
+          decoding="async"
           className="pointer-events-none select-none absolute inset-0 w-full h-full object-cover opacity-[0.08]"
         />
         <div className="relative max-w-5xl mx-auto px-6 pt-14 pb-20 md:pt-24 md:pb-28 text-center">
@@ -554,8 +559,14 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto px-6 grid sm:grid-cols-2 gap-10">
           <div>
             <div className="aspect-[9/16] max-w-[280px] mx-auto overflow-hidden rounded-lg border border-[#c9a84c]/25">
+              {/* preload="none" + poster: el clip está debajo del pliegue
+                  y con autoPlay a secas el navegador lo bajaba desde el
+                  primer instante, compitiendo con el contenido de arriba.
+                  Ahora se ve el póster (17 KB) y el video llega después. */}
               <video
                 src="/memento_mori_video.mp4"
+                poster="/memento_mori_video.poster.jpg"
+                preload="none"
                 autoPlay
                 muted
                 loop
@@ -575,6 +586,8 @@ export default function LandingPage() {
             <div className="aspect-[9/16] max-w-[280px] mx-auto overflow-hidden rounded-lg border border-[#c9a84c]/25">
               <video
                 src="/memento_vivere_video.mp4"
+                poster="/memento_vivere_video.poster.jpg"
+                preload="none"
                 autoPlay
                 muted
                 loop
