@@ -32,12 +32,20 @@ demo y URL del sitio. Todo existe — este doc lo empaqueta.
 > ($59 USD one-time). We also accept Mercado Pago for LatAm customers
 > (COP $199,000, same product) — Lemon Squeezy is our international rail.
 >
-> **Demo video:** link below. It shows the public landing and its
-> pricing section, sign-in with Google, the daily exercise with its full
-> written lesson, marking the day complete, the evening journal, the
-> calendar with completed and missed days, the settings where users
-> control email schedule and timezone, and one of the daily emails as
-> received.
+> **Demo video:** link below. The product interface is in Spanish, since
+> that is our market, so here is what each part shows:
+>
+> ```
+> 0:00  Public landing page
+> 0:10  Pricing section — $59 USD one-time, lifetime access
+> 0:22  Sign in with Google
+> 0:28  Day 45 of 90 — the daily exercise and its full written lesson
+> 0:48  Marking the day as complete
+> 0:54  Evening journal (Seneca's nightly review)
+> 1:04  Calendar — completed and missed days stay visible
+> 1:12  Settings — email hour and timezone, set by each user
+> 1:18  One of the daily emails, as received
+> ```
 >
 > One note on the video: our USD checkout button is currently disabled
 > on the site, showing "coming soon", because the Lemon Squeezy store is
@@ -75,8 +83,34 @@ muestra en la sección de precios de la landing, y el correo lo explica.
 | 8 | `/settings` | Hora de correos y zona horaria: el usuario controla cuándo recibe. | 6 |
 | 9 | Correo real | Abrir el correo matutino en la bandeja: el producto también se entrega por correo. | 10 |
 
-Cierre sugerido: la pantalla del calendario mientras se narra "missed
-days stay visible — no inflated streaks".
+Cierre sugerido: dejar unos segundos en el calendario, donde se ven los
+días perdidos sin reorganizar.
+
+### ¿Hay que narrar en inglés?
+
+**No.** Tres opciones, de menos a más esfuerzo — cualquiera sirve:
+
+1. **Mudo (recomendado).** Solo el screencast. El contexto en inglés va
+   escrito en el correo, con la lista de tiempos de abajo. Es lo que
+   envía la mayoría de comercios y evita el riesgo de trabarse.
+2. **Narrado en español.** El producto ES en español y el revisor va a
+   ver la interfaz en español de todos modos; el correo ya lo advierte.
+3. **Narrado en inglés.** Solo si te sale natural. No suma puntos.
+
+Si grabas mudo, pega esta lista en el correo para que el revisor sepa
+qué está viendo (ajusta los segundos a tu grabación real):
+
+```
+0:00  Public landing page
+0:10  Pricing section — $59 USD one-time, lifetime access
+0:22  Sign in with Google
+0:28  Day 45 of 90 — the daily exercise and its full written lesson
+0:48  Marking the day as complete
+0:54  Evening journal (Seneca's nightly review)
+1:04  Calendar — completed and missed days
+1:12  Settings — email hour and timezone per user
+1:18  One of the daily emails, as received
+```
 
 Consejos: ventana del navegador limpia (sin extensiones ni bookmarks),
 idioma del sistema no importa (el producto es en español — di en la
