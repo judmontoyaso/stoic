@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Users, Activity, Bell, Flame } from 'lucide-react'
 import { Card, PageHeader, StatCard, LoadingScreen, EmptyState } from '@/components/ui'
+import ResetUserButton from '@/components/admin/ResetUserButton'
 
 // Panel del administrador: activación y actividad por usuario a partir
 // de stoic.events y los registros. El acceso lo decide /api/admin/stats
@@ -64,15 +65,22 @@ export default function AdminPage() {
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  // Se reutiliza tras reiniciar un usuario, para ver los datos nuevos
+  const reload = useCallback(
+    () =>
+      fetch('/api/admin/stats')
+        .then(async res => {
+          const data = await res.json()
+          if (!res.ok) throw new Error(data.error || `Error ${res.status}`)
+          setStats(data)
+        })
+        .catch(err => setError(err.message)),
+    []
+  )
+
   useEffect(() => {
-    fetch('/api/admin/stats')
-      .then(async res => {
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || `Error ${res.status}`)
-        setStats(data)
-      })
-      .catch(err => setError(err.message))
-  }, [])
+    reload()
+  }, [reload])
 
   if (error) {
     return (
@@ -147,7 +155,8 @@ export default function AdminPage() {
               <th className="pb-2 pr-4">Diario</th>
               <th className="pb-2 pr-4">Push</th>
               <th className="pb-2 pr-4">Correo</th>
-              <th className="pb-2">Últ. actividad</th>
+              <th className="pb-2 pr-4">Últ. actividad</th>
+              <th className="pb-2">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -176,7 +185,10 @@ export default function AdminPage() {
                 <td className="py-2.5 pr-4 whitespace-nowrap">
                   {u.prefs ? `${u.prefs.morning}h / ${u.prefs.evening}h` : 'default'}
                 </td>
-                <td className="py-2.5">{u.lastActivity || '—'}</td>
+                <td className="py-2.5 pr-4">{u.lastActivity || '—'}</td>
+                <td className="py-2.5">
+                  <ResetUserButton email={u.email} onDone={reload} />
+                </td>
               </tr>
             ))}
           </tbody>
