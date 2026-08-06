@@ -11,7 +11,7 @@ const cinzel = Cinzel({ subsets: ['latin'], weight: ['400', '700'], variable: '-
 
 const GOLD = '#c9a84c'
 
-const TITLE = 'Becas StoiCom | Entrenamiento Estoico de Comunicación'
+const TITLE = 'Becas · StoiCom, entrenamiento estoico de comunicación'
 const DESCRIPTION =
   'Convocatoria a las 20 becas StoiCom: un año completo del programa de comunicación estoica, sin pagar nada. 210 prácticas diarias, 3 tracks y herramientas de templanza.'
 

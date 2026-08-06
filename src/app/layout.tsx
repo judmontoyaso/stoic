@@ -16,7 +16,12 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_URL || 'https://stoicom.app'),
-  title: "StoiComunicación - Hábitos y Habilidades de Comunicación",
+  // Título por defecto: lo hereda toda página que no defina el suyo
+  // (/login, /today, /journal…). Decía "StoiComunicación", el nombre
+  // viejo de la marca, y era lo primero que veía cualquiera que entrara
+  // a la app. Sin `template`: las páginas que ya traen "· StoiCom" en su
+  // título lo repetirían.
+  title: "StoiCom · Entrenamiento estoico de comunicación",
   description: "Entrena tus habilidades de comunicación y forma hábitos estoicos para liderar y conectar mejor. App instalable (PWA) con base de datos sincronizada.",
   manifest: "/manifest.json",
   appleWebApp: {
