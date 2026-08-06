@@ -127,6 +127,61 @@ es que el producto existe, funciona y coincide con lo que se cobra.
 Cierre: unos segundos en el calendario, con los días perdidos sin
 reorganizar.
 
+### Título y descripción del Loom (pegar tal cual)
+
+El revisor abre el enlace antes de leer el correo, así que el título y la
+descripción tienen que sostenerse solos. Van en inglés y con los enlaces
+dentro: si el video se comparte entre revisores, la información viaja con
+él.
+
+**Título:**
+
+```
+StoiCom — product demo for store review (Spanish-language app)
+```
+
+**Descripción:**
+
+```
+Product demo for Lemon Squeezy store verification.
+
+StoiCom is a 90-day communication training program in Spanish, based on
+applied Stoic philosophy. The interface is in Spanish because that is our
+market (LatAm), so the timestamps below describe what each part shows.
+
+Product: one-time payment of $59 USD granting 12 months of access.
+Not a subscription — no recurring charges, nothing to cancel.
+
+Website:        https://stoicom.app/landing
+Terms:          https://stoicom.app/terms
+Privacy:        https://stoicom.app/privacy
+Refund policy:  https://stoicom.app/reembolsos
+Support:        ayuda@stoicom.app
+
+0:00  Public landing page
+0:12  Pricing — $59 USD one-time payment, 12 months of access
+0:24  What happens when the year ends (grace period + free journal export)
+0:34  Sign in with Google
+0:40  Day 45 of 90 — the daily exercise and its full written lesson
+1:00  Marking the day as complete
+1:06  Evening journal (Seneca's nightly review)
+1:16  AI reading of the user's own journal, quoting their entries
+1:28  Calendar — completed and missed days stay visible
+1:36  Settings — email hour and timezone, set by each user
+1:42  One of the daily emails, as received
+
+Note: the USD checkout button currently shows "coming soon" because this
+store is pending verification. The product and checkout are already
+configured at $59 USD and will be enabled once approved.
+```
+
+Ajusta los segundos a tu grabación real antes de pegarlo, y usa los
+mismos en el correo — que no se contradigan.
+
+En Loom: deja el video en **"Anyone with the link"**. Si queda restringido
+al equipo, el revisor abre una pantalla de permiso y te devuelve el caso
+sin mirarlo.
+
 ### ¿Narrado?
 
 **Mudo es lo recomendado.** Solo el screencast; el contexto en inglés va
