@@ -6,7 +6,7 @@ export const metadata = {
 
 // Página pública (listada en el proxy): visible sin sesión.
 
-const UPDATED = '14 de julio de 2026'
+const UPDATED = '6 de agosto de 2026'
 
 export default function PrivacyPage() {
   return (
@@ -24,6 +24,7 @@ export default function PrivacyPage() {
           <li><span className="font-semibold">Diario:</span> las entradas que escribes, incluido tu estado de ánimo si lo registras.</li>
           <li><span className="font-semibold">Preferencias:</span> zona horaria, horarios de correo y suscripciones de notificaciones push.</li>
           <li><span className="font-semibold">Uso:</span> eventos básicos de producto (p. ej. &ldquo;completó un día&rdquo;, &ldquo;guardó una entrada&rdquo;) para mejorar la aplicación. Sin rastreadores de terceros ni publicidad.</li>
+          <li><span className="font-semibold">Voz (opcional):</span> si usas el dictado, la grabación se envía para transcribirla y <span className="font-semibold">no se almacena</span>: guardamos únicamente el texto resultante dentro de tu diario, más los minutos consumidos para aplicar el tope mensual.</li>
         </ul>
       </section>
 
@@ -32,15 +33,42 @@ export default function PrivacyPage() {
         <p>
           Exclusivamente para prestarte el servicio: mostrar tu progreso, enviarte
           tus correos y notificaciones diarias, y generar tu contenido personalizado.
-          Las lecciones y evaluaciones con inteligencia artificial se generan
-          enviando el texto necesario a un proveedor de IA (DeepSeek); tus entradas
-          de diario solo se procesan con este fin y no se usan para entrenar modelos
-          por nuestra parte. No vendemos ni compartimos tus datos con anunciantes.
+          No vendemos ni compartimos tus datos con anunciantes.
         </p>
       </section>
 
       <section className="space-y-2">
-        <h2 className="font-bold text-base">3. Dónde viven tus datos</h2>
+        <h2 className="font-bold text-base">3. Inteligencia artificial y transferencia internacional</h2>
+        <p>
+          Dos funciones envían texto o audio tuyo a proveedores fuera de Colombia.
+          Te lo detallamos porque la Ley 1581 exige que sepas a dónde va tu
+          información antes de que salga:
+        </p>
+        <ul className="list-disc pl-5 space-y-1">
+          <li>
+            <span className="font-semibold">Lecciones y lectura de tu diario (DeepSeek).</span>{' '}
+            Para escribir tu lección diaria enviamos los datos del ejercicio. Para la
+            lectura mensual de tu diario —que solo se genera cuando tú la pides—
+            enviamos las entradas de ese mes. Se procesan para devolverte el
+            resultado y no las usamos para entrenar modelos.
+          </li>
+          <li>
+            <span className="font-semibold">Dictado por voz (Deepgram).</span> Es
+            opcional y está desactivado hasta que lo autorices de forma expresa
+            dentro de la aplicación. Al autorizarlo, el audio que grabes se envía a
+            Deepgram únicamente para convertirlo en texto. Puedes usar el diario
+            escribiendo a mano y no perderás ninguna función.
+          </li>
+        </ul>
+        <p>
+          Ambos proveedores tratan los datos por cuenta nuestra y no los emplean para
+          entrenar sus modelos. Si prefieres no usarlas, la lectura del diario no se
+          genera sola y el dictado no se activa sin tu autorización.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="font-bold text-base">4. Dónde viven tus datos</h2>
         <p>
           Usamos proveedores de infraestructura estándar: Supabase (base de datos y
           autenticación), Vercel (alojamiento) y Resend (envío de correo). Cada uno
@@ -51,7 +79,7 @@ export default function PrivacyPage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="font-bold text-base">4. Tus derechos</h2>
+        <h2 className="font-bold text-base">5. Tus derechos</h2>
         <p>
           Conforme a la Ley 1581 de 2012 (Colombia) y, si aplica, el RGPD europeo,
           puedes solicitar acceso, corrección o eliminación de tus datos en cualquier
@@ -62,7 +90,7 @@ export default function PrivacyPage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="font-bold text-base">5. Cookies</h2>
+        <h2 className="font-bold text-base">6. Cookies</h2>
         <p>
           Solo usamos las cookies estrictamente necesarias para mantener tu sesión
           iniciada. No hay cookies de publicidad ni de seguimiento de terceros.

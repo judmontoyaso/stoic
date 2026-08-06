@@ -6,6 +6,7 @@ import { Award, Flame, XCircle, CheckCircle2, TrendingUp, TrendingDown, BookOpen
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
 import MoodChart from '@/components/MoodChart'
+import MonthlyAnalysis from '@/components/MonthlyAnalysis'
 import { getToday, formatDate } from '@/lib/utils'
 import { buildTrackReport, getModuleColor, getModuleLabel, type TrackReport } from '@/lib/program'
 import { Card, EmptyState, LoadingScreen, PageHeader, StatCard } from '@/components/ui'
@@ -107,6 +108,11 @@ export default function EvaluationPage() {
         icon={<Award className="w-7 h-7 text-[var(--primary-gold)]" />}
         subtitle={`Informe de solo lectura: consulta tus datos, nunca los modifica. Corte al ${formatDate(getToday())}.`}
       />
+
+      {/* Va arriba de las gráficas a propósito: los números dicen cuánto
+          cumpliste, esto dice qué escribiste. Es lo que la gente vuelve
+          a abrir. */}
+      <MonthlyAnalysis />
 
       {activeEvals.length === 0 ? (
         <EmptyState icon={<Award className="w-8 h-8 text-[var(--primary-gold)]" />}>

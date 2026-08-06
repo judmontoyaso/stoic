@@ -8,6 +8,7 @@ import { StoicDB } from '@/lib/db'
 import { getToday, formatDate } from '@/lib/utils'
 import { JOURNAL_TEMPLATES, MOODS } from '@/lib/journal'
 import TemplateIcon from '@/components/journal/TemplateIcon'
+import DictateButton from '@/components/journal/DictateButton'
 import { Card, EmptyState, LoadingScreen, PageHeader, Pill } from '@/components/ui'
 import { useStoicSync } from '@/hooks/useStoicSync'
 import type { JournalEntry, JournalEntryType } from '@/types'
@@ -154,7 +155,23 @@ export default function JournalPage() {
 
             {template.fields.map(field => (
               <div key={field.key}>
-                <label className="text-sm text-slate-600 dark:text-slate-400 font-medium block mb-1">{field.label}</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm text-slate-600 dark:text-slate-400 font-medium">{field.label}</label>
+                  <DictateButton
+                    campo={field.label}
+                    onTranscript={texto =>
+                      setDraft(prev => {
+                        // Se AÑADE a lo que ya hay: dictar no puede borrar
+                        // el párrafo que llevaba escrito a medias.
+                        const previo = (prev[field.key] || '').trimEnd()
+                        return {
+                          ...prev,
+                          [field.key]: previo ? `${previo} ${texto}` : texto,
+                        }
+                      })
+                    }
+                  />
+                </div>
                 <InputTextarea
                   value={draft[field.key] || ''}
                   onChange={(e) => setDraft(prev => ({ ...prev, [field.key]: e.target.value }))}

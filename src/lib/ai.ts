@@ -386,3 +386,111 @@ Escribe la lección diaria completa siguiendo la estructura y reglas del sistema
 
   return null
 }
+
+// ============================================================
+// Análisis mensual del diario
+// ============================================================
+
+export interface AIMonthlyAnalysis {
+  analysis: string
+}
+
+// La regla que decide si esto sirve o es un horóscopo: CITAR AL USUARIO.
+// Un informe que dice "sigue trabajando tu asertividad" no lo lee nadie
+// dos veces. Uno que dice "el 12 de marzo escribiste que te callaste en
+// la junta, y el 3 de abril que pediste la palabra tú" es indiscutible,
+// porque el usuario reconoce sus propias frases.
+//
+// Las reglas de prosa son las mismas de READING_SYSTEM_PROMPT y viven
+// también en .claude/skills/redaccion: si cambias una aquí, cámbiala allá.
+const ANALYSIS_SYSTEM_PROMPT = `Analizas el diario de un mes de alguien que está haciendo un programa de entrenamiento de comunicación con base estoica. Escribes como un entrenador que leyó todo lo que esa persona escribió y le devuelve lo que ve, sin adornos y sin consolarla.
+
+Responde estrictamente con un objeto JSON con una sola clave "analysis": un texto en español de 350 a 500 palabras, en 4-5 párrafos separados por saltos de línea dobles (\n\n), con esta estructura invisible (sin subtítulos ni numeración):
+1. El patrón que más se repite en lo que escribió, nombrado sin rodeos.
+2. Una contradicción o un cambio entre el principio y el final del mes, sostenido con SUS PALABRAS.
+3. Lo que evita: el tema que aparece de refilón y nunca desarrolla, o la situación que sigue posponiendo.
+4. Lo que mejoró de verdad, con la evidencia concreta que lo demuestra.
+5. Una sola cosa para el mes que viene. Una, no una lista.
+
+REGLA INNEGOCIABLE — CITA SUS PALABRAS:
+- Cita textualmente al menos tres fragmentos de lo que escribió, entre comillas y con la fecha. Ejemplo: el 12 de marzo escribiste "me quedé callado otra vez".
+- Cita corto: seis a quince palabras. No pegues párrafos enteros.
+- Si el material es tan escaso que no alcanza para tres citas, dilo de frente en la primera línea y analiza solo lo que haya. No rellenes.
+- Nunca inventes una cita ni una fecha. Si no está en el material, no existe.
+
+CÓMO SUENA (obligatorio):
+- Ritmo desigual. En cada párrafo, al menos una frase de menos de seis palabras y al menos una larga. Si todas miden igual, reescribe.
+- Concreción antes que categoría: la escena que él contó, no la etiqueta psicológica.
+- Verbos por delante: "decidir", no "la toma de decisiones".
+- Tutea. Sin emojis, sin listas ni viñetas.
+- Directo pero no cruel: señalas lo que ves, no lo humillas. No eres su terapeuta ni su animador.
+
+PROHIBIDO (delata texto generado):
+- La antítesis de muleta: "no se trata de X, sino de Y", "no es X, es Y". Máximo UNA vez.
+- Tríadas: tres adjetivos, tres ejemplos o tres cláusulas seguidas. Usa dos, o cuatro.
+- Frases de plantilla: "La realidad es que", "En el fondo", "Todos hemos estado ahí", "Es importante destacar", "En resumen".
+- Cierres de superación: "y eso lo cambia todo", "el cambio empieza hoy", "recuerda:", "la decisión es tuya".
+- Vocabulario inflado: poderoso, profundo, transformador, viaje, abrazar, desbloquear, potenciar, elevar, esencia, pilar, resonar, empoderar.
+- Titubeos: "quizás", "puede que", "en cierto modo".
+- Diagnósticos clínicos o etiquetas de salud mental. No eres profesional de la salud.
+- Que el último párrafo resuma los anteriores: avanza o calla.`
+
+/**
+ * Analiza el diario de un mes. Devuelve null si no hay material o si el
+ * modelo falla — el llamador decide qué mostrar.
+ *
+ * `entries` llega ya recortado por el llamador: se manda el texto que el
+ * usuario escribió, no la base entera.
+ */
+export async function generateMonthlyAnalysis(opts: {
+  monthLabel: string
+  entries: Array<{ date: string; tipo: string; campos: Array<{ label: string; texto: string }> }>
+  diasCompletados: number
+  diasPerdidos: number
+  animoMedio: number | null
+}): Promise<{ analysis: string; model: string } | null> {
+  if (opts.entries.length === 0) return null
+
+  const material = opts.entries
+    .map(e => {
+      const cuerpo = e.campos
+        .filter(c => c.texto.trim())
+        .map(c => `  ${c.label}: ${c.texto.trim()}`)
+        .join('\n')
+      return `[${e.date}] ${e.tipo}\n${cuerpo}`
+    })
+    .join('\n\n')
+
+  const prompt = `
+Mes analizado: ${opts.monthLabel}
+Días completados en el programa: ${opts.diasCompletados}
+Días perdidos: ${opts.diasPerdidos}
+Ánimo medio reportado: ${opts.animoMedio !== null ? `${opts.animoMedio.toFixed(1)} sobre 5` : 'sin datos'}
+Entradas de diario en el mes: ${opts.entries.length}
+
+Esto es TODO lo que escribió durante el mes. Las fechas entre corchetes son reales: úsalas al citar.
+
+${material}
+
+Escribe el análisis del mes siguiendo la estructura y las reglas del sistema. Cita sus palabras.
+`
+
+  const deepseekKey = process.env.DEEPSEEK_API_KEY
+  if (deepseekKey) {
+    const model = process.env.DEEPSEEK_ANALYSIS_MODEL || process.env.DEEPSEEK_MODEL || 'deepseek-chat'
+    const result = await callOpenAICompatible<AIMonthlyAnalysis>(
+      deepseekKey, 'https://api.deepseek.com', model, ANALYSIS_SYSTEM_PROMPT, prompt
+    )
+    if (result?.analysis) return { analysis: result.analysis, model }
+  }
+
+  const openaiKey = process.env.OPENAI_API_KEY
+  if (openaiKey) {
+    const result = await callOpenAICompatible<AIMonthlyAnalysis>(
+      openaiKey, 'https://api.openai.com/v1', 'gpt-4o-mini', ANALYSIS_SYSTEM_PROMPT, prompt
+    )
+    if (result?.analysis) return { analysis: result.analysis, model: 'gpt-4o-mini' }
+  }
+
+  return null
+}
