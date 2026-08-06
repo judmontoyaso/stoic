@@ -6,36 +6,56 @@ import PricingSection from '@/components/landing/PricingSection'
 import FAQAccordion from '@/components/landing/FAQAccordion'
 import { FAQS } from '@/data/faqs'
 import { FOUNDER_PRICE } from '@/lib/pricing'
-import { Sparkles, MessageSquare, Shield, Zap, BookOpen, Brain, Smartphone, CalendarCheck, CheckCircle2, UserCheck, Layers } from 'lucide-react'
+import { Sparkles, MessageSquare, Shield, Zap, BookOpen, Brain, Smartphone, CalendarCheck, CheckCircle2, UserCheck, Layers, Mic, ScanSearch } from 'lucide-react'
 
 const cinzel = Cinzel({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-cinzel' })
 
-const TITLE = 'StoiCom · Entrenamiento estoico de comunicación, un ejercicio al día'
+// SEO — por qué este título y no el de marca.
+//
+// "StoiCom" tiene cero volumen de búsqueda: nadie nos conoce todavía, así
+// que ponerlo delante gasta los 60 caracteres que Google muestra en una
+// palabra que nadie escribe. Y pelear por "estoicismo" o "stoic" es
+// perder: ahí están Wikipedia, Daily Stoic y la app Stoic, con años de
+// autoridad.
+//
+// El terreno ganable es la búsqueda por SÍNTOMA, en español y con
+// intención de resolver algo hoy: "muletillas", "me tiembla la voz",
+// "hablar en público". Volumen real en LatAm, competencia baja, y encaja
+// exacto con lo que el producto hace. La marca va al final, donde sirve
+// para reconocimiento sin robar espacio.
+const TITLE = 'Ejercicios diarios para hablar mejor: muletillas, nervios y voz · StoiCom'
 const DESCRIPTION =
-  '210 ejercicios diarios en 3 tracks: comunicación con los demás, diálogo interno e influencia. Estoicismo aplicado y frameworks de Robbins y Voss, con una lección escrita cada día. Primeros 7 días gratis por correo.'
+  'Programa de 90 días con un ejercicio concreto al día para dejar las muletillas, hablar sin que te tiemble la voz y sostener conversaciones difíciles. Diario estoico, lectura de tu mes con IA y dictado por voz. Primeros 7 días gratis por correo.'
 
 export const metadata = {
+  metadataBase: new URL('https://stoicom.app'),
   title: TITLE,
   description: DESCRIPTION,
+  // Google ignora esta etiqueta desde hace años; se mantiene por Bing y
+  // por dejar escrito a qué se apunta. El trabajo de verdad está en que
+  // estos términos aparezcan en los H2 y en las preguntas frecuentes.
   keywords: [
-    'comunicación estoica',
-    'entrenamiento de comunicación',
-    'hablar en público',
-    'conversaciones difíciles',
-    'escucha activa',
-    'diario estoico',
+    'cómo dejar de decir muletillas',
+    'ejercicios para hablar mejor',
+    'me tiembla la voz al hablar',
+    'cómo hablar en público sin nervios',
+    'ejercicios de comunicación asertiva',
+    'cómo dejar de interrumpir',
+    'conversaciones difíciles en el trabajo',
+    'diario estoico en español',
     'examen nocturno de Séneca',
-    'Marco Aurelio',
-    'Epicteto',
-    'anclaje de estado',
-    'reencuadre',
-    'liderazgo e influencia',
+    'estoicismo aplicado ejercicios diarios',
+    'app de estoicismo en español',
+    'programa de comunicación 90 días',
   ],
-  alternates: { canonical: 'https://stoicom.app/landing' },
+  // Canónica a la RAÍZ: el proxy sirve esta misma página en `/` con
+  // rewrite, así que las dos URLs muestran lo mismo. Sin esta línea sería
+  // contenido duplicado y Google elegiría por su cuenta.
+  alternates: { canonical: 'https://stoicom.app/' },
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,
-    url: 'https://stoicom.app/landing',
+    url: 'https://stoicom.app/',
     siteName: 'StoiCom',
     locale: 'es_CO',
     type: 'website',
@@ -91,8 +111,11 @@ const JSON_LD = {
       },
       offers: [
         { '@type': 'Offer', category: 'Trial', price: '0', priceCurrency: 'COP' },
-        { '@type': 'Offer', category: 'Lifetime', price: String(FOUNDER_PRICE.cop), priceCurrency: 'COP' },
-        { '@type': 'Offer', category: 'Lifetime', price: String(FOUNDER_PRICE.usd), priceCurrency: 'USD' },
+        // Un año de vigencia, pago único (no es suscripción: nada se
+        // cobra solo). Debe coincidir con lo que anuncia PricingSection
+        // y con lo que se le declaró a la pasarela.
+        { '@type': 'Offer', category: 'Annual', price: String(FOUNDER_PRICE.cop), priceCurrency: 'COP' },
+        { '@type': 'Offer', category: 'Annual', price: String(FOUNDER_PRICE.usd), priceCurrency: 'USD' },
       ],
     },
     {
@@ -199,7 +222,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="mt-8 max-w-xl mx-auto text-base md:text-lg leading-relaxed text-slate-400">
-            Un ejercicio real cada día para dejar de sonar dubitativo, escuchar de verdad y sostener la conversación difícil. Sin frases de taza, sin atajos: percepción, acción y voluntad, entrenadas como los estoicos — por escrito y contra el reloj de un día real.
+            Un ejercicio real cada día para dejar las muletillas, hablar sin que te tiemble la voz y sostener la conversación que llevas semanas evitando. Sin frases de taza, sin atajos: percepción, acción y voluntad, entrenadas como los estoicos — por escrito y contra el reloj de un día real.
           </p>
 
           <div className="mt-10">
@@ -513,6 +536,16 @@ export default function LandingPage() {
               icon: <Shield className="w-5 h-5 text-[#c9a84c]" />,
               title: 'Gráfico de Estados de Ánimo',
               body: 'Registra y analiza tu nivel de claridad y calma a lo largo de las 12 semanas del programa.',
+            },
+            {
+              icon: <Mic className="w-5 h-5 text-[#c9a84c]" />,
+              title: 'Diario dictado por voz',
+              body: 'De noche escribir cuesta. Hablas y el examen nocturno queda transcrito con puntuación. Opcional: se activa solo si tú lo autorizas.',
+            },
+            {
+              icon: <ScanSearch className="w-5 h-5 text-[#c9a84c]" />,
+              title: 'Lectura mensual de tu diario',
+              body: 'Una vez al mes, si la pides: el patrón que repites, lo que estás evitando y lo que cambió. Citando tus frases con su fecha, para que puedas verificarlo.',
             },
           ].map((item, i) => (
             <div key={i} className="rounded-xl border border-slate-800 bg-[#0d0d13] p-6 space-y-3">

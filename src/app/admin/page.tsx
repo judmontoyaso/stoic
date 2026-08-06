@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Users, Activity, Bell, Flame } from 'lucide-react'
 import { Card, PageHeader, StatCard, LoadingScreen, EmptyState } from '@/components/ui'
 import ResetUserButton from '@/components/admin/ResetUserButton'
+import ResenasPanel from '@/components/admin/ResenasPanel'
 
 // Panel del administrador: activación y actividad por usuario a partir
 // de stoic.events y los registros. El acceso lo decide /api/admin/stats
@@ -274,6 +275,15 @@ export default function AdminPage() {
           )}
         </Card>
       )}
+
+      <Card className="p-5">
+        <h2 className="text-sm font-bold text-[var(--foreground)] mb-1">Reseñas fundadoras</h2>
+        <p className="text-xs text-slate-500 mb-4">
+          Regala el año a quien terminó los 7 días sin comprar, a cambio de una opinión
+          honesta al mes. Son las reseñas reales de la landing.
+        </p>
+        <ResenasPanel />
+      </Card>
 
       <Card className="p-5">
         <h2 className="text-sm font-bold text-[var(--foreground)] mb-4">Eventos · últimos 30 días</h2>

@@ -57,12 +57,42 @@ gancho narrativo de la marca.
 
 1. **Gancho gratis:** los **primeros 7 días del programa, por correo**. Es
    el CTA por defecto de casi todo. Bajísima fricción, entrega valor real.
-2. **Fundador:** pago único, acceso de por vida. Se ofrece tras probar
+2. **Fundador:** pago único, **un año** de acceso. Se ofrece tras probar
    (día 7 del correo, y en la app tras entrar).
+
+**Cómo se nombra la vigencia** (importa: se anunció "vitalicio" hasta
+agosto de 2026 y quien compró entonces lo conserva):
+
+- Di "un año", "doce meses", "pago único", "sin suscripción". Nunca
+  "vitalicio", "de por vida" ni "para siempre".
+- "Pago único" y "un año" no se contradicen: no hay cobro automático ni
+  hay que cancelar nada. Dilo así cuando aparezca la objeción.
+- El gancho de retención es el **precio congelado**: quien renueva paga
+  siempre lo que pagó la primera vez; para quien entra después, sube.
+- La política de borrado (30 días de gracia y descarga del diario) se
+  anuncia **de frente y arriba**, junto al precio. Esconderla en los
+  términos la convierte en trampa; decirla en la página de precios la
+  convierte en señal de confianza. Ver `PricingSection.tsx`.
 
 **Regla de CTA:** en contenido frío (video, anuncio), el CTA SIEMPRE es
 "los primeros 7 días gratis", nunca "compra". La venta ocurre después de
 que probaron. Vender en frío quema la mejor cohorte.
+
+**Las dos funciones que sí diferencian** (úsalas cuando toque hablar de
+producto, no de método):
+
+- **Lectura mensual del diario.** Se vende por la mecánica, no por decir
+  "con IA": *cita tus propias frases con la fecha*. Eso es lo que nadie
+  más hace y lo que se puede demostrar en pantalla. Nunca prometer
+  diagnóstico ni interpretación psicológica.
+- **Diario dictado por voz.** Se vende por el momento, no por la
+  tecnología: de noche escribir cuesta, y el examen nocturno es de noche.
+  Mencionar siempre que es opcional y que se activa solo con permiso.
+
+**Palabras que sí busca la gente** (ver `docs/SEO.md`): el cliente no
+busca "estoicismo", busca su síntoma — "muletillas", "me tiembla la voz",
+"me quedo en blanco", "cómo dejar de interrumpir". Escribe los hooks y
+los títulos con esas palabras, no con las de la filosofía.
 
 ## 5. Frameworks de copy
 
