@@ -137,8 +137,9 @@ export default function VerifyPage() {
               ¿Sin código? Hazte fundador
             </p>
             <p className="text-[10px] text-slate-500 text-center leading-relaxed">
-              Pago único, acceso de por vida al programa completo. Al confirmarse
-              el pago tu cuenta entra sola (recarga esta página al volver).
+              Pago único, un año de acceso al programa completo. Sin suscripción:
+              nada se te cobra solo. Al confirmarse el pago tu cuenta entra sola
+              (recarga esta página al volver).
             </p>
 
             {MP_ENABLED && (
@@ -157,7 +158,7 @@ export default function VerifyPage() {
                 href={checkoutUrl}
                 className="block w-full py-2.5 rounded-lg border border-[var(--primary-gold)]/50 text-center text-sm font-bold text-[var(--primary-gold)] hover:bg-[var(--primary-gold)]/10 transition-colors"
               >
-                {MP_ENABLED ? 'Pagar con tarjeta internacional' : 'Hazte fundador — pago único'}
+                {MP_ENABLED ? 'Pagar con tarjeta internacional' : 'Hazte fundador — un año'}
               </a>
             )}
             <p className="text-[10px] text-slate-500 text-center leading-relaxed">

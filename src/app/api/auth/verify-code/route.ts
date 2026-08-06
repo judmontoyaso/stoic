@@ -4,6 +4,7 @@ import { createClient as createServerSupabase } from '@/utils/supabase/server'
 import { sendEmail, welcomeEmail } from '@/lib/email'
 import { markLeadConverted } from '@/lib/leads'
 import { redeemCode } from '@/lib/access-codes'
+import { nextExpiry } from '@/lib/access'
 
 // Aprueba al usuario logueado si presenta el código de acceso correcto.
 // La aprobación se guarda en app_metadata.stoicom_approved: solo el
@@ -101,9 +102,34 @@ export async function POST(request: Request) {
   await admin.from('verify_attempts').delete().eq('user_id', user.id)
 
   // Un fundador que reverifique con código no pierde su plan
-  const finalPlan = user.app_metadata?.stoicom_plan === 'founder' ? 'founder' : plan
+  const meta = user.app_metadata || {}
+  const finalPlan = meta.stoicom_plan === 'founder' ? 'founder' : plan
+  const esFundador = finalPlan === 'founder'
+
+  // Vigencia de los códigos.
+  //
+  // Los códigos únicos (becas, referidos, campañas) dan UN AÑO, igual que
+  // la compra: una beca vitalicia valdría más que el producto pagado, y
+  // eso vuelve absurda la oferta.
+  //
+  // El código compartido de la env queda SIN vencimiento a propósito: es
+  // la beta privada, son cuatro gatos y son los que probaron gratis
+  // cuando esto no funcionaba.
+  //
+  // A un fundador que reverifica no se le toca la fecha: la suya la puso
+  // su pago y un código no debe acortarla ni alargarla.
+  const otorgaVigencia = plan !== 'code' && !esFundador
+  const expiresAt = otorgaVigencia
+    ? nextExpiry(meta.stoicom_expires_at as string | null).toISOString()
+    : meta.stoicom_expires_at
+
   const { error } = await admin.auth.admin.updateUserById(user.id, {
-    app_metadata: { ...user.app_metadata, stoicom_approved: true, stoicom_plan: finalPlan },
+    app_metadata: {
+      ...meta,
+      stoicom_approved: true,
+      stoicom_plan: finalPlan,
+      ...(expiresAt ? { stoicom_expires_at: expiresAt } : {}),
+    },
   })
 
   if (error) {

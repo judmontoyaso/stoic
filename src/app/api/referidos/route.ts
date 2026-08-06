@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerSupabase } from '@/utils/supabase/server'
 import { createCodes, type AccessCode } from '@/lib/access-codes'
+import { hasProgramAccess } from '@/lib/access'
 
 // Códigos de invitación del usuario. Cada aprobado tiene REFERRALS_PER_USER
 // para regalar: el producto es de disciplina compartida y "hazlo conmigo"
@@ -14,7 +15,8 @@ const REFERRALS_PER_USER = 2
 export async function GET() {
   const session = await createServerSupabase()
   const { data: { user } } = await session.auth.getUser()
-  if (!user || user.app_metadata?.stoicom_approved !== true) {
+  // Vencido no reparte invitaciones: regalaría acceso que él ya no tiene
+  if (!user || !hasProgramAccess(user.app_metadata)) {
     return NextResponse.json({ error: 'Sin acceso' }, { status: 403 })
   }
 

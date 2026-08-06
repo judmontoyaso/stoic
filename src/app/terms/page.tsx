@@ -6,7 +6,7 @@ export const metadata = {
 
 // Página pública (listada en el proxy): visible sin sesión.
 
-const UPDATED = '14 de julio de 2026'
+const UPDATED = '6 de agosto de 2026'
 
 export default function TermsPage() {
   return (
@@ -46,10 +46,36 @@ export default function TermsPage() {
           correos personalizados). Puedes borrar tus entradas en cualquier momento
           y solicitar la eliminación completa de tu cuenta y sus datos.
         </p>
+        <p>
+          Puedes descargar tu diario completo cuando quieras desde la aplicación,
+          en formato legible o en JSON, sin costo.
+        </p>
       </section>
 
       <section className="space-y-2">
-        <h2 className="font-bold text-base">4. Contenido del programa</h2>
+        <h2 className="font-bold text-base">4. Vigencia del acceso y borrado</h2>
+        <p>
+          El acceso de fundador es un <strong>pago único que da 12 meses</strong>. No
+          es una suscripción: no se realizan cobros automáticos ni hay nada que
+          cancelar. Te avisamos por correo cuatro veces antes de que venza.
+        </p>
+        <p>
+          Al vencer, dispones de <strong>30 días calendario</strong> para renovar
+          conservando todo tu progreso, o para descargar tu diario. Cumplido ese
+          plazo eliminamos tu contenido personal —diario, reflexiones y registro de
+          días— de forma <strong>definitiva e irreversible</strong>: no conservamos
+          copia y un pago posterior no lo restaura. Conservamos tu cuenta y tu
+          correo para que puedas volver a acceder, y los registros de pago por el
+          tiempo que exija la normativa contable y tributaria.
+        </p>
+        <p>
+          Si adquiriste el acceso cuando se anunciaba como vitalicio, ese acceso se
+          respeta y no vence.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="font-bold text-base">5. Contenido del programa</h2>
         <p>
           Los ejercicios, lecciones y textos del programa son contenido original de
           StoiCom. No puedes copiarlos, redistribuirlos ni revenderlos fuera de tu
@@ -58,7 +84,7 @@ export default function TermsPage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="font-bold text-base">5. Disponibilidad y cambios</h2>
+        <h2 className="font-bold text-base">6. Disponibilidad y cambios</h2>
         <p>
           El servicio está en desarrollo activo: pueden cambiar funciones, y aunque
           cuidamos la continuidad, no garantizamos disponibilidad ininterrumpida.
@@ -68,7 +94,7 @@ export default function TermsPage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="font-bold text-base">6. Contacto</h2>
+        <h2 className="font-bold text-base">7. Contacto</h2>
         <p>
           Preguntas sobre estos términos, tu cuenta o el servicio:{' '}
           <a href="mailto:ayuda@stoicom.app" className="font-bold underline">

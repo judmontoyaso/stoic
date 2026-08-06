@@ -13,7 +13,7 @@ const GOLD = '#c9a84c'
 
 const TITLE = 'Becas Fundador · StoiCom | Entrenamiento Estoico de Comunicación'
 const DESCRIPTION =
-  'Convocatoria a las 20 Becas Fundador de acceso vitalicio completo al programa de comunicación estoica: 210 prácticas diarias, 3 tracks y herramientas de templanza.'
+  'Convocatoria a las 20 Becas Fundador: un año completo del programa de comunicación estoica, sin pagar nada. 210 prácticas diarias, 3 tracks y herramientas de templanza.'
 
 export const metadata = {
   title: TITLE,
@@ -64,7 +64,7 @@ export default function BecasPage() {
             className={`${cinzel.className} text-[11px] md:text-xs tracking-[0.35em] uppercase`}
             style={{ color: GOLD }}
           >
-            20 becas fundador · acceso de por vida
+            20 becas fundador · un año completo
           </p>
 
           <h1
@@ -80,7 +80,8 @@ export default function BecasPage() {
           <p>
             Veinte personas entran gratis al programa completo. El mismo acceso que paga un
             fundador: 210 ejercicios diarios en tres tracks, el diario con el examen nocturno,
-            los retos semanales y la temporada avanzada de Influencia. De por vida.
+            los retos semanales y la temporada avanzada de Influencia. Un año entero, sin pagar
+            nada.
           </p>
 
           <p>

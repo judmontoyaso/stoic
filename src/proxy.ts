@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { readAccess, canUseProgram } from '@/lib/access'
 
 // Rutas que no requieren sesión
 function isPublicPath(pathname: string): boolean {
@@ -22,6 +23,8 @@ function isPublicPath(pathname: string): boolean {
     pathname === '/login' ||
     pathname === '/landing' ||
     pathname === '/becas' ||
+    pathname === '/renovar' ||               // destino de los vencidos: renovar o exportar
+    pathname === '/api/export/journal' ||    // descarga del diario (valida sesión dentro)
     pathname === '/suscripcion' ||
     pathname === '/terms' ||
     pathname === '/privacy' ||
@@ -74,12 +77,28 @@ export async function proxy(request: NextRequest) {
     if (user.app_metadata?.stoicom_approved !== true) {
       return NextResponse.redirect(new URL('/auth/verify', request.url))
     }
+    // Aprobado pero con la vigencia vencida: el programa deja de abrirse.
+    // Durante los 30 días de gracia /renovar todavía le deja descargar su
+    // diario; pasada la gracia el contenido ya no existe, pero puede
+    // volver a comprar desde la misma página.
+    if (!canUseProgram(readAccess(user.app_metadata))) {
+      return NextResponse.redirect(new URL('/renovar', request.url))
+    }
     return response
   }
 
-  // Visitante sin sesión: la raíz muestra la landing; el resto pide login
-  const destination = pathname === '/' ? '/landing' : '/login'
-  return NextResponse.redirect(new URL(destination, request.url))
+  // Visitante sin sesión: la raíz MUESTRA la landing (rewrite), el resto
+  // pide login.
+  //
+  // Antes esto era un redirect a /landing y le regalaba a una subruta la
+  // autoridad de la URL más fuerte del dominio: los enlaces que reciba
+  // stoicom.app apuntan a la raíz, no a /landing. Con rewrite el
+  // contenido se sirve en `/` sin salto, y /landing sigue existiendo para
+  // los enlaces viejos apuntando a la raíz por canonical.
+  if (pathname === '/') {
+    return NextResponse.rewrite(new URL('/landing', request.url))
+  }
+  return NextResponse.redirect(new URL('/login', request.url))
 }
 
 // Configuración de las rutas a interceptar

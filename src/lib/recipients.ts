@@ -4,6 +4,7 @@
 // única vez con el código de acceso en /auth/verify).
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { hasProgramAccess, type AccessMetadata } from '@/lib/access'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = SupabaseClient<any, any, any, any, any>
@@ -40,7 +41,12 @@ export async function getApprovedUsers(supabase: AnySupabaseClient): Promise<App
 
       const users = data?.users || []
       for (const u of users) {
-        if (u.app_metadata?.stoicom_approved !== true || !u.email) continue
+        if (!u.email) continue
+        // Aprobado Y con la vigencia viva. Sin el segundo filtro, un
+        // fundador vencido seguiría recibiendo el ejercicio diario de un
+        // programa al que ya no puede entrar: el peor correo posible.
+        // Los avisos de vencimiento los manda /api/cron/vigencia aparte.
+        if (!hasProgramAccess(u.app_metadata)) continue
         approved.push({
           id: u.id,
           email: (u.email as string).toLowerCase(),
@@ -55,4 +61,44 @@ export async function getApprovedUsers(supabase: AnySupabaseClient): Promise<App
     console.error('Error listando usuarios para correos:', err)
   }
   return approved
+}
+
+export interface LifecycleUser {
+  id: string
+  email: string
+  metadata: AccessMetadata
+}
+
+/**
+ * Aprobados CON los vencidos incluidos, para el cron de vigencia.
+ *
+ * getApprovedUsers() filtra a los vencidos a propósito (no deben recibir
+ * el programa). Justamente a esos hay que escribirles los avisos de
+ * vencimiento, así que este listado no filtra por vigencia: devuelve la
+ * app_metadata cruda y el cron decide con readAccess().
+ */
+export async function getLifecycleUsers(supabase: AnySupabaseClient): Promise<LifecycleUser[]> {
+  const users: LifecycleUser[] = []
+  try {
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: PAGE_SIZE })
+      if (error) {
+        console.error('Error listando usuarios para vigencia (página %d):', page, error)
+        break
+      }
+      const batch = data?.users || []
+      for (const u of batch) {
+        if (u.app_metadata?.stoicom_approved !== true || !u.email) continue
+        users.push({
+          id: u.id,
+          email: (u.email as string).toLowerCase(),
+          metadata: (u.app_metadata || {}) as AccessMetadata,
+        })
+      }
+      if (batch.length < PAGE_SIZE) break
+    }
+  } catch (err) {
+    console.error('Error listando usuarios para vigencia:', err)
+  }
+  return users
 }

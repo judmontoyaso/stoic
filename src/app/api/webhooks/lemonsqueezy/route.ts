@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import crypto from 'node:crypto'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
-import { sendEmail, welcomeEmail } from '@/lib/email'
+import { sendEmail, welcomeEmail, renewalEmail } from '@/lib/email'
 import { markLeadConverted } from '@/lib/leads'
 import { recordPayment } from '@/lib/payments'
 import { revokeAccess } from '@/lib/revoke-access'
+import { nextExpiry } from '@/lib/access'
 
 // Webhook de Lemon Squeezy: al confirmarse una orden pagada, aprueba al
 // usuario (misma marca que el código de acceso) y registra el plan.
@@ -106,13 +107,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, warning: 'usuario no encontrado' })
   }
 
+  const meta = userData.user.app_metadata || {}
+  const alreadyApproved = meta.stoicom_approved === true
+
+  // Vigencia de un año, extendida desde el vencimiento actual si aún no
+  // ha llegado. LS reintenta los webhooks que fallan, así que se marca
+  // qué orden otorgó la vigencia: un reintento de la MISMA orden no puede
+  // regalar un segundo año.
+  const identifier = payload.data?.attributes?.identifier || payload.data?.id || null
+  const orderRef = `lemonsqueezy:${identifier ?? userId}`
+  const yaContado = meta.stoicom_vigencia_order === orderRef
+  const expiresAt = yaContado
+    ? (meta.stoicom_expires_at as string)
+    : nextExpiry(meta.stoicom_expires_at as string | null).toISOString()
+  const esRenovacion = alreadyApproved && !yaContado
+
   const { error } = await admin.auth.admin.updateUserById(userId, {
     app_metadata: {
-      ...userData.user.app_metadata,
+      ...meta,
       stoicom_approved: true,
       stoicom_plan: 'founder',
-      stoicom_paid_at: new Date().toISOString(),
-      stoicom_order: payload.data?.attributes?.identifier || null,
+      stoicom_paid_at: meta.stoicom_paid_at || new Date().toISOString(),
+      stoicom_order: identifier,
+      stoicom_expires_at: expiresAt,
+      stoicom_vigencia_order: orderRef,
     },
   })
   if (error) {
@@ -124,16 +142,24 @@ export async function POST(request: Request) {
   // Bienvenida (best effort, pero con await: en serverless una promesa
   // suelta muere cuando la función responde)
   const email = userData.user.email || payload.data?.attributes?.user_email
-  if (email) {
+  if (email && (!alreadyApproved || esRenovacion)) {
     const appUrl = process.env.APP_URL || 'https://stoicom.app'
+    const name = email.split('@')[0]
     try {
-      await sendEmail(email, welcomeEmail({ name: email.split('@')[0], appUrl }))
+      await sendEmail(
+        email,
+        esRenovacion
+          ? renewalEmail({ name, appUrl, expiresAt })
+          : welcomeEmail({ name, appUrl })
+      )
     } catch (err) {
-      console.error('Error enviando bienvenida al comprador:', err)
+      console.error('Error enviando correo al comprador:', err)
     }
-    // El correo de la compra puede diferir del de la cuenta: marcar ambos
-    await markLeadConverted(email)
-    await markLeadConverted(payload.data?.attributes?.user_email)
+    if (!alreadyApproved) {
+      // El correo de la compra puede diferir del de la cuenta: marcar ambos
+      await markLeadConverted(email)
+      await markLeadConverted(payload.data?.attributes?.user_email)
+    }
   }
 
   // Registro interno del pago (idempotente; no bloquea la aprobación).

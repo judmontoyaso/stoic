@@ -1,8 +1,20 @@
 # Pagos con Lemon Squeezy — acceso fundador
 
-Modelo: **pago único de por vida** ("Fundador"). Dos puertas de entrada,
-sin free trial: código de invitación o compra. El webhook aprueba al
-comprador con la misma marca (`stoicom_approved`) que usa el código.
+Modelo: **pago único por un año de vigencia** ("Fundador"). No es
+suscripción: LS no cobra nada de forma recurrente y el comprador no tiene
+que cancelar. Dos puertas de entrada, sin free trial: código de
+invitación o compra. El webhook aprueba al comprador con la misma marca
+(`stoicom_approved`) que usa el código, y además le escribe
+`stoicom_expires_at` a un año (ver `src/lib/access.ts`).
+
+> El producto en LS sigue siendo **one-time payment**, no subscription.
+> La vigencia la lleva StoiCom en `app_metadata`, no LS. Configurarlo
+> como suscripción en LS sería cobrar automáticamente, que es justo lo
+> que este modelo evita.
+
+Quien compró antes de agosto de 2026 lo hizo cuando se anunciaba acceso
+vitalicio: `supabase_v14_vigencia.sql` los marca `stoicom_lifetime` y no
+vencen nunca.
 
 ## Configuración (una sola vez, ~20 min)
 

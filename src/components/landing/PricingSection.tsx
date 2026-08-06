@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Check, ShieldCheck, Sparkles, CreditCard, Globe } from 'lucide-react'
+import { Check, ShieldCheck, Sparkles, CreditCard, Globe, CalendarClock } from 'lucide-react'
 import { copLabel, usdLabel } from '@/lib/pricing'
 
 interface PricingSectionProps {
@@ -38,13 +38,13 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
       {/* Header Precios */}
       <div className="text-center space-y-4">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#c9a84c]/10 border border-[#c9a84c]/30 text-[11px] font-bold tracking-widest text-[#c9a84c] uppercase">
-          <Sparkles className="w-3.5 h-3.5" /> Acceso Completo de Por Vida
+          <Sparkles className="w-3.5 h-3.5" /> Un año completo · Precio de fundador
         </div>
         <h2 className="text-3xl md:text-4xl font-bold text-slate-100">
-          Una sola inversión para transformar tu forma de hablar
+          Doce meses de entrenamiento. Un solo pago.
         </h2>
         <p className="max-w-xl mx-auto text-sm md:text-base text-slate-400">
-          Comienza gratis los primeros 7 días por correo. Cuando estés listo para dominar el programa completo de 210 prácticas, obtén tu acceso permanente.
+          Empiezas gratis con los siete primeros días por correo. Cuando quieras el programa entero, pagas una vez y tienes un año. No es suscripción: no se te cobra solo.
         </p>
 
         {/* Selector de Moneda */}
@@ -118,15 +118,15 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
         {/* Card 2: Pase de Acceso Completo (Pago Único) */}
         <div className="relative rounded-xl border-2 border-[#c9a84c]/60 bg-[#111118] p-7 flex flex-col justify-between shadow-[0_10px_40px_-15px_rgba(201,168,76,0.25)]">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-[#c9a84c] text-[#0a0a0f] text-[10px] font-black uppercase tracking-widest">
-            Acceso Vitalicio · Pago Único
+            Un año · Pago único
           </div>
 
           <div className="space-y-4 pt-2">
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-slate-100 flex items-center justify-between">
-                <span>Pase de Acceso Completo</span>
+                <span>Acceso Fundador</span>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-[#c9a84c]/20 text-[#c9a84c]">
-                  Sin mensualidades
+                  Sin suscripción
                 </span>
               </h3>
               <p className="text-xs text-slate-400">
@@ -140,17 +140,17 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
                 {currency === 'COP' ? copLabel : usdLabel}
               </span>
               <span className="text-xs text-slate-400">
-                {currency === 'COP' ? 'COP / Pago único' : 'USD / Pago único'}
+                {currency === 'COP' ? 'COP / un año' : 'USD / un año'}
               </span>
             </div>
             <ul className="space-y-2.5 pt-2 text-xs text-slate-300">
               <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Acceso vitalicio a los 3 Tracks (210 prácticas)
+                Los 3 tracks completos: 210 prácticas, doce meses
               </li>
               <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Incluye Track Avanzado: &ldquo;Influencia & Liderazgo&rdquo;
+                Incluye el track avanzado: &ldquo;Influencia y Liderazgo&rdquo;
               </li>
               <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
@@ -158,11 +158,18 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
               </li>
               <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                Diario nocturno de Séneca + 13 Retos Semanales
+                Diario nocturno de Séneca y 13 retos semanales
               </li>
               <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                App PWA instalable en iOS, Android y PC
+                App instalable en iOS, Android y PC
+              </li>
+              <li className="flex items-start gap-2.5">
+                <Check className="w-4 h-4 text-[#c9a84c] shrink-0 mt-0.5" />
+                <span>
+                  <strong className="text-[#c9a84c]">Renuevas siempre a este precio.</strong> Para
+                  quien entre después, sube.
+                </span>
               </li>
             </ul>
           </div>
@@ -194,13 +201,50 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
         </div>
       </div>
 
-      {/* Nota de Seguridad & Garantía */}
+      {/* Qué pasa cuando se acaba el año.
+          Va aquí arriba, junto al precio, y no enterrado en los términos:
+          es la pregunta que cualquiera se hace antes de pagar, y
+          contestarla de frente vende más que esconderla. */}
+      <div className="max-w-3xl mx-auto rounded-lg border border-[#c9a84c]/25 bg-[#0d0d13] p-6">
+        <div className="flex items-start gap-3">
+          <CalendarClock className="w-6 h-6 text-[#c9a84c] shrink-0 mt-0.5" />
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+              Qué pasa cuando se acaba el año
+            </p>
+            <p className="text-[13px] leading-relaxed text-slate-400">
+              Te avisamos cuatro veces antes de que venza. Si renuevas, sigues donde ibas y pagas
+              lo mismo que pagaste hoy. Si no renuevas, tienes 30 días para descargar tu diario
+              completo y llevártelo en un archivo tuyo. Pasado ese mes lo borramos, y volver a
+              pagar más tarde no lo recupera.
+            </p>
+            <p className="text-[13px] leading-relaxed text-slate-400">
+              Lo decimos aquí y no en la letra pequeña porque es tu decisión, no una trampa.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Para quién NO es. Rechazar clientes en voz alta es la señal de
+          autoridad más barata que existe, y filtra los reembolsos. */}
+      <div className="max-w-3xl mx-auto rounded-lg border border-slate-800 bg-[#0d0d13] p-6">
+        <p className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+          Esto no es para ti si
+        </p>
+        <p className="mt-2 text-[13px] leading-relaxed text-slate-400">
+          Buscas frases para publicar en redes. Quieres resultados sin grabarte y sin escribir
+          nada. Esperas que una app te dé la disciplina que no tienes. El día 1 es grabarte tres
+          minutos hablando y verte entero, sin saltar. La mayoría lo odia. Es exactamente el punto.
+        </p>
+      </div>
+
+      {/* Nota de Seguridad y Garantía */}
       <div className="rounded-lg border border-slate-800 bg-[#0d0d13] p-5 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left max-w-3xl mx-auto">
         <div className="flex items-center gap-3">
           <ShieldCheck className="w-8 h-8 text-[#c9a84c] shrink-0" />
           <div>
-            <p className="text-xs font-bold text-slate-200">Garantía Incondicional de 7 Días</p>
-            <p className="text-[11px] text-slate-400">Prueba el programa sin riesgo. Si no cumple tus expectativas, solicitas el reembolso total.</p>
+            <p className="text-xs font-bold text-slate-200">Garantía incondicional de 7 días</p>
+            <p className="text-[11px] text-slate-400">Si no es lo que esperabas, escribes y te devolvemos todo. Sin preguntas.</p>
           </div>
         </div>
         <div className="text-[11px] text-slate-500">

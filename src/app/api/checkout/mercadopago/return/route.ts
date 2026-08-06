@@ -29,6 +29,11 @@ export async function GET(request: Request) {
   const lookup = await getPayment(config, paymentId)
   if (lookup.ok && lookup.payment.status === 'approved') {
     const outcome = await approveMpFounder(lookup.payment)
+    if (outcome === 'renewed') {
+      // Renovación: ya conoce la app, no tiene sentido devolverlo al
+      // onboarding. Va a su día de hoy con la vigencia recién extendida.
+      return NextResponse.redirect(`${base}/today?renovado=1`, 303)
+    }
     if (outcome === 'approved' || outcome === 'already') {
       return NextResponse.redirect(`${base}/welcome`, 303)
     }

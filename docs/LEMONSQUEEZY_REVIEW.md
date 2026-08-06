@@ -26,18 +26,31 @@ demo y URL del sitio. Todo existe — este doc lo empaqueta.
 > | Tier | Price | What it includes |
 > |---|---|---|
 > | Free email course | $0 | First 7 days of the program, delivered by email (lead magnet) |
-> | Founder — lifetime access | $59 USD, one-time | Full 90-day program (2 parallel tracks), advanced 30-day season, daily emails and push notifications delivered at each user's own hour and timezone, journal, progress dashboard. No subscription, no recurring charges. Limited to the first 100 founders. |
+> | Founder — 12 months of access | $59 USD, one-time | Full 90-day program (2 parallel tracks), advanced 30-day season, daily emails and push notifications delivered at each user's own hour and timezone, journal, progress dashboard. Limited to the first 100 founders. |
 >
-> The Lemon Squeezy checkout sells the **Founder lifetime access**
-> ($59 USD one-time). We also accept Mercado Pago for LatAm customers
-> (COP $199,000, same product) — Lemon Squeezy is our international rail.
+> The Lemon Squeezy checkout sells the **Founder access: a single
+> $59 USD payment that grants 12 months**. Please note this is a
+> **one-time payment product, not a subscription** — Lemon Squeezy never
+> charges the customer again, and there is nothing for the customer to
+> cancel. Access simply expires after 12 months unless the customer
+> chooses to buy again. We track the expiry date in our own database, not
+> through Lemon Squeezy billing.
+>
+> When access expires, the customer gets a 30-day window in which they can
+> download their complete journal (free, no payment required), after which
+> the personal content is deleted. This is stated on the pricing page
+> itself and in our refund policy, not buried in the terms.
+>
+> We also accept Mercado Pago for LatAm customers (COP $199,000, same
+> product and same 12-month term) — Lemon Squeezy is our international
+> rail.
 >
 > **Demo video:** link below. The product interface is in Spanish, since
 > that is our market, so here is what each part shows:
 >
 > ```
 > 0:00  Public landing page
-> 0:10  Pricing section — $59 USD one-time, lifetime access
+> 0:10  Pricing section — $59 USD one-time payment, 12 months of access
 > 0:22  Sign in with Google
 > 0:28  Day 45 of 90 — the daily exercise and its full written lesson
 > 0:48  Marking the day as complete
@@ -60,6 +73,13 @@ Antes de enviar: confirma que el precio del producto en el dashboard de
 LS es efectivamente $59 (los docs internos lo sugieren; la cifra final
 vive en LS, no en el código).
 
+**Y confirma que el producto en LS sigue siendo `one-time payment`, NO
+`subscription`.** El modelo es un pago único que da 12 meses: la vigencia
+la lleva StoiCom en su base de datos, no la facturación de LS.
+Configurarlo como suscripción cobraría automáticamente al año, que es
+exactamente lo que este modelo evita y lo contrario de lo que dice el
+correo de arriba.
+
 ## 2. Guion del video demo (60–90 s, grabar con Loom u OBS)
 
 Pantalla + narración breve en inglés (o subtítulos). Usa una cuenta ya
@@ -74,7 +94,7 @@ muestra en la sección de precios de la landing, y el correo lo explica.
 | # | Toma | Qué mostrar | ~seg |
 |---|---|---|---|
 | 1 | `stoicom.app/landing` | Scroll lento por el hero y la metodología. | 10 |
-| 2 | `/landing#precios` | La sección de precios: $59 USD / COP 199.000, pago único, y los 7 días gratis. **Esta es la toma clave**: LS verifica que el precio anunciado es el que se cobra. | 12 |
+| 2 | `/landing#precios` | La sección de precios: $59 USD / COP 199.000, pago único por un año, y los 7 días gratis. Baja hasta el bloque "Qué pasa cuando se acaba el año". **Esta es la toma clave**: LS verifica que lo anunciado es lo que se cobra, y ese bloque le contesta de antemano la pregunta de qué pasa al vencer. | 14 |
 | 3 | `/login` | Botón de Google; entra con la cuenta demo. | 6 |
 | 4 | `/today` ("Hoy") | El día actual: cita, ejercicio del día, abrir la lección completa (400–550 palabras). Es el corazón del producto: que se vea contenido real, no una plantilla. | 20 |
 | 5 | Marcar completado | Toggle del ejercicio; se ve el avance del día. | 6 |
@@ -102,7 +122,7 @@ qué está viendo (ajusta los segundos a tu grabación real):
 
 ```
 0:00  Public landing page
-0:10  Pricing section — $59 USD one-time, lifetime access
+0:10  Pricing section — $59 USD one-time payment, 12 months of access
 0:22  Sign in with Google
 0:28  Day 45 of 90 — the daily exercise and its full written lesson
 0:48  Marking the day as complete
@@ -120,6 +140,12 @@ narración "the product is in Spanish, targeting the LatAm market").
 
 - [ ] Precio del producto en el dashboard de LS = **$59** (debe coincidir
       con lo que muestra la landing, que sale de `src/lib/pricing.ts`)
+- [ ] El producto en LS es **one-time payment**, no subscription
+- [ ] `supabase_v14_vigencia.sql` ejecutado (si no, la landing anuncia un
+      año y el webhook no escribe vencimiento: incoherencia justo en lo
+      que LS está revisando)
+- [ ] La landing ya NO dice "vitalicio" ni "de por vida" en ningún lado:
+      `grep -ri "vitalici\|de por vida" src/`
 - [ ] La cuenta demo tiene un track activo **con varios días marcados**:
       una cuenta recién creada se ve vacía y no demuestra nada
 - [ ] `ayuda@stoicom.app` recibe (LS suele probar el contacto de soporte)

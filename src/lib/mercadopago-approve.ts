@@ -8,13 +8,15 @@
 // confía en datos que lleguen del navegador o de la notificación.
 
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
-import { sendEmail, welcomeEmail } from '@/lib/email'
+import { sendEmail, welcomeEmail, renewalEmail } from '@/lib/email'
 import { markLeadConverted } from '@/lib/leads'
 import { recordPayment } from '@/lib/payments'
+import { nextExpiry } from '@/lib/access'
 import type { MpPayment } from '@/lib/mercadopago'
 
 export type ApproveOutcome =
   | 'approved'       // recién aprobado
+  | 'renewed'        // ya era cliente y extendió su vigencia otro año
   | 'already'        // ya estaba aprobado (idempotente)
   | 'no_user_ref'    // pago sin external_reference
   | 'user_not_found' // el user_id no existe
@@ -42,15 +44,32 @@ export async function approveMpFounder(payment: MpPayment): Promise<ApproveOutco
     return 'user_not_found'
   }
 
-  const alreadyApproved = userData.user.app_metadata?.stoicom_approved === true
+  const meta = userData.user.app_metadata || {}
+  const alreadyApproved = meta.stoicom_approved === true
+
+  // Vigencia: un año desde hoy, o desde el vencimiento actual si todavía
+  // no ha llegado (renovar temprano no debe costar los días que quedaban).
+  //
+  // OJO — este mismo pago llega por DOS caminos (retorno del checkout y
+  // webhook). Sin esta guarda, el segundo camino sumaría un segundo año
+  // gratis. Se marca cuál fue el pago que ya otorgó la vigencia y solo se
+  // extiende cuando llega uno distinto.
+  const orderRef = `mercadopago:${payment.id}`
+  const yaContado = meta.stoicom_vigencia_order === orderRef
+  const expiresAt = yaContado
+    ? (meta.stoicom_expires_at as string)
+    : nextExpiry(meta.stoicom_expires_at as string | null).toISOString()
+  const esRenovacion = alreadyApproved && !yaContado
 
   const { error } = await admin.auth.admin.updateUserById(userId, {
     app_metadata: {
-      ...userData.user.app_metadata,
+      ...meta,
       stoicom_approved: true,
       stoicom_plan: 'founder',
-      stoicom_paid_at: userData.user.app_metadata?.stoicom_paid_at || new Date().toISOString(),
+      stoicom_paid_at: meta.stoicom_paid_at || new Date().toISOString(),
       stoicom_mp_payment: payment.id,
+      stoicom_expires_at: expiresAt,
+      stoicom_vigencia_order: orderRef,
     },
   })
   if (error) {
@@ -72,18 +91,25 @@ export async function approveMpFounder(payment: MpPayment): Promise<ApproveOutco
     plan: 'founder',
   })
 
-  if (!alreadyApproved) {
-    if (email) {
-      const appUrl = process.env.APP_URL || 'https://stoicom.app'
-      try {
-        await sendEmail(email, welcomeEmail({ name: email.split('@')[0], appUrl }))
-      } catch (err) {
-        console.error('Error enviando bienvenida al comprador MP:', err)
-      }
+  if (email && (!alreadyApproved || esRenovacion)) {
+    const appUrl = process.env.APP_URL || 'https://stoicom.app'
+    const name = email.split('@')[0]
+    try {
+      await sendEmail(
+        email,
+        esRenovacion
+          ? renewalEmail({ name, appUrl, expiresAt })
+          : welcomeEmail({ name, appUrl })
+      )
+    } catch (err) {
+      console.error('Error enviando correo al comprador MP:', err)
+    }
+    if (!alreadyApproved) {
       await markLeadConverted(email)
       await markLeadConverted(payment.payerEmail)
     }
   }
 
+  if (esRenovacion) return 'renewed'
   return alreadyApproved ? 'already' : 'approved'
 }

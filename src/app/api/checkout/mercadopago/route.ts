@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createServerSupabase } from '@/utils/supabase/server'
 import { mpConfig, createPreference } from '@/lib/mercadopago'
+import { readAccess } from '@/lib/access'
 
 // Crea la preferencia de Mercado Pago para el usuario logueado y devuelve
 // el init_point (URL de checkout). El front redirige ahí.
@@ -24,9 +25,23 @@ export async function POST() {
     return NextResponse.json({ error: 'Sin sesión activa' }, { status: 401 })
   }
 
-  // Ya aprobado: no tiene sentido cobrarle de nuevo
-  if (user.app_metadata?.stoicom_approved === true) {
-    return NextResponse.json({ error: 'Tu cuenta ya tiene acceso' }, { status: 409 })
+  // Quién puede pagar: el que no tiene acceso, el vencido que renueva, y
+  // el vigente al que le quedan menos de RENEW_WINDOW_DAYS (renovar
+  // temprano no le cuesta días, nextExpiry los suma).
+  //
+  // Se bloquea al vitalicio —no vence nunca, cobrarle sería robarle— y al
+  // que aún tiene el año largo por delante, para que no pague dos veces
+  // por olvido. Ese doble cobro es la queja de soporte más cara que hay.
+  const RENEW_WINDOW_DAYS = 60
+  const access = readAccess(user.app_metadata)
+  if (access.state === 'lifetime') {
+    return NextResponse.json({ error: 'Tu acceso no vence: no necesitas pagar' }, { status: 409 })
+  }
+  if (access.state === 'active' && (access.daysToExpiry ?? 0) > RENEW_WINDOW_DAYS) {
+    return NextResponse.json(
+      { error: `Tu acceso sigue vigente. Podrás renovar cuando falten ${RENEW_WINDOW_DAYS} días.` },
+      { status: 409 }
+    )
   }
 
   const appUrl = process.env.APP_URL || new URL('http://localhost:3000').origin

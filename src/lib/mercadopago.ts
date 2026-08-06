@@ -60,7 +60,7 @@ export async function createPreference(opts: {
       {
         id: 'stoicom-founder',
         title: 'StoiCom · Acceso de fundador',
-        description: 'Acceso de por vida al programa completo de 90 días.',
+        description: 'Un año de acceso al programa completo de 90 días. Pago único, sin suscripción.',
         quantity: 1,
         unit_price: config.price,
         currency_id: config.currency,

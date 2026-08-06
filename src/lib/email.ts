@@ -337,6 +337,144 @@ export function welcomeEmail(opts: { name: string; appUrl: string }): EmailConte
   }
 }
 
+/** "12 de marzo de 2027" — para las fechas de vencimiento y borrado. */
+function fechaLarga(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+// --- Renovación confirmada (el pago extendió la vigencia otro año) ---
+export function renewalEmail(opts: {
+  name: string
+  appUrl: string
+  expiresAt: string
+}): EmailContent {
+  const hasta = fechaLarga(opts.expiresAt)
+  return {
+    subject: `Tu acceso queda extendido hasta el ${hasta}`,
+    html: baseLayout({
+      preheader: `Un año más. Tu diario sigue completo.`,
+      heading: `${opts.name}, tienes un año más`,
+      body:
+        paragraph(
+          `El pago entró. Tu acceso va hasta el <strong style="color:#d4b45f;">${hasta}</strong> y tu diario sigue intacto, con todo lo que llevas escrito desde el primer día.`
+        ) +
+        paragraph(
+          'Renovaste al precio de fundador. Ese precio es tuyo mientras no dejes vencer el acceso; para quien entre después, sube.'
+        ) +
+        button('Volver al programa', `${opts.appUrl}/today`),
+    }),
+  }
+}
+
+// --- Ciclo de vida de la vigencia ---
+// Los cuatro avisos antes del borrado y la confirmación posterior. Los
+// envía el cron /api/cron/vigencia, que lleva el registro en
+// stoic.lifecycle_emails para no repetirlos.
+export type LifecycleKind =
+  | 'aviso_7d'      // faltan 7 días para vencer
+  | 'vencido'       // venció hoy, empieza la gracia
+  | 'gracia_15'     // mitad de la gracia
+  | 'ultimo_aviso'  // faltan 3 días para el borrado
+  | 'purgado'       // ya se borró el contenido personal
+
+export function lifecycleEmail(
+  kind: LifecycleKind,
+  opts: { name: string; appUrl: string; expiresAt: string; purgeAt: string }
+): EmailContent {
+  const vence = fechaLarga(opts.expiresAt)
+  const borra = fechaLarga(opts.purgeAt)
+  const renovar = `${opts.appUrl}/renovar`
+
+  switch (kind) {
+    case 'aviso_7d':
+      return {
+        subject: 'Te quedan siete días de acceso',
+        html: baseLayout({
+          preheader: `Tu año vence el ${vence}.`,
+          heading: `${opts.name}, tu año vence el ${vence}`,
+          body:
+            paragraph(
+              'Faltan siete días. Después de esa fecha el programa deja de abrirse y tu diario entra en un mes de espera antes de borrarse.'
+            ) +
+            paragraph(
+              'Si renuevas antes de que venza, los días que te sobran se suman al año nuevo en vez de perderse. Y pagas lo mismo que pagaste la primera vez.'
+            ) +
+            button('Renovar mi acceso', renovar),
+        }),
+      }
+
+    case 'vencido':
+      return {
+        subject: 'Tu acceso venció hoy',
+        html: baseLayout({
+          preheader: `Tienes hasta el ${borra} para renovar o descargar tu diario.`,
+          heading: `${opts.name}, hasta aquí llegaba tu año`,
+          body:
+            paragraph(
+              'Venció hoy. El programa deja de abrirse desde este momento, y todavía no borramos nada.'
+            ) +
+            paragraph(
+              `Tienes hasta el <strong style="color:#d4b45f;">${borra}</strong>: renuevas y sigues exactamente donde ibas, o descargas tu diario completo y te lo llevas en un archivo. Lo segundo es gratis y no te pide nada.`
+            ) +
+            button('Renovar o descargar mi diario', renovar),
+        }),
+      }
+
+    case 'gracia_15':
+      return {
+        subject: 'Quince días antes de borrar tu diario',
+        html: baseLayout({
+          preheader: `El ${borra} se borra lo que escribiste.`,
+          heading: `${opts.name}, quedan quince días`,
+          body:
+            paragraph(
+              `El <strong style="color:#d4b45f;">${borra}</strong> se borra el contenido personal de tu cuenta: el diario, tus reflexiones nocturnas y el registro de días. Tu correo y tu cuenta se quedan.`
+            ) +
+            paragraph(
+              'Descargar todo toma un clic y no cuesta nada. Hazlo aunque no pienses volver.'
+            ) +
+            button('Descargar mi diario', renovar),
+        }),
+      }
+
+    case 'ultimo_aviso':
+      return {
+        subject: 'Últimos tres días para descargar tu diario',
+        html: baseLayout({
+          preheader: `El ${borra} se borra y no hay vuelta atrás.`,
+          heading: `${opts.name}, tres días`,
+          body:
+            paragraph(
+              `El <strong style="color:#d4b45f;">${borra}</strong> se borra lo que escribiste. Ese borrado es definitivo: no guardamos copia, y volver a pagar dentro de dos meses no lo devuelve.`
+            ) +
+            paragraph(
+              'Si nunca vas a volver, descárgalo igual. Son meses de tu letra.'
+            ) +
+            button('Descargar mi diario', renovar),
+        }),
+      }
+
+    case 'purgado':
+      return {
+        subject: 'Borramos tu diario',
+        html: baseLayout({
+          preheader: 'Tu cuenta sigue abierta; el contenido ya no está.',
+          heading: `${opts.name}, borramos tu contenido`,
+          body:
+            paragraph(
+              'Pasó el mes que te dimos y borramos lo que habías escrito: diario, reflexiones y el registro de tus días. Fue lo que te avisamos cuatro veces.'
+            ) +
+            paragraph(
+              'Tu cuenta sigue abierta. Si algún día vuelves entras con el mismo correo, y el programa arranca otra vez en el día uno.'
+            ) +
+            button('Volver a empezar', renovar),
+        }),
+      }
+  }
+}
+
 // --- Beca fundador otorgada (aplicación aprobada en /admin/becas) ---
 export function becaEmail(opts: { name: string; code: string; appUrl: string }): EmailContent {
   return {
@@ -346,7 +484,7 @@ export function becaEmail(opts: { name: string; code: string; appUrl: string }):
       heading: `${opts.name}, tu beca quedó aprobada`,
       body:
         paragraph(
-          'Leímos tu aplicación y una de las becas fundador es tuya: acceso completo al programa de 90 días, de por vida. Este es tu código personal, de un solo uso:'
+          'Leímos tu aplicación y una de las becas fundador es tuya: un año completo del programa, sin pagar nada. Este es tu código personal, de un solo uso:'
         ) +
         `
         <div style="margin:20px 0;padding:18px 20px;background:#16161d;border-left:4px solid ${ACCENT};border-radius:0 4px 4px 0;text-align:center;">
@@ -356,6 +494,81 @@ export function becaEmail(opts: { name: string; code: string; appUrl: string }):
           'Cómo entrar: <strong>1)</strong> inicia sesión con Google, <strong>2)</strong> pega el código cuando te lo pida, <strong>3)</strong> elige tu fecha de inicio. El programa se ejecuta, no se lee: el día 1 empieza con tu video de línea base.'
         ) +
         button('Activar mi beca', `${opts.appUrl}/login`),
+    }),
+  }
+}
+
+// --- Lectura mensual del diario lista ---
+//
+// Va SOLO el primer párrafo, no el informe entero. Dos razones, y la
+// primera pesa más: el análisis cita textualmente lo que la persona
+// escribió en su diario, y el correo es el sitio menos privado donde eso
+// puede acabar (bandejas compartidas, vistas previas en la pantalla de
+// bloqueo, reenvíos). La segunda es que el clic hacia la app es lo que
+// queremos: ahí está el resto del producto y ahí se renueva.
+export function monthlyAnalysisEmail(opts: {
+  name: string
+  appUrl: string
+  mesLabel: string
+  entradas: number
+  primerParrafo: string
+}): EmailContent {
+  return {
+    subject: `Leí tu ${opts.mesLabel}`,
+    html: baseLayout({
+      preheader: `${opts.entradas} entradas de diario. Esto es lo que se repite.`,
+      heading: `${opts.name}, esto vi en tu ${opts.mesLabel}`,
+      body:
+        paragraph(
+          `Escribiste ${opts.entradas} ${opts.entradas === 1 ? 'entrada' : 'entradas'} este mes. Las leí todas. Así empieza lo que encontré:`
+        ) +
+        `
+        <div style="margin:20px 0;padding:18px 22px;background:#16161d;border-left:4px solid ${ACCENT};border-radius:0 4px 4px 0;">
+          <p style="margin:0;font-size:14px;line-height:1.65;color:${TEXT_LIGHT};">${opts.primerParrafo}</p>
+        </div>` +
+        paragraph(
+          'El resto está en la app: la contradicción entre cómo empezaste y cómo terminaste el mes, lo que estás evitando y lo que mejoró de verdad. Con tus frases y sus fechas, para que puedas comprobarlo.'
+        ) +
+        button('Leer el análisis completo', `${opts.appUrl}/evaluation`),
+    }),
+  }
+}
+
+// --- Invitación a reseñar (lead que terminó el drip y no compró) ---
+// Se le regala el año a cambio de una opinión honesta al mes. Es la
+// forma legítima de tener reseñas reales antes de tener clientes: la
+// alternativa —inventarlas— quema la marca y la pasarela.
+export function resenaInviteEmail(opts: {
+  name: string
+  code: string
+  appUrl: string
+}): EmailContent {
+  return {
+    subject: 'Te doy el año completo. Te pido la verdad a cambio.',
+    html: baseLayout({
+      preheader: 'Sin pagar nada. Tu código va adentro.',
+      heading: `${opts.name}, quiero pedirte algo`,
+      body:
+        paragraph(
+          'Hiciste los siete días gratis y hasta ahí llegaste. Puede que no fuera para ti, puede que no fuera el momento. Las dos respuestas me sirven para lo que voy a proponerte.'
+        ) +
+        paragraph(
+          'Te doy el año completo del programa sin pagar nada: los tres tracks, los 210 ejercicios, el diario con el examen nocturno y los correos diarios a la hora que elijas. No hay tarjeta ni letra pequeña.'
+        ) +
+        paragraph(
+          'A cambio te pido una cosa. Que dentro de un mes me escribas lo que pienses de verdad. Si te sirvió, dime en qué. Si no te sirvió, dime dónde se cayó — esa es la que de verdad necesito, porque es la que me dice qué arreglar. No te voy a pedir que seas amable.'
+        ) +
+        `
+        <div style="margin:20px 0;padding:18px 20px;background:#16161d;border-left:4px solid ${ACCENT};border-radius:0 4px 4px 0;text-align:center;">
+          <p style="margin:0;font-size:22px;letter-spacing:3px;font-weight:bold;color:#d4b45f;font-family:monospace;">${opts.code}</p>
+        </div>` +
+        paragraph(
+          'Entras con Google, pegas el código y eliges tu fecha de inicio. El día 1 es grabarte tres minutos hablando y verlo entero.'
+        ) +
+        button('Activar mi acceso', `${opts.appUrl}/login`) +
+        paragraph(
+          'Si más adelante quiero publicar lo que me escribas, te pregunto antes y con tu nombre solo si tú dices que sí.'
+        ),
     }),
   }
 }
@@ -555,7 +768,7 @@ export function leadDripEmail(opts: {
         ) +
         `<div style="margin:20px 0;padding:16px 20px;background:#16161d;border:1px solid rgba(201,168,76,0.35);border-radius:6px;">
           <p style="margin:0 0 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#d4b45f;">Acceso de fundador</p>
-          <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};">Un solo pago, acceso de por vida y a todo lo que venga después. Sin suscripción y sin renovaciones.</p>
+          <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};">Un solo pago y un año completo, con todo lo que salga durante ese año. Sin suscripción: nada se te cobra solo. Renuevas si quieres, y al precio que pagaste hoy.</p>
         </div>` +
         button('Entrar y hacerme fundador', opts.founderUrl) +
         paragraph(
