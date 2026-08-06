@@ -87,18 +87,16 @@ export async function proxy(request: NextRequest) {
     return response
   }
 
-  // Visitante sin sesión: la raíz MUESTRA la landing (rewrite), el resto
-  // pide login.
+  // Visitante sin sesión: la raíz lleva a la landing; el resto pide login.
   //
-  // Antes esto era un redirect a /landing y le regalaba a una subruta la
-  // autoridad de la URL más fuerte del dominio: los enlaces que reciba
-  // stoicom.app apuntan a la raíz, no a /landing. Con rewrite el
-  // contenido se sirve en `/` sin salto, y /landing sigue existiendo para
-  // los enlaces viejos apuntando a la raíz por canonical.
-  if (pathname === '/') {
-    return NextResponse.rewrite(new URL('/landing', request.url))
-  }
-  return NextResponse.redirect(new URL('/login', request.url))
+  // OJO — esto tiene que ser REDIRECT, no rewrite. Con rewrite la URL se
+  // queda en `/`, y el layout decide si pinta el sidebar leyendo la
+  // cabecera x-pathname, que también se queda en `/`: resultado, la
+  // landing pública salía con el sidebar de la app encima. Si algún día
+  // se quiere el rewrite por SEO, hay que reescribir ADEMÁS la cabecera
+  // x-pathname a '/landing' y comprobar layout.tsx.
+  const destination = pathname === '/' ? '/landing' : '/login'
+  return NextResponse.redirect(new URL(destination, request.url))
 }
 
 // Configuración de las rutas a interceptar

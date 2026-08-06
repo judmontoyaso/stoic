@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Mic, Square, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -35,6 +35,12 @@ export default function DictateButton({ onTranscript, campo }: Props) {
   const [pidiendoPermiso, setPidiendoPermiso] = useState(false)
   const recorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<BlobPart[]>([])
+  /** Audio grabado que quedó a la espera de la autorización.
+   *  Va en estado y no en ref porque el aviso lo muestra al pintar, y
+   *  leer un ref durante el render es justo lo que React prohíbe. */
+  const [pendiente, setPendiente] = useState<Blob | null>(null)
+  /** null = todavía no se sabe; se consulta al montar, no al grabar. */
+  const [autorizado, setAutorizado] = useState<boolean | null>(null)
 
   const enviar = useCallback(
     async (blob: Blob) => {
@@ -48,6 +54,11 @@ export default function DictateButton({ onTranscript, campo }: Props) {
         const data = await res.json()
 
         if (res.status === 403 && data.needsConsent) {
+          // No debería llegar aquí: el permiso se pide ANTES de grabar.
+          // Si pasa, se guarda el audio para reenviarlo en cuanto
+          // autorice — perder lo que la persona acaba de dictar es la
+          // peor forma de estrenar la función.
+          setPendiente(blob)
           setPidiendoPermiso(true)
           return
         }
@@ -82,6 +93,12 @@ export default function DictateButton({ onTranscript, campo }: Props) {
       toast.error('Tu navegador no permite grabar. Usa el micrófono del teclado.')
       return
     }
+    // El permiso se pide ANTES de grabar. Pedirlo después es hacer que
+    // alguien hable dos minutos para luego preguntarle si se puede usar.
+    if (autorizado === false) {
+      setPidiendoPermiso(true)
+      return
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const mimeType = pickMimeType()
@@ -105,7 +122,16 @@ export default function DictateButton({ onTranscript, campo }: Props) {
     } catch {
       toast.error('No diste permiso al micrófono')
     }
-  }, [enviar])
+  }, [enviar, autorizado])
+
+  // Se consulta al montar, no al grabar: así el permiso se pide antes de
+  // que la persona empiece a hablar.
+  useEffect(() => {
+    fetch('/api/transcribe/estado')
+      .then(res => res.json())
+      .then(d => setAutorizado(d.autorizado === true))
+      .catch(() => setAutorizado(null))
+  }, [])
 
   const autorizar = async () => {
     try {
@@ -115,8 +141,14 @@ export default function DictateButton({ onTranscript, campo }: Props) {
         toast.error(data.error || 'No se pudo guardar la autorización')
         return
       }
+      setAutorizado(true)
       setPidiendoPermiso(false)
-      toast.success('Listo. Vuelve a grabar.')
+      // Si había audio esperando, se manda solo: la persona ya habló y no
+      // tiene por qué repetirlo.
+      if (pendiente) {
+        setPendiente(null)
+        await enviar(pendiente)
+      }
     } catch {
       toast.error('Sin conexión')
     }
@@ -126,10 +158,8 @@ export default function DictateButton({ onTranscript, campo }: Props) {
     return (
       <div className="mt-2 rounded-lg border border-[var(--primary-gold)]/40 bg-[var(--background)] p-3">
         <p className="text-xs leading-relaxed text-slate-500">
-          Para convertir tu voz en texto tenemos que mandar la grabación a Deepgram, un
-          servicio de transcripción fuera del país. No la usan para entrenar sus modelos y
-          nosotros no guardamos el audio: solo el texto que resulta, dentro de tu diario.
-          Puedes seguir escribiendo a mano si prefieres.
+          Transcribimos con Deepgram. No guardamos el audio, solo el texto.
+          {pendiente ? ' Tu grabación está esperando: autoriza y se transcribe sola.' : ''}
         </p>
         <div className="mt-3 flex gap-2">
           <button
@@ -137,7 +167,7 @@ export default function DictateButton({ onTranscript, campo }: Props) {
             onClick={autorizar}
             className="rounded bg-[var(--primary-gold)] px-3 py-1.5 text-[11px] font-bold text-[#0a0a0f]"
           >
-            Autorizar el dictado
+            Activar
           </button>
           <button
             type="button"

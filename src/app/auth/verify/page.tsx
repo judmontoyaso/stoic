@@ -100,7 +100,7 @@ export default function VerifyPage() {
           <p className="text-xs text-slate-500 dark:text-slate-450 leading-relaxed">
             Tu cuenta de Google inició sesión. Para entrar necesitas
             <span className="font-bold"> una única vez</span> un código de
-            invitación, o el acceso de fundador.
+            invitación, o comprando tu acceso.
           </p>
         </div>
 
@@ -134,7 +134,7 @@ export default function VerifyPage() {
         {(MP_ENABLED || checkoutUrl) && (
           <div className="space-y-3 pt-2 border-t border-[var(--border-color)]">
             <p className="text-[10px] text-slate-500 text-center uppercase tracking-widest font-bold">
-              ¿Sin código? Hazte fundador
+              ¿Sin código? Obtén tu acceso
             </p>
             <p className="text-[10px] text-slate-500 text-center leading-relaxed">
               Pago único, un año de acceso al programa completo. Sin suscripción:
@@ -158,7 +158,7 @@ export default function VerifyPage() {
                 href={checkoutUrl}
                 className="block w-full py-2.5 rounded-lg border border-[var(--primary-gold)]/50 text-center text-sm font-bold text-[var(--primary-gold)] hover:bg-[var(--primary-gold)]/10 transition-colors"
               >
-                {MP_ENABLED ? 'Pagar con tarjeta internacional' : 'Hazte fundador — un año'}
+                {MP_ENABLED ? 'Pagar con tarjeta internacional' : 'Obtener acceso — un año'}
               </a>
             )}
             <p className="text-[10px] text-slate-500 text-center leading-relaxed">

@@ -151,7 +151,7 @@ export default function RenovarPage() {
           <p className="text-xs leading-relaxed text-slate-500">
             {enGracia
               ? 'Renuevas al mismo precio que pagaste la primera vez. Ese precio es tuyo mientras no dejes vencer el acceso.'
-              : 'El precio de fundador ya no aplica al que dejó vencer su acceso. Este es el que hay hoy.'}
+              : 'El precio que tenías ya no aplica cuando se deja vencer el acceso. Este es el de hoy.'}
           </p>
 
           {MP_ENABLED && (

@@ -24,17 +24,84 @@ const MESES = [
   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
 ]
 
-/** '2026-03' → 'marzo de 2026' */
-export function etiquetaMes(month: string): string {
-  const [anio, mes] = month.split('-')
+// Un "periodo" es un mes ('2026-07') o una semana ISO ('2026-W31').
+//
+// Los dos viven en la MISMA tabla y en la misma columna de texto. Es
+// reutilización deliberada: la clave primaria (user_id, month) ya impide
+// duplicados sea cual sea el formato, y así la lectura semanal no obligó
+// a otra migración.
+export const ES_SEMANA = /^\d{4}-W\d{2}$/
+export const ES_MES = /^\d{4}-(0[1-9]|1[0-2])$/
+
+export function periodoValido(periodo: string): boolean {
+  return ES_MES.test(periodo) || ES_SEMANA.test(periodo)
+}
+
+const iso = (d: Date) => d.toISOString().slice(0, 10)
+
+/** Lunes de la semana ISO de una fecha. */
+function lunesDe(fecha: Date): Date {
+  const d = new Date(Date.UTC(fecha.getUTCFullYear(), fecha.getUTCMonth(), fecha.getUTCDate()))
+  // getUTCDay: 0 = domingo. Se lleva a lunes = 0.
+  const desplazamiento = (d.getUTCDay() + 6) % 7
+  d.setUTCDate(d.getUTCDate() - desplazamiento)
+  return d
+}
+
+/** '2026-W31' de una fecha cualquiera. */
+export function claveSemana(fecha: Date): string {
+  const lunes = lunesDe(fecha)
+  // Semana ISO: la del jueves manda sobre a qué año pertenece
+  const jueves = new Date(lunes)
+  jueves.setUTCDate(jueves.getUTCDate() + 3)
+  const primeroDeAnio = new Date(Date.UTC(jueves.getUTCFullYear(), 0, 1))
+  const semana = Math.ceil(((jueves.getTime() - primeroDeAnio.getTime()) / 86400000 + 1) / 7)
+  return `${jueves.getUTCFullYear()}-W${String(semana).padStart(2, '0')}`
+}
+
+/** '2026-07' de una fecha. */
+export function claveMes(fecha: Date): string {
+  return `${fecha.getUTCFullYear()}-${String(fecha.getUTCMonth() + 1).padStart(2, '0')}`
+}
+
+/** 'marzo de 2026' o 'la semana del 3 al 9 de marzo' */
+export function etiquetaPeriodo(periodo: string): string {
+  if (ES_SEMANA.test(periodo)) {
+    const { desde, hasta } = rango(periodo)
+    const d = new Date(`${desde}T00:00:00Z`)
+    const h = new Date(`${hasta}T00:00:00Z`)
+    const mesD = MESES[d.getUTCMonth()]
+    const mesH = MESES[h.getUTCMonth()]
+    return mesD === mesH
+      ? `la semana del ${d.getUTCDate()} al ${h.getUTCDate()} de ${mesH}`
+      : `la semana del ${d.getUTCDate()} de ${mesD} al ${h.getUTCDate()} de ${mesH}`
+  }
+  const [anio, mes] = periodo.split('-')
   return `${MESES[Number(mes) - 1] ?? mes} de ${anio}`
 }
 
-/** Primer y último día del mes, en formato DATE. */
-function rango(month: string): { desde: string; hasta: string } {
-  const [anio, mes] = month.split('-').map(Number)
+/** Compatibilidad: se sigue usando en el correo mensual. */
+export const etiquetaMes = etiquetaPeriodo
+
+/** Primer día del periodo (DATE). Sirve de marca única para el dedupe. */
+export function inicioPeriodo(periodo: string): string {
+  return rango(periodo).desde
+}
+
+/** Primer y último día del periodo, en formato DATE. */
+function rango(periodo: string): { desde: string; hasta: string } {
+  if (ES_SEMANA.test(periodo)) {
+    const [anioStr, semanaStr] = periodo.split('-W')
+    // 4 de enero cae siempre en la semana ISO 1
+    const base = lunesDe(new Date(Date.UTC(Number(anioStr), 0, 4)))
+    base.setUTCDate(base.getUTCDate() + (Number(semanaStr) - 1) * 7)
+    const fin = new Date(base)
+    fin.setUTCDate(fin.getUTCDate() + 6)
+    return { desde: iso(base), hasta: iso(fin) }
+  }
+  const [anio, mes] = periodo.split('-').map(Number)
   const ultimo = new Date(Date.UTC(anio, mes, 0)).getUTCDate()
-  return { desde: `${month}-01`, hasta: `${month}-${String(ultimo).padStart(2, '0')}` }
+  return { desde: `${periodo}-01`, hasta: `${periodo}-${String(ultimo).padStart(2, '0')}` }
 }
 
 interface JournalRow {
@@ -111,7 +178,7 @@ export async function buildMonthlyAnalysis(
   }
 
   const generado = await generateMonthlyAnalysis({
-    monthLabel: etiquetaMes(opts.month),
+    monthLabel: etiquetaPeriodo(opts.month),
     entries,
     diasCompletados,
     diasPerdidos: Math.max(0, logs.length - diasCompletados),

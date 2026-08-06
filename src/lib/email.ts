@@ -361,7 +361,7 @@ export function renewalEmail(opts: {
           `El pago entró. Tu acceso va hasta el <strong style="color:#d4b45f;">${hasta}</strong> y tu diario sigue intacto, con todo lo que llevas escrito desde el primer día.`
         ) +
         paragraph(
-          'Renovaste al precio de fundador. Ese precio es tuyo mientras no dejes vencer el acceso; para quien entre después, sube.'
+          'Renovaste al precio que ya tenías. Ese precio es tuyo mientras no dejes vencer el acceso; para quien entre después, sube.'
         ) +
         button('Volver al programa', `${opts.appUrl}/today`),
     }),
@@ -478,13 +478,13 @@ export function lifecycleEmail(
 // --- Beca fundador otorgada (aplicación aprobada en /admin/becas) ---
 export function becaEmail(opts: { name: string; code: string; appUrl: string }): EmailContent {
   return {
-    subject: 'Tu beca fundador de StoiCom',
+    subject: 'Tu beca de StoiCom',
     html: baseLayout({
       preheader: 'Una de las 20 becas es tuya. Tu código va adentro.',
       heading: `${opts.name}, tu beca quedó aprobada`,
       body:
         paragraph(
-          'Leímos tu aplicación y una de las becas fundador es tuya: un año completo del programa, sin pagar nada. Este es tu código personal, de un solo uso:'
+          'Leímos tu aplicación y una de las becas es tuya: un año completo del programa, sin pagar nada. Este es tu código personal, de un solo uso:'
         ) +
         `
         <div style="margin:20px 0;padding:18px 20px;background:#16161d;border-left:4px solid ${ACCENT};border-radius:0 4px 4px 0;text-align:center;">
@@ -767,10 +767,10 @@ export function leadDripEmail(opts: {
           'Hasta aquí llegan los siete días de muestra. Quedan 83 en el track de Comunicación, más los 90 de Práctica Interna: la app con tu calendario real, el diario con examen nocturno, la lección diaria escrita para tu día exacto y los correos a la hora que elijas.'
         ) +
         `<div style="margin:20px 0;padding:16px 20px;background:#16161d;border:1px solid rgba(201,168,76,0.35);border-radius:6px;">
-          <p style="margin:0 0 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#d4b45f;">Acceso de fundador</p>
+          <p style="margin:0 0 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#d4b45f;">Acceso completo</p>
           <p style="margin:0;font-size:13px;line-height:1.6;color:${TEXT_LIGHT};">Un solo pago y un año completo, con todo lo que salga durante ese año. Sin suscripción: nada se te cobra solo. Renuevas si quieres, y al precio que pagaste hoy.</p>
         </div>` +
-        button('Entrar y hacerme fundador', opts.founderUrl) +
+        button('Entrar y obtener mi acceso', opts.founderUrl) +
         paragraph(
           'Entras con tu cuenta de Google y eliges el pago; tu acceso queda activo al instante.'
         )

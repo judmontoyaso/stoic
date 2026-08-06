@@ -19,7 +19,7 @@ export default function ReembolsosPage() {
       <section className="space-y-2">
         <h2 className="font-bold text-base">1. Garantía de satisfacción de 7 días</h2>
         <p>
-          El acceso de fundador es un pago único que te da <strong>un año</strong> de
+          El acceso completo es un pago único que te da <strong>un año</strong> de
           programa. No es una suscripción: no se te cobra de forma automática ni
           tienes que cancelar nada. Antes de comprar puedes probar gratis los
           primeros 7 días del programa por correo, así que sabes bien qué estás
@@ -87,7 +87,7 @@ export default function ReembolsosPage() {
           El reembolso se hace a través de la misma pasarela y al mismo medio de
           pago con el que compraste (Mercado Pago u otra). El tiempo en que se
           refleja el dinero depende de tu banco o medio de pago, normalmente entre
-          unos días y un par de semanas. Al reembolsar, tu acceso de fundador se
+          unos días y un par de semanas. Al reembolsar, tu acceso se
           desactiva.
         </p>
       </section>
@@ -96,7 +96,7 @@ export default function ReembolsosPage() {
         <h2 className="font-bold text-base">6. Después del periodo de garantía</h2>
         <p>
           Pasados los 7 días, y salvo lo que exija la ley aplicable, el pago del
-          acceso de fundador no es reembolsable ni prorrateable, ya que se trata de
+          acceso completo no es reembolsable ni prorrateable, ya que se trata de
           contenido digital ya entregado. Esto incluye el año en curso: no
           reembolsamos meses sin usar. Si tienes un problema técnico que te impide
           usar el programa, escríbenos: preferimos resolverlo antes que dejarte sin

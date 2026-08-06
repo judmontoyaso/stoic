@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendEmail, monthlyAnalysisEmail } from '@/lib/email'
 import { getApprovedUsers } from '@/lib/recipients'
-import { buildMonthlyAnalysis, etiquetaMes } from '@/lib/analysis'
+import { buildMonthlyAnalysis, etiquetaPeriodo, claveSemana, periodoValido, inicioPeriodo, ES_SEMANA } from '@/lib/analysis'
 import { deadlineFrom, outOfTime } from '@/lib/cron-budget'
 
 // Lectura mensual del diario, por correo.
@@ -32,10 +32,12 @@ const OWN_BUDGET_MS = 280_000
  */
 const RESERVE_MS = 70_000
 
-/** Días del mes en que se manda. Fuera de esa ventana no hace nada. */
+/** Días del mes en que sale la lectura mensual. */
 const SEND_WINDOW_DAYS = 5
-/** Mínimo de entradas para que el análisis diga algo. */
+/** Mínimo de entradas del mes para que el análisis diga algo. */
 const MIN_ENTRIES = 6
+/** La semana da menos material: se pide menos para no dejarla muda. */
+const MIN_ENTRIES_SEMANA = 3
 
 function isAuthorized(request: Request, secret: string | null): boolean {
   const cronSecret = process.env.CRON_SECRET
@@ -65,17 +67,29 @@ export async function GET(request: Request) {
   const mesPedido = url.searchParams.get('month')
   const now = new Date()
 
-  // Fuera de la ventana no se hace nada: este cron va dentro del lote
-  // diario de correos y no puede gastar presupuesto los otros 25 días.
-  // ?month= lo salta, para poder probarlo cualquier día.
-  if (!mesPedido && now.getUTCDate() > SEND_WINDOW_DAYS) {
-    return NextResponse.json({ ok: true, omitido: 'fuera de la ventana de envío' })
+  // Qué periodo toca hoy. La lectura sale sola, sin que nadie la pida:
+  //   · lunes            → la semana que acaba de cerrar
+  //   · días 1-5 del mes → el mes anterior, ya cerrado
+  // El mes manda si coinciden; la semana vuelve al lunes siguiente.
+  // ?month= salta la ventana, para poder probarlo cualquier día.
+  let periodo: string
+  if (mesPedido) {
+    periodo = mesPedido
+  } else if (now.getUTCDate() <= SEND_WINDOW_DAYS) {
+    periodo = mesAnterior(now)
+  } else if (now.getUTCDay() === 1) {
+    const haceUnaSemana = new Date(now)
+    haceUnaSemana.setUTCDate(haceUnaSemana.getUTCDate() - 7)
+    periodo = claveSemana(haceUnaSemana)
+  } else {
+    return NextResponse.json({ ok: true, omitido: 'hoy no toca lectura' })
   }
 
-  const month = mesPedido || mesAnterior(now)
-  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
-    return NextResponse.json({ error: 'Mes inválido (usa YYYY-MM)' }, { status: 400 })
+  if (!periodoValido(periodo)) {
+    return NextResponse.json({ error: 'Periodo inválido (YYYY-MM o YYYY-Www)' }, { status: 400 })
   }
+  const esSemana = ES_SEMANA.test(periodo)
+  const month = periodo
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceKey) {
@@ -98,8 +112,10 @@ export async function GET(request: Request) {
 
   const appUrl = (process.env.APP_URL || 'https://stoicom.app').replace(/\/$/, '')
   const deadline = deadlineFrom(request, OWN_BUDGET_MS)
-  // Marca del periodo para el dedupe: primer día del mes analizado
-  const cycleEndsAt = new Date(`${month}-01T00:00:00.000Z`).toISOString()
+  // Marca del periodo para el dedupe: su primer día real (el lunes en las
+  // semanas, el día 1 en los meses). Tiene que ser distinta por periodo o
+  // la clave primaria dejaría pasar una sola lectura semanal al año.
+  const cycleEndsAt = new Date(`${inicioPeriodo(periodo)}T00:00:00.000Z`).toISOString()
 
   // getApprovedUsers ya excluye a los vencidos: al que no puede entrar no
   // se le manda un informe que no va a poder abrir.
@@ -122,7 +138,7 @@ export async function GET(request: Request) {
       .from('lifecycle_emails')
       .select('kind')
       .eq('user_id', usuario.id)
-      .eq('kind', 'analisis_mensual')
+      .eq('kind', esSemana ? 'analisis_semanal' : 'analisis_mensual')
       .eq('cycle_ends_at', cycleEndsAt)
       .limit(1)
     if (yaEnviado && yaEnviado.length > 0) continue
@@ -130,7 +146,7 @@ export async function GET(request: Request) {
     const resultado = await buildMonthlyAnalysis(admin, {
       userId: usuario.id,
       month,
-      minEntries: MIN_ENTRIES,
+      minEntries: esSemana ? MIN_ENTRIES_SEMANA : MIN_ENTRIES,
     })
 
     if (resultado.status === 'too_few') {
@@ -154,7 +170,7 @@ export async function GET(request: Request) {
         monthlyAnalysisEmail({
           name: usuario.email.split('@')[0],
           appUrl,
-          mesLabel: etiquetaMes(month),
+          mesLabel: etiquetaPeriodo(month),
           entradas: resultado.entriesCount,
           primerParrafo,
         })
@@ -166,7 +182,7 @@ export async function GET(request: Request) {
 
     await admin.from('lifecycle_emails').insert({
       user_id: usuario.id,
-      kind: 'analisis_mensual',
+      kind: esSemana ? 'analisis_semanal' : 'analisis_mensual',
       cycle_ends_at: cycleEndsAt,
     })
     enviados.push(usuario.email)
@@ -175,7 +191,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ok: true,
     dryRun,
-    mes: month,
+    periodo: month,
     revisados,
     total: usuarios.length,
     enviados: enviados.length,

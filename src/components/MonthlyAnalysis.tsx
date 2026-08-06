@@ -1,8 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Sparkles, RefreshCw } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { Sparkles } from 'lucide-react'
 import { Card } from '@/components/ui'
 
 // Lectura del diario del mes hecha por IA. No es un puntaje ni una
@@ -37,8 +36,6 @@ export default function MonthlyAnalysis() {
   const meses = ultimosMeses(6)
   const [mes, setMes] = useState(meses[0])
   const [texto, setTexto] = useState<string | null>(null)
-  const [generando, setGenerando] = useState(false)
-  const [aviso, setAviso] = useState<string | null>(null)
   // Qué mes hay pintado. Comparado con el elegido da el estado de carga
   // sin tener que llamar a setState dentro del efecto.
   const [mesCargado, setMesCargado] = useState<string | null>(null)
@@ -50,12 +47,8 @@ export default function MonthlyAnalysis() {
           const data = await res.json()
           if (!res.ok) throw new Error(data.error || 'No se pudo cargar')
           setTexto(data.analysis?.analysis ?? null)
-          setAviso(null)
         })
-        .catch(err => {
-          setTexto(null)
-          setAviso(err instanceof Error ? err.message : 'No se pudo cargar')
-        })
+        .catch(() => setTexto(null))
         .finally(() => setMesCargado(m)),
     []
   )
@@ -65,29 +58,6 @@ export default function MonthlyAnalysis() {
   }, [mes, cargar])
 
   const cargando = mesCargado !== mes
-
-  const generar = async (refresh: boolean) => {
-    setGenerando(true)
-    setAviso(null)
-    try {
-      const res = await fetch('/api/analysis/monthly', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ month: mes, refresh }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setAviso(data.error || 'No se pudo generar')
-        return
-      }
-      setTexto(data.analysis)
-      toast.success(data.cached ? 'Análisis recuperado' : 'Análisis listo')
-    } catch {
-      toast.error('Sin conexión')
-    } finally {
-      setGenerando(false)
-    }
-  }
 
   return (
     <Card className="p-5 space-y-4">
@@ -112,41 +82,19 @@ export default function MonthlyAnalysis() {
       {cargando ? (
         <p className="text-xs text-slate-500">Cargando…</p>
       ) : texto ? (
-        <>
-          <div className="space-y-3">
-            {texto.split(/\n\n+/).map((parrafo, i) => (
-              <p key={i} className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                {parrafo}
-              </p>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => generar(true)}
-            disabled={generando}
-            className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 hover:text-[var(--primary-gold)] disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${generando ? 'animate-spin' : ''}`} />
-            {generando ? 'Releyendo tu mes…' : 'Volver a leer con lo nuevo'}
-          </button>
-        </>
-      ) : (
         <div className="space-y-3">
-          <p className="text-sm text-slate-500 leading-relaxed">
-            Nadie ha leído tu {etiqueta(mes)} todavía. Se lee lo que escribiste ese mes y se
-            te devuelve el patrón que se repite, lo que evitas y lo que cambió — citando tus
-            propias frases, con su fecha.
-          </p>
-          {aviso && <p className="text-xs text-amber-500">{aviso}</p>}
-          <button
-            type="button"
-            onClick={() => generar(false)}
-            disabled={generando}
-            className="rounded-lg bg-[var(--primary-gold)] px-4 py-2 text-xs font-bold text-[#0a0a0f] transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
-            {generando ? 'Leyendo tu mes… (tarda cerca de un minuto)' : `Leer mi ${etiqueta(mes)}`}
-          </button>
+          {texto.split(/\n\n+/).map((parrafo, i) => (
+            <p key={i} className="text-[15px] leading-relaxed text-slate-700 dark:text-slate-200">
+              {parrafo}
+            </p>
+          ))}
         </div>
+      ) : (
+        <p className="text-[15px] leading-relaxed text-slate-600 dark:text-slate-400">
+          Tu lectura de {etiqueta(mes)} todavía no está. Llega sola: cada domingo la de la
+          semana y a comienzos de mes la del mes completo, siempre que hayas escrito lo
+          suficiente para que diga algo.
+        </p>
       )}
     </Card>
   )

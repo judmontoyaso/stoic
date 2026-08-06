@@ -55,7 +55,7 @@ export default function TermsPage() {
       <section className="space-y-2">
         <h2 className="font-bold text-base">4. Vigencia del acceso y borrado</h2>
         <p>
-          El acceso de fundador es un <strong>pago único que da 12 meses</strong>. No
+          El acceso completo es un <strong>pago único que da 12 meses</strong>. No
           es una suscripción: no se realizan cobros automáticos ni hay nada que
           cancelar. Te avisamos por correo cuatro veces antes de que venza.
         </p>

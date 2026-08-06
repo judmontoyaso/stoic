@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerSupabase } from '@/utils/supabase/server'
 import { hasProgramAccess } from '@/lib/access'
-import { buildMonthlyAnalysis, type AnalysisOutcome } from '@/lib/analysis'
+import { buildMonthlyAnalysis, periodoValido, type AnalysisOutcome } from '@/lib/analysis'
 
 // Análisis mensual del diario.
 //
@@ -18,9 +18,6 @@ export const maxDuration = 120
 /** Mínimo de entradas para que el análisis diga algo. Menos es ruido. */
 const MIN_ENTRIES = 4
 
-function mesValido(month: string): boolean {
-  return /^\d{4}-(0[1-9]|1[0-2])$/.test(month)
-}
 
 async function contexto() {
   const supabase = await createServerSupabase()
@@ -45,7 +42,7 @@ export async function GET(request: Request) {
   const { user, admin } = ctx
 
   const month = new URL(request.url).searchParams.get('month') || ''
-  if (!mesValido(month)) {
+  if (!periodoValido(month)) {
     return NextResponse.json({ error: 'Mes inválido (usa YYYY-MM)' }, { status: 400 })
   }
 
@@ -79,7 +76,7 @@ export async function POST(request: Request) {
   }
 
   const month = String(body.month || '')
-  if (!mesValido(month)) {
+  if (!periodoValido(month)) {
     return NextResponse.json({ error: 'Mes inválido (usa YYYY-MM)' }, { status: 400 })
   }
 
