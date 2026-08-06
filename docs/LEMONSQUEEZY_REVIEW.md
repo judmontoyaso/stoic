@@ -3,6 +3,35 @@
 LS pidió tres cosas para aprobar la tienda: desglose de precios, video
 demo y URL del sitio. Todo existe — este doc lo empaqueta.
 
+> **Ojo, esto cambió.** El modelo pasó de acceso vitalicio a **un año de
+> vigencia**, y se quitó el marco de "fundador" de todo lo que ve el
+> cliente. Si ya habías grabado el video antes de agosto de 2026, hay que
+> volver a grabarlo: la landing es otra.
+
+---
+
+## 0. Antes de grabar: qué tocar en los paneles
+
+### Lemon Squeezy
+
+| Campo | Debe decir | Por qué |
+|---|---|---|
+| Nombre del producto | **StoiCom · Acceso completo (1 año)** | Si dice "Founder" contradice la landing, y lo primero que LS compara es eso |
+| Tipo de pago | **One-time payment**, NO subscription | La vigencia la lleva StoiCom en su base de datos. Ponerlo como suscripción cobraría solo al año, justo lo contrario de lo que dice el correo de abajo |
+| Precio | **$59 USD** | Debe coincidir con `src/lib/pricing.ts` |
+| Descripción | Un año de acceso al programa completo. Pago único, sin suscripción. | — |
+
+### Mercado Pago
+
+**No hay que tocar nada en el panel.** El título y la descripción que ve
+el comprador se arman por código en `src/lib/mercadopago.ts`, y ya dicen
+"StoiCom · Acceso completo, 1 año". Solo confirma que
+`MERCADOPAGO_FOUNDER_PRICE` en Vercel siga en 199000 (el nombre de la
+variable quedó con "founder" a propósito: renombrarla obliga a tocarla en
+Vercel y no aporta nada al cliente).
+
+---
+
 ## 1. Borrador de respuesta (inglés, listo para pegar)
 
 > Hi,
@@ -26,20 +55,18 @@ demo y URL del sitio. Todo existe — este doc lo empaqueta.
 > | Tier | Price | What it includes |
 > |---|---|---|
 > | Free email course | $0 | First 7 days of the program, delivered by email (lead magnet) |
-> | Founder — 12 months of access | $59 USD, one-time | Full 90-day program (2 parallel tracks), advanced 30-day season, daily emails and push notifications delivered at each user's own hour and timezone, journal, progress dashboard. Limited to the first 100 founders. |
+> | Full access — 12 months | $59 USD, one-time | Full 90-day program (2 parallel tracks), advanced 30-day season, daily emails and push notifications delivered at each user's own hour and timezone, journal with optional voice dictation, AI reading of the user's own journal, progress dashboard. |
 >
-> The Lemon Squeezy checkout sells the **Founder access: a single
-> $59 USD payment that grants 12 months**. Please note this is a
-> **one-time payment product, not a subscription** — Lemon Squeezy never
-> charges the customer again, and there is nothing for the customer to
-> cancel. Access simply expires after 12 months unless the customer
-> chooses to buy again. We track the expiry date in our own database, not
-> through Lemon Squeezy billing.
+> Please note this is a **one-time payment product, not a
+> subscription**. Lemon Squeezy never charges the customer again and
+> there is nothing for the customer to cancel: access simply expires
+> after 12 months unless they choose to buy again. We track the expiry
+> date in our own database, not through Lemon Squeezy billing.
 >
-> When access expires, the customer gets a 30-day window in which they can
-> download their complete journal (free, no payment required), after which
-> the personal content is deleted. This is stated on the pricing page
-> itself and in our refund policy, not buried in the terms.
+> When access expires, the customer gets a 30-day window in which they
+> can download their complete journal (free, no payment required), after
+> which the personal content is deleted. This is stated on the pricing
+> page itself and in our refund policy, not buried in the terms.
 >
 > We also accept Mercado Pago for LatAm customers (COP $199,000, same
 > product and same 12-month term) — Lemon Squeezy is our international
@@ -50,14 +77,16 @@ demo y URL del sitio. Todo existe — este doc lo empaqueta.
 >
 > ```
 > 0:00  Public landing page
-> 0:10  Pricing section — $59 USD one-time payment, 12 months of access
-> 0:22  Sign in with Google
-> 0:28  Day 45 of 90 — the daily exercise and its full written lesson
-> 0:48  Marking the day as complete
-> 0:54  Evening journal (Seneca's nightly review)
-> 1:04  Calendar — completed and missed days stay visible
-> 1:12  Settings — email hour and timezone, set by each user
-> 1:18  One of the daily emails, as received
+> 0:12  Pricing — $59 USD one-time payment, 12 months of access
+> 0:24  What happens when the year ends (grace period + free journal export)
+> 0:34  Sign in with Google
+> 0:40  Day 45 of 90 — the daily exercise and its full written lesson
+> 1:00  Marking the day as complete
+> 1:06  Evening journal (Seneca's nightly review)
+> 1:16  AI reading of the user's own journal, quoting their entries
+> 1:28  Calendar — completed and missed days stay visible
+> 1:36  Settings — email hour and timezone, set by each user
+> 1:42  One of the daily emails, as received
 > ```
 >
 > One note on the video: our USD checkout button is currently disabled
@@ -69,85 +98,58 @@ demo y URL del sitio. Todo existe — este doc lo empaqueta.
 >
 > Let me know if you need anything else.
 
-Antes de enviar: confirma que el precio del producto en el dashboard de
-LS es efectivamente $59 (los docs internos lo sugieren; la cifra final
-vive en LS, no en el código).
+---
 
-**Y confirma que el producto en LS sigue siendo `one-time payment`, NO
-`subscription`.** El modelo es un pago único que da 12 meses: la vigencia
-la lleva StoiCom en su base de datos, no la facturación de LS.
-Configurarlo como suscripción cobraría automáticamente al año, que es
-exactamente lo que este modelo evita y lo contrario de lo que dice el
-correo de arriba.
+## 2. Guion del video (90–110 s)
 
-## 2. Guion del video demo (60–90 s, grabar con Loom u OBS)
+Usa una cuenta ya aprobada **con varios días marcados y con diario
+escrito**: una cuenta recién creada se ve vacía y no demuestra nada. La
+lectura con IA necesita al menos 6 entradas del mes para existir.
 
-Pantalla + narración breve en inglés (o subtítulos). Usa una cuenta ya
-aprobada con un track activo para que haya contenido real.
-
-**Ojo con el checkout.** El botón de pago en USD está inactivo hasta que
-LS verifique la tienda, así que NO se puede filmar su checkout en uso —
-es circular. No pasa nada: lo que LS necesita comprobar es que el
-producto existe, funciona y coincide con lo que se cobra. El precio se
-muestra en la sección de precios de la landing, y el correo lo explica.
+**El checkout en USD no se puede filmar**: está inactivo hasta que LS
+verifique, y grabarlo sería circular. No pasa nada — lo que LS comprueba
+es que el producto existe, funciona y coincide con lo que se cobra.
 
 | # | Toma | Qué mostrar | ~seg |
 |---|---|---|---|
-| 1 | `stoicom.app/landing` | Scroll lento por el hero y la metodología. | 10 |
-| 2 | `/landing#precios` | La sección de precios: $59 USD / COP 199.000, pago único por un año, y los 7 días gratis. Baja hasta el bloque "Qué pasa cuando se acaba el año". **Esta es la toma clave**: LS verifica que lo anunciado es lo que se cobra, y ese bloque le contesta de antemano la pregunta de qué pasa al vencer. | 14 |
-| 3 | `/login` | Botón de Google; entra con la cuenta demo. | 6 |
-| 4 | `/today` ("Hoy") | El día actual: cita, ejercicio del día, abrir la lección completa (400–550 palabras). Es el corazón del producto: que se vea contenido real, no una plantilla. | 20 |
-| 5 | Marcar completado | Toggle del ejercicio; se ve el avance del día. | 6 |
-| 6 | `/journal` | Examen nocturno de Séneca: las tres preguntas por escrito. | 10 |
-| 7 | `/calendar` | Días completados y perdidos: los perdidos se quedan marcados. | 6 |
-| 8 | `/settings` | Hora de correos y zona horaria: el usuario controla cuándo recibe. | 6 |
-| 9 | Correo real | Abrir el correo matutino en la bandeja: el producto también se entrega por correo. | 10 |
+| 1 | `stoicom.app/landing` | Scroll lento por el hero. Que se lea el titular y el gancho de los 7 días gratis. | 12 |
+| 2 | `/landing#precios` | **La toma clave.** El precio en las dos monedas, "un año", "pago único" y "sin suscripción". Detente aquí. | 12 |
+| 3 | Sigue bajando | El bloque **"Qué pasa cuando se acaba el año"**. Es nuevo y le contesta al revisor la pregunta que iba a hacer: qué pasa al vencer, los 30 días de gracia y la descarga gratis del diario. | 10 |
+| 4 | `/login` | Botón de Google; entra con la cuenta demo. | 6 |
+| 5 | `/today` | El día actual: cita, ejercicio y abrir la lección completa (400–550 palabras). Que se vea contenido real, no plantilla. | 20 |
+| 6 | Marcar completado | Toggle del ejercicio. | 6 |
+| 7 | `/journal` | Examen nocturno: las tres preguntas por escrito. Si te animas, toca **Dictar** y di una frase para que se vea la transcripción. | 10 |
+| 8 | `/evaluation` | **Toma nueva y la que más suma.** La lectura del diario con IA, donde se ven las citas del propio usuario con su fecha. Demuestra que hay producto de verdad detrás del precio. | 12 |
+| 9 | `/calendar` | Días completados y perdidos: los perdidos se quedan marcados. | 6 |
+| 10 | `/settings` | Hora de correos y zona horaria. | 6 |
+| 11 | Correo real | Abrir el correo matutino en la bandeja. | 10 |
 
-Cierre sugerido: dejar unos segundos en el calendario, donde se ven los
-días perdidos sin reorganizar.
+Cierre: unos segundos en el calendario, con los días perdidos sin
+reorganizar.
 
-### ¿Hay que narrar en inglés?
+### ¿Narrado?
 
-**No.** Tres opciones, de menos a más esfuerzo — cualquiera sirve:
+**Mudo es lo recomendado.** Solo el screencast; el contexto en inglés va
+escrito en el correo, con la lista de tiempos de arriba (ajusta los
+segundos a tu grabación real). Es lo que envía la mayoría de comercios y
+evita el riesgo de trabarse. Narrar en español también sirve — el
+producto ES en español y el correo ya lo advierte. En inglés, solo si te
+sale natural; no suma puntos.
 
-1. **Mudo (recomendado).** Solo el screencast. El contexto en inglés va
-   escrito en el correo, con la lista de tiempos de abajo. Es lo que
-   envía la mayoría de comercios y evita el riesgo de trabarse.
-2. **Narrado en español.** El producto ES en español y el revisor va a
-   ver la interfaz en español de todos modos; el correo ya lo advierte.
-3. **Narrado en inglés.** Solo si te sale natural. No suma puntos.
+Consejos de grabación: ventana limpia, sin extensiones ni barra de
+marcadores, y sin pestañas abiertas que revelen otras cosas.
 
-Si grabas mudo, pega esta lista en el correo para que el revisor sepa
-qué está viendo (ajusta los segundos a tu grabación real):
-
-```
-0:00  Public landing page
-0:10  Pricing section — $59 USD one-time payment, 12 months of access
-0:22  Sign in with Google
-0:28  Day 45 of 90 — the daily exercise and its full written lesson
-0:48  Marking the day as complete
-0:54  Evening journal (Seneca's nightly review)
-1:04  Calendar — completed and missed days
-1:12  Settings — email hour and timezone per user
-1:18  One of the daily emails, as received
-```
-
-Consejos: ventana del navegador limpia (sin extensiones ni bookmarks),
-idioma del sistema no importa (el producto es en español — di en la
-narración "the product is in Spanish, targeting the LatAm market").
+---
 
 ## 3. Checklist antes de responder
 
-- [ ] Precio del producto en el dashboard de LS = **$59** (debe coincidir
-      con lo que muestra la landing, que sale de `src/lib/pricing.ts`)
-- [ ] El producto en LS es **one-time payment**, no subscription
-- [ ] `supabase_v14_vigencia.sql` ejecutado (si no, la landing anuncia un
-      año y el webhook no escribe vencimiento: incoherencia justo en lo
-      que LS está revisando)
-- [ ] La landing ya NO dice "vitalicio" ni "de por vida" en ningún lado:
-      `grep -ri "vitalici\|de por vida" src/`
-- [ ] La cuenta demo tiene un track activo **con varios días marcados**:
-      una cuenta recién creada se ve vacía y no demuestra nada
+- [ ] Producto en LS: nombre **sin "Founder"**, one-time payment, $59
+- [ ] `MERCADOPAGO_FOUNDER_PRICE` en Vercel sigue en 199000
+- [ ] `supabase_v14_vigencia.sql` y `supabase_v15_voz_analisis.sql` ejecutados
+- [ ] Nada de "vitalicio" ni "fundador" en la web:
+      `grep -rniE "vitalici|de por vida|fundador" src/app src/components`
+- [ ] La cuenta demo tiene días marcados **y** 6+ entradas de diario del
+      mes, o la toma 8 (la lectura con IA) sale vacía
 - [ ] `ayuda@stoicom.app` recibe (LS suele probar el contacto de soporte)
 - [ ] `/terms`, `/privacy` y `/reembolsos` cargan desde incógnito
-- [ ] Video subido a Loom o YouTube **no listado**; LS acepta enlace
+- [ ] Video en Loom o YouTube **no listado**; LS acepta enlace

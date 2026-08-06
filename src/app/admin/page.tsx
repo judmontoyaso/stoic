@@ -127,7 +127,7 @@ export default function AdminPage() {
             }
           />
           <StatCard
-            label="Lead → fundador"
+            label="Lead → cliente"
             value={
               stats.funnel.conversionLeadFundador === null
                 ? '—'
@@ -166,7 +166,7 @@ export default function AdminPage() {
                 <td className="py-2.5 pr-4 font-medium">{u.email}</td>
                 <td className="py-2.5 pr-4">
                   {u.plan === 'founder'
-                    ? <span className="text-[var(--primary-gold)] font-bold">fundador</span>
+                    ? <span className="text-[var(--primary-gold)] font-bold">de pago</span>
                     : <span className="text-slate-500">código</span>}
                 </td>
                 <td className="py-2.5 pr-4">
