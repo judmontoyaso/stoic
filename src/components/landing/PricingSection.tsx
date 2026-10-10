@@ -33,6 +33,20 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
     window.location.href = '/login'
   }
 
+  const handleFreeTrialClick = () => {
+    if (onSelectFreeTrial) {
+      onSelectFreeTrial()
+      return
+    }
+    const el =
+      (document.getElementById('lead-email-landing-hero') as HTMLInputElement | null) ||
+      (document.querySelector('input[type="email"]') as HTMLInputElement | null)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.focus()
+    }
+  }
+
   return (
     <div className="w-full max-w-4xl mx-auto space-y-12">
       {/* Header Precios */}
@@ -108,7 +122,7 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
           </div>
           <button
             type="button"
-            onClick={onSelectFreeTrial}
+            onClick={handleFreeTrialClick}
             className="mt-8 w-full py-3 px-4 rounded-lg border border-slate-700 text-slate-200 text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-colors"
           >
             Empezar Gratis Ahora
@@ -124,7 +138,7 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
           <div className="space-y-4 pt-2">
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-slate-100 flex items-center justify-between">
-                <span>Acceso Completo</span>
+                <span>Matrícula Anual</span>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-[#c9a84c]/20 text-[#c9a84c]">
                   Sin suscripción
                 </span>
@@ -243,7 +257,7 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
         <div className="flex items-center gap-3">
           <ShieldCheck className="w-8 h-8 text-[#c9a84c] shrink-0" />
           <div>
-            <p className="text-xs font-bold text-slate-200">Garantía incondicional de 7 días</p>
+            <p className="text-xs font-bold text-slate-200">Garantía Incondicional de 14 Días</p>
             <p className="text-[11px] text-slate-300">Si no es lo que esperabas, escribes y te devolvemos todo. Sin preguntas.</p>
           </div>
         </div>

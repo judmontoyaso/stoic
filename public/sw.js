@@ -39,8 +39,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   
-  // Omitir peticiones que no sean HTTP (extensiones de chrome, supabase API, etc.)
-  if (!req.url.startsWith(self.location.origin)) {
+  // Omitir peticiones que no sean GET, extensiones, orígenes externos o rutas de API
+  if (req.method !== 'GET' || !req.url.startsWith(self.location.origin) || req.url.includes('/api/')) {
     return;
   }
 

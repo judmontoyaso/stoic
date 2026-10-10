@@ -78,7 +78,7 @@ export default function ProgramPage() {
       <PageHeader
         title="El Programa"
         icon={<img src="/icons/skull.png" className="w-8 h-8 object-contain" alt="Programa" />}
-        subtitle="Los 90 días completos de cada track: qué toca, cuándo, por qué funciona y de quién viene."
+        subtitle={activeTrack ? `Los ${activeTrack.duration_days || 90} días completos del track: qué toca, cuándo, por qué funciona y de quién viene.` : 'El programa completo de cada track.'}
       />
 
       <TrackSelector

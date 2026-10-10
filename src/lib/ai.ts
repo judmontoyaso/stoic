@@ -140,6 +140,46 @@ async function callOpenAICompatible<T>(
   }
 }
 
+/**
+ * Llama a la API nativa de Google Gemini (Gemini 3.8 / 2.5 Flash) con respuesta JSON estructurada.
+ */
+async function callGemini<T>(
+  apiKey: string,
+  model: string,
+  systemPrompt: string,
+  prompt: string
+): Promise<T | null> {
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { response_mime_type: 'application/json' },
+        }),
+      }
+    )
+
+    if (!res.ok) {
+      const errorText = await res.text()
+      console.error(`Error en Google Gemini API (${model}):`, errorText)
+      return null
+    }
+
+    const data = await res.json()
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text
+    if (!content) return null
+
+    return parseModelJson<T>(content)
+  } catch (error) {
+    console.error(`Fallo llamando a Google Gemini (${model}):`, error)
+    return null
+  }
+}
+
 const REFLECTION_SYSTEM_PROMPT = `Eres el entrenador de un programa estoico de comunicación. Escribes el consejo del día: breve, concreto, sin adornos.
 
 Responde estrictamente con un objeto JSON con las claves "reflection" (1 o 2 párrafos en español que aterricen la cita estoica en el ejercicio de hoy) y "actionableTip" (una sola instrucción práctica para ejecutar hoy, en una o dos frases).
@@ -204,7 +244,15 @@ Instrucciones:
 Escribe una reflexión estoica inspiradora sobre la comunicación de hoy y un consejo práctico accionable. No uses emojis.
 `
 
-  // 1. Intentar con DeepSeek primero
+  // 1. Intentar con Google Gemini (Gemini 3.8 Flash) si está configurado en .env
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
+  if (geminiKey) {
+    const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash'
+    const result = await callGemini<AIDailyReflection>(geminiKey, model, REFLECTION_SYSTEM_PROMPT, prompt)
+    if (result) return result
+  }
+
+  // 2. Intentar con DeepSeek
   const deepseekKey = process.env.DEEPSEEK_API_KEY
   if (deepseekKey) {
     const model = process.env.DEEPSEEK_MODEL || 'deepseek-chat'
@@ -212,7 +260,7 @@ Escribe una reflexión estoica inspiradora sobre la comunicación de hoy y un co
     if (result) return result
   }
 
-  // 2. Fallback a OpenAI (gpt-4o-mini)
+  // 3. Fallback a OpenAI (gpt-4o-mini)
   const openaiKey = process.env.OPENAI_API_KEY
   if (openaiKey) {
     const result = await callOpenAICompatible<AIDailyReflection>(openaiKey, 'https://api.openai.com/v1', 'gpt-4o-mini', REFLECTION_SYSTEM_PROMPT, prompt)
@@ -230,6 +278,7 @@ Escribe una reflexión estoica inspiradora sobre la comunicación de hoy y un co
  * Origen y mapa completo: docs/FRAMEWORKS_ROBBINS.md
  */
 const TECHNIQUE_NOTES: { match: RegExp; note: string }[] = [
+  // --- TONY ROBBINS & ALTO RENDIMIENTO ---
   {
     match: /tríada|triada/i,
     note: 'La Tríada (Robbins): toda emoción se sostiene sobre fisiología, foco y lenguaje a la vez. Mover una la desplaza; mover las tres la cambia de golpe.',
@@ -243,7 +292,7 @@ const TECHNIQUE_NOTES: { match: RegExp; note: string }[] = [
     note: 'Incantación vs. afirmación (Robbins): la afirmación en frío la rechaza el cerebro por falsa. La incantación involucra cuerpo, voz e intensidad a la vez: el estado no se declara, se ejecuta.',
   },
   {
-    match: /interrupción de patrón|interrupcion de patron|protocolo de 5 pasos|sustitución uno a uno|sustitucion uno a uno|condicionamiento: repetir/i,
+    match: /interrupción de patrón|interrupcion de patron|protocolo de 5 pasos|sustitución uno a uno|sustitucion uno a uno|condicionamiento: repetir|condicionamiento neuro-asociativo/i,
     note: 'Condicionamiento Neuro-Asociativo (Robbins), 6 pasos: decidir qué quieres y qué lo impide; conseguir apalancamiento asociando dolor inmediato a seguir igual; interrumpir el patrón físicamente; crear una alternativa que cubra la MISMA necesidad; condicionarla por repetición; probarla a futuro. Un patrón no se elimina, se reemplaza.',
   },
   {
@@ -255,7 +304,7 @@ const TECHNIQUE_NOTES: { match: RegExp; note: string }[] = [
     note: 'Dolor y placer (Robbins): la conducta persiste por lo que el cerebro asoció a evitar dolor o ganar placer AHORA. Se cambia reasignando esas asociaciones de forma visceral e inmediata, no discutiéndolas.',
   },
   {
-    match: /preguntas de poder|pregunta de francotirador/i,
+    match: /preguntas de poder|pregunta de francotirador|preguntas de calidad/i,
     note: 'Preguntas de calidad (Robbins): pensar es preguntar y responder. La pregunta determina qué sale a buscar el cerebro. "¿Por qué siempre me pasa esto?" ordena buscar pruebas de impotencia.',
   },
   {
@@ -271,22 +320,19 @@ const TECHNIQUE_NOTES: { match: RegExp; note: string }[] = [
     note: 'Momentos de decisión (Robbins): una decisión real es aquella tras la cual actúas de inmediato y cierras las alternativas. Si no hubo acción inmediata, era una preferencia disfrazada.',
   },
   {
-    match: /matching sutil/i,
+    match: /matching sutil|rapport/i,
     note: 'Rapport (Robbins): la sintonía se construye igualando lo no verbal —ritmo, volumen, postura— antes que el argumento. Primero acompasas, después conduces; si el otro no te sigue, aún tocaba acompasar.',
   },
   {
     match: /metáfora|metafora/i,
     note: 'Metáforas (Robbins): la metáfora con la que describes un ámbito ("negociar es una guerra" vs. "un rompecabezas a dos manos") gobierna qué conductas te parecen razonables en él. No se discute la conducta: se cambia la metáfora que la produce.',
   },
-  // Técnicas del track Influencia (30 días). Sus días llevan el nombre de
-  // la técnica en source_author ("Tony Robbins — anclaje de estado"), así
-  // que los patrones disparan por autor sin falsos positivos en otros tracks.
   {
-    match: /anclaje de estado|instalar un ancla|ancla de estado/i,
+    match: /anclaje de estado|instalar un ancla|ancla de estado|apila estados/i,
     note: 'Anclaje (Robbins): un estímulo sensorial único y repetible, instalado en el PICO de un estado intenso, devuelve ese estado en segundos al dispararlo. Si se instala después del pico, no prende.',
   },
   {
-    match: /redefinición del marco|redefinicion del marco|reencuadre/i,
+    match: /redefinición del marco|redefinicion del marco|reencuadre|detecta el marco/i,
     note: 'Redefinición del marco (Robbins): de contexto (la misma conducta vale distinto en otro escenario) o de contenido (el hecho es idéntico, cambia lo que significa). Es la disciplina del asentimiento estoica vuelta herramienta de conversación.',
   },
   {
@@ -294,33 +340,134 @@ const TECHNIQUE_NOTES: { match: RegExp; note: string }[] = [
     note: 'Metaprogramas (Robbins): filtros con los que alguien decide a qué atiende — hacia/desde, interno/externo, semejanza/diferencia, general/detalle. Detectarlos cambia cómo le presentas lo mismo.',
   },
   {
-    match: /precisión del lenguaje|precision del lenguaje/i,
+    match: /precisión del lenguaje|precision del lenguaje|generalizaciones|comparativos huérfanos/i,
     note: 'Precisión del lenguaje (Robbins): las generalizaciones ("siempre", "todos", "imposible") y los comparativos sin vara ("muy caro", "mejor") borran la información que contradice. La pregunta de precisión ("¿quiénes exactamente?", "¿comparado con qué?") no discute la frase: le pide al mapa que muestre el territorio.',
   },
   {
-    match: /reglas y valores/i,
+    match: /reglas y valores|código fuente/i,
     note: 'Reglas y valores (Robbins): la frustración casi nunca viene del valor sino de la REGLA que le pusiste — qué tiene que pasar para darlo por cumplido. Reglas imposibles o que dependen de otros garantizan malestar; una regla reescrita bajo tu control convierte el valor de lotería en rutina.',
   },
   {
-    match: /emoción como señal|emocion como senal/i,
+    match: /emoción como señal|emocion como senal|emociones por diseño/i,
     note: 'La emoción como señal (Robbins): cada emoción dolorosa es un mensaje con acción asociada, no un defecto a suprimir — la culpa señala una norma propia violada, el miedo preparación pendiente, la frustración un método agotado. Se atiende la señal; suprimirla es matar al mensajero.',
+  },
+
+  // --- CHRIS VOSS (EMPATÍA TÁCTICA & NEGOCIACIÓN BAJO PRESIÓN) ---
+  {
+    match: /espejo táctico|espejo tactico|espejo bajo fricción|silencio post-espejo/i,
+    note: 'Espejo táctico (Chris Voss): repetir las últimas 1 a 3 palabras clave del interlocutor con entonación de pregunta ascendente, seguido de al menos 4 segundos de silencio absoluto. Induce a la contraparte a profundizar y aclarar sin sentirse presionada ni interrogada.',
+  },
+  {
+    match: /etiquetado emocional|etiqueta lo positivo|etiquetado por escrito/i,
+    note: 'Etiquetado emocional (Chris Voss): verbalizar la emoción o dinámica subyacente comenzando con "Parece que...", "Suena a que...", sin usar jamás el pronombre "Yo". Nombrar la emoción negativa apaga la amígdala cerebral y restaura la racionalidad.',
+  },
+  {
+    match: /auditoría de acusaciones|auditoria de acusaciones/i,
+    note: 'Auditoría de acusaciones (Chris Voss): enumerar de forma preventiva todas las críticas o sospechas negativas que la otra parte podría formular en tu contra, antes de que las mencione. Desactiva la carga tóxica y genera alivio inmediato.',
+  },
+  {
+    match: /preguntas calibradas|banco de calibradas|¿cómo se supone que haga eso\?/i,
+    note: 'Preguntas calibradas (Chris Voss): formular interrogantes con "¿Cómo...?" o "¿Qué...?" que transfieren el peso de la resolución a la otra parte sin generar agresión (evitando siempre el "¿Por qué?"). "¿Cómo se supone que haga eso?" fuerza a la contraparte a reevaluar su demanda.',
+  },
+  {
+    match: /el poder del no|orientada al no/i,
+    note: 'El poder del No (Chris Voss): formular propuestas buscando un "No" protector en vez de un "Sí" defensivo ("¿Sería descabellado considerar...?", "¿Has descartado continuar con este proyecto?"). Decir "No" otorga al interlocutor sensación de seguridad y control.',
+  },
+  {
+    match: /voz de locutor|locutor de radio nocturno|baja la voz/i,
+    note: 'Voz de locutor de radio nocturno (Chris Voss): tono grave, pausado y con inflexión descendente al final de la frase. Actúa como un tranquilizante biológico inmediato sobre el sistema nervioso de la sala, proyectando autoridad serena.',
+  },
+  {
+    match: /empatía táctica en caliente|empatia tactica/i,
+    note: 'Empatía táctica en caliente (Chris Voss): resumir la visión y los sentimientos del interlocutor con tal precisión que responda "Exacto / Así es". Es la señal verde que indica que sus defensas cayeron y está listo para escuchar tu propuesta.',
+  },
+
+  // --- DAN MARTELL & LIDERAZGO EJECUTIVO ---
+  {
+    match: /1-3-1|regla 1-3-1|instala el 1-3-1/i,
+    note: 'Regla 1-3-1 (Dan Martell): presentar ante cualquier desafío un (1) problema bien delimitado, tres (3) soluciones viables evaluadas y una (1) recomendación argumentada. Erradica la cultura de la queja y acelera la toma de decisiones ejecutiva.',
+  },
+  {
+    match: /delega el problema|delegar el problema/i,
+    note: 'Delegar el problema, no la tarea (Dan Martell): transferir el contexto, el criterio de éxito y las restricciones ("el qué y para cuándo"), dejando plena autonomía sobre el "cómo". Fomenta la responsabilidad radical y el criterio propio en el equipo.',
+  },
+  {
+    match: /cpps|framework cpps/i,
+    note: 'Framework CPPS (Dan Martell): Contexto → Problema → Propuesta → Siguiente paso. Estructura ejecutiva en 4 líneas para comunicar iniciativas técnicas o de negocio sin divagar ni perder la atención de la directiva.',
+  },
+  {
+    match: /elevator pitch|analogía técnica/i,
+    note: 'Síntesis y analogía (Dan Martell): si no puedes explicar tu propuesta en 60 segundos con una analogía cotidiana, aún no dominas el concepto. La claridad es un acto de respeto y una ventaja competitiva.',
+  },
+
+  // --- BRENÉ BROWN, LEWIS HOWES & ASertividad Estoica ---
+  {
+    match: /claro es amable|límite sin disculpa|limite sin disculpa/i,
+    note: 'Claro es amable (Brené Brown): la ambigüedad y las disculpas excesivas son cobardía disfrazada de cortesía. Comunicar límites con hechos objetivos y sin rodeos ("no puedo asumir esto debido a prioridades X e Y") protege la relación a largo plazo.',
+  },
+  {
+    match: /vulnerabilidad estratégica|máscara del invencible|máscara del sabelotodo|no sé \/ me equivoqué/i,
+    note: 'Vulnerabilidad estratégica (Lewis Howes & Brené Brown): admitir "no sé" o asumir un error en público sin dramatismo ni justificaciones derriba la máscara de invencibilidad y construye seguridad psicológica colectiva.',
+  },
+  {
+    match: /feedback sbi|feedforward/i,
+    note: 'Feedback SBI & Feedforward (Howes & Robbins): Situación concreta (S) → Conducta observable (B) → Impacto medible (I). Desvincula la crítica de la identidad personal y enfoca la retroalimentación en acciones de mejora hacia el futuro.',
+  },
+
+  // --- JULIAN TREASURE, ADRIÀ SOLÀ & ORATORIA DE ALTO IMPACTO ---
+  {
+    match: /calentamiento vocal|melodía vocal|melodia vocal/i,
+    note: 'Vocal Power (Julian Treasure): la voz es un instrumento físico. Diafragma, vibración labial (lip trills), distensión mandibular y rango dinámico aseguran resonancia profunda y eliminan el temblor vocal inducido por estrés.',
+  },
+  {
+    match: /silencio estratégico|silencio estrategico|pausa de 2 segundos/i,
+    note: 'Silencio estratégico (Adrià Solà Pastor): sostener una pausa deliberada de 2 a 4 segundos con mirada firme tras una afirmación clave. Multiplica la autoridad percibida, genera expectación y demuestra control del turno conversacional.',
+  },
+  {
+    match: /guerra a las muletillas|inventario de muletillas/i,
+    note: 'Erradicación de muletillas (Adrià Solà Pastor): las muletillas son fugas acústicas originadas por el miedo al silencio. Se corrigen cerrando físicamente los labios al culminar cada frase e incorporando el micro-silencio como elemento de poder.',
+  },
+
+  // --- CARMINE GALLO & CHARLES DUHIGG ---
+  {
+    match: /sparkline|storytelling|historia personal/i,
+    note: 'Estructura Sparkline (Carmine Gallo): alternar constantemente el contraste entre "lo que es" (estado actual, dolor, fricción) y "lo que podría ser" (visión de futuro resuelta), cerrando con una llamada inequívoca a la acción.',
+  },
+  {
+    match: /regla de tres/i,
+    note: 'Regla de tres (Carmine Gallo): el cerebro procesa y recuerda información en tríadas estructurales de manera óptima. Tres argumentos, tres fases o tres opciones evitan la sobrecarga cognitiva y proyectan dominio temático.',
+  },
+  {
+    match: /mapa de conversaciones|tipos de conversación/i,
+    note: 'Supercomunicadores (Charles Duhigg): identificar antes de hablar si la conversación es práctica (resolver un problema), emocional (sentirse escuchado) o social (identidad y pertenencia). Ajustar el registro al tipo correspondiente previene el 90% de los conflictos.',
+  },
+
+  // --- FILOSOFÍA ESTOICA PURA (EPICTETO, SÉNECA, MARCO AURELIO) ---
+  {
+    match: /dicotomía del control|dicotomia del control|marco estoico/i,
+    note: 'Dicotomía del Control (Epicteto): dividir los acontecimientos entre lo que depende absolutamente de tu voluntad (juicios, intenciones, reacciones) y lo que no (opiniones ajenas, resultados, clima). Asignar energía exclusivamente a lo primero.',
+  },
+  {
+    match: /disciplina del asentimiento|auditoría de la primera reacción/i,
+    note: 'Disciplina del Asentimiento (Marco Aurelio): interponer una pausa infranqueable entre la impresión sensorial bruta (phantasia) y la emisión del juicio racional (dogma). Negar el asentimiento automático a la ira o la provocación.',
+  },
+  {
+    match: /premeditatio malorum|examen de fase|examen nocturno/i,
+    note: 'Premeditatio Malorum & Examen de Séneca: anticipación lúcida de los obstáculos diarios para anular el factor sorpresa, seguido de una auditoría nocturna de tres preguntas ("¿Qué debilidad vencí hoy? ¿Qué virtud ejercité? ¿Dónde titubeé?").',
   },
 ]
 
 /**
  * Fichas relevantes para un día concreto (máximo 3, para no inflar el prompt).
- *
- * Solo se busca en autor y título, NUNCA en instructions/rationale: son
- * textos largos donde palabras como "regla", "marco", "valor" o "ancla"
- * aparecen en su sentido corriente, y matchear ahí metía la mecánica de
- * Robbins en días de Gallo, Frankl o Marco Aurelio.
- *
- * Además se exige que el día cite a Robbins: todas las fichas son suyas,
- * así que un día de otro referente no debe recibir ninguna.
+ * Busca coincidencias en el autor de referencia, título, instrucciones y por qué funciona.
  */
-function techniqueNotesFor(sourceAuthor: string | null, title: string | null): string[] {
-  if (!/robbins/i.test(sourceAuthor || '')) return []
-  const haystack = `${sourceAuthor || ''} ${title || ''}`
+function techniqueNotesFor(
+  sourceAuthor: string | null,
+  title: string | null,
+  instructions?: string | null,
+  rationale?: string | null
+): string[] {
+  const haystack = `${sourceAuthor || ''} ${title || ''} ${instructions || ''} ${rationale || ''}`
   const notes: string[] = []
   for (const { match, note } of TECHNIQUE_NOTES) {
     if (match.test(haystack) && !notes.includes(note)) notes.push(note)
@@ -349,7 +496,7 @@ export async function generateDailyReading(opts: {
   /** Duración del track. El de Influencia dura 30, no 90. */
   durationDays?: number
 }): Promise<{ reading: string; model: string } | null> {
-  const notes = techniqueNotesFor(opts.sourceAuthor, opts.title)
+  const notes = techniqueNotesFor(opts.sourceAuthor, opts.title, opts.instructions, opts.rationale)
 
   const prompt = `
 Datos del día para escribir la lección:
@@ -369,8 +516,15 @@ ${notes.map(n => `- ${n}`).join('\n')}
 Escribe la lección diaria completa siguiendo la estructura y reglas del sistema.
 `
 
-  // Para lecturas largas priorizamos velocidad: deepseek-chat responde en ~20-30s,
-  // mientras los modelos razonadores pueden tardar minutos.
+  // 1. Intentar con Google Gemini (Gemini 3.8 Flash) si está configurado en .env
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
+  if (geminiKey) {
+    const model = process.env.GEMINI_READING_MODEL || 'gemini-3.8-flash'
+    const result = await callGemini<AIDailyReading>(geminiKey, model, READING_SYSTEM_PROMPT, prompt)
+    if (result?.reading) return { reading: result.reading, model }
+  }
+
+  // 2. Para lecturas largas fallback a DeepSeek
   const deepseekKey = process.env.DEEPSEEK_API_KEY
   if (deepseekKey) {
     const model = process.env.DEEPSEEK_READING_MODEL || 'deepseek-chat'
@@ -378,6 +532,7 @@ Escribe la lección diaria completa siguiendo la estructura y reglas del sistema
     if (result?.reading) return { reading: result.reading, model }
   }
 
+  // 3. Fallback a OpenAI (gpt-4o-mini)
   const openaiKey = process.env.OPENAI_API_KEY
   if (openaiKey) {
     const result = await callOpenAICompatible<AIDailyReading>(openaiKey, 'https://api.openai.com/v1', 'gpt-4o-mini', READING_SYSTEM_PROMPT, prompt)

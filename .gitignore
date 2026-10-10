@@ -45,3 +45,13 @@ next-env.d.ts
 
 # libros de referencia (no versionar)
 /books/
+
+# automatizacion de distribucion
+automation/.env
+automation/output/
+__pycache__/
+*.pyc
+
+# ephemeral teamwork coordinator artifacts
+.agents/teamwork/
+

@@ -41,7 +41,7 @@
     {
       "name": "Ejercicio de hoy",
       "short_name": "Hoy",
-      "url": "/",
+      "url": "/today",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {

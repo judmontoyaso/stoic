@@ -33,7 +33,8 @@ export async function POST(request: Request) {
   }
 
   const eventName = request.headers.get('x-event-name') || ''
-  if (eventName !== 'order_created') {
+  const validEvents = ['order_created', 'order_refunded', 'order_updated']
+  if (!validEvents.includes(eventName)) {
     return NextResponse.json({ ok: true, ignored: eventName })
   }
 
@@ -56,10 +57,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Cuerpo inválido' }, { status: 400 })
   }
 
-  const status = payload.data?.attributes?.status
+  const rawStatus = payload.data?.attributes?.status
+  const isRefund = eventName === 'order_refunded' || rawStatus === 'refunded'
+  const status = isRefund ? 'refunded' : rawStatus
 
   // Reembolso: se retira el acceso. Sin esto, quien pedía su dinero de
-  // vuelta conservaba el acceso de por vida y había que quitarlo a mano.
+  // vuelta conservaba el acceso y había que quitarlo a mano.
   if (status === 'refunded') {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (serviceKey) {

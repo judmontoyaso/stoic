@@ -1,6 +1,6 @@
-// Server-only. Revoca el acceso de un fundador reembolsado.
+// Server-only. Revoca el acceso de un comprador reembolsado.
 //
-// Hasta ahora un reembolso dejaba el acceso de por vida intacto y había
+// Hasta ahora un reembolso dejaba el acceso intacto y había
 // que quitarlo a mano. Se conserva la cuenta y sus datos (días, diario):
 // solo se retira la marca de aprobación, así que si vuelve a pagar
 // recupera todo su progreso.

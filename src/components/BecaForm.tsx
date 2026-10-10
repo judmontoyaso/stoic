@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { trackPublic } from '@/lib/analytics-public'
 
-// Formulario de aplicación a las Becas Fundador (/becas).
+// Formulario de aplicación a las Becas de Mérito (/becas).
 // Diseño elegante y oscuro con microcopy persuasivo, humano y directo.
 // Honeypot "website" para filtrado pasivo de bots.
 

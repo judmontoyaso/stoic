@@ -1,5 +1,5 @@
-// Server-only. Lógica compartida para aprobar a un fundador que pagó por
-// Mercado Pago. La usan DOS caminos:
+// Server-only. Lógica compartida para aprobar a un comprador que pagó por
+// Mercado Pago la Matrícula Anual (1 Año de Acceso). La usan DOS caminos:
 //   1. El retorno del checkout (back_url success) — fiable, síncrono: el
 //      comprador vuelve al sitio y se aprueba en el acto.
 //   2. El webhook — respaldo, por si el comprador cierra la pestaña antes

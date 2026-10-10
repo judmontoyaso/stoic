@@ -88,7 +88,7 @@ function LoginForm() {
         </button>
 
         <p className="text-[10px] text-slate-500 text-center leading-relaxed">
-          La primera vez se te pedirá un código de acceso para aprobar tu correo.
+          La primera vez podrás ingresar con tu código de acceso o activar tu Matrícula Anual.
         </p>
 
         <p className="text-[10px] text-slate-500 text-center leading-relaxed">

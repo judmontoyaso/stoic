@@ -1,8 +1,8 @@
-# Pagos con Mercado Pago (segunda puerta de fundador)
+# Pagos con Mercado Pago (segunda puerta de Matrícula Anual)
 
 Rail de pago para **LatAm** (México + Colombia y demás): tarjeta, PSE, OXXO,
 saldo. Convive con Lemon Squeezy (rail internacional/USD) y con el código de
-invitación. Las tres puertas escriben la misma marca de aprobación
+invitación o beca. Las tres puertas escriben la misma marca de aprobación
 (`app_metadata.stoicom_approved`).
 
 ```
@@ -15,7 +15,7 @@ invitación. Las tres puertas escriben la misma marca de aprobación
 
 ## Puesta en marcha
 
-1. **Cuenta de Mercado Pago** (la del fundador, país Colombia → cobra en COP).
+1. **Cuenta de Mercado Pago** (país Colombia → cobra en COP).
    Panel de desarrolladores → crea una aplicación → copia el **Access Token**
    de producción.
 2. **Webhook** en el panel de MP:
@@ -29,7 +29,7 @@ invitación. Las tres puertas escriben la misma marca de aprobación
    | `MERCADOPAGO_ACCESS_TOKEN` | `APP_USR-...` | Token de producción. Secreto. |
    | `MERCADOPAGO_WEBHOOK_SECRET` | `abc123...` | Clave de la firma del webhook. |
    | `MERCADOPAGO_CURRENCY` | `COP` | Moneda de la cuenta. |
-   | `MERCADOPAGO_FOUNDER_PRICE` | `199000` | Precio del fundador, en la moneda de arriba. |
+   | `MERCADOPAGO_FOUNDER_PRICE` | `199000` | Precio de la Matrícula Anual, en la moneda de arriba. |
    | `NEXT_PUBLIC_MERCADOPAGO_ENABLED` | `true` | Muestra el botón en `/auth/verify`. |
 
    **El botón solo aparece con `NEXT_PUBLIC_MERCADOPAGO_ENABLED=true`.** Estado

@@ -212,7 +212,9 @@ export default function EvaluationPage() {
                   <Award className="w-5 h-5 text-[var(--primary-gold)] flex-shrink-0" />
                   <div>
                     <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Retos cumplidos</p>
-                    <p className="text-sm font-bold text-[var(--foreground)]">{weeksCompleted}/13 semanales · {monthsCompleted}/3 mensuales</p>
+                    <p className="text-sm font-bold text-[var(--foreground)]">
+                      {weeksCompleted}/{Math.ceil((track.duration_days || 90) / 7)} semanales · {monthsCompleted}/{Math.ceil((track.duration_days || 90) / 30)} mensuales
+                    </p>
                   </div>
                 </div>
               </div>

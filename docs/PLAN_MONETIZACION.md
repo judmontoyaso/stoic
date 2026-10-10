@@ -23,25 +23,18 @@ es el diferenciador (nadie del benchmark lo hace bien en español).
 
 **Precio recomendado (mercado LATAM + España):**
 
-- **Freemium**: gratis = 14 primeros días del programa + diario básico. De ahí, paywall.
-- **Mensual**: **$4.99 USD / ~20.000 COP**
-- **Anual**: **$29.99 USD / ~120.000 COP** (equivale a $2.5/mes — ancla la decisión)
-- **Fundador (lifetime)**: $59 USD única vez, limitado a primeros 100 usuarios — caja
-  temprana y evangelistas.
+- **Secuencia Inicial Gratuita**: gratis = 7 primeros días del programa por correo.
+- **Matrícula Anual (1 Año de Acceso Completo)**: **$59 USD / $199.000 COP** pago único anual — acceso total durante 12 meses a los 3 tracks (210 prácticas diarias), examen nocturno de Séneca, retos semanales y actualizaciones. Sin renovación automática forzosa ni débitos sorpresa.
 
-Regla de sanidad: el programa dura 90 días → el usuario racional compara "3 meses × $4.99 =
-$15" contra un curso de comunicación de $100+. Percepción de valor alta si el contenido
-diario se siente hecho a mano.
+Regla de sanidad: el programa entrega 210 lecciones estructuradas → el usuario racional compara los $59 USD anuales frente a cursos o consultorías de comunicación de $200–$1.000 USD. Percepción de valor alta al ser un sistema de práctica diaria con retroalimentación y diario estructurado.
 
 ---
 
 ## 2. Qué falta técnicamente (en orden)
 
-### 2.1 Pagos — Stripe (1-2 semanas)
-- [ ] Cuenta Stripe + productos (mensual/anual/lifetime). En Colombia: Stripe vía cuenta USD
-      (Payoneer/Wise) o alternativa **Lemon Squeezy** (merchant of record: ellos facturan,
-      liquidan impuestos internacionales, aceptan PayPal — menos fricción legal, fee 5%+).
-      Para LATAM considerar también **Mercado Pago** (PSE/Nequi vía checkout propio).
+### 2.1 Pagos — Stripe / Lemon Squeezy / Mercado Pago (1-2 semanas)
+- [ ] Cuenta de cobro configurada para la Matrícula Anual. En Colombia: **Mercado Pago** (PSE/Nequi/tarjetas)
+      y **Lemon Squeezy** (merchant of record internacional: ellos facturan, liquidan impuestos y aceptan PayPal).
 - [ ] Webhook `/api/webhooks/stripe`: en `checkout.session.completed` marcar
       `app_metadata.plan = 'pro'` + `plan_expires_at` (mismo patrón que `stoicom_approved`).
 - [ ] Paywall: proxy ya valida usuario; añadir check de plan en las rutas de programa
@@ -111,19 +104,18 @@ contigo mismo. Filosofía estoica aplicada, un ejercicio al día, sin trampas."
 
 Instrumentación mínima: PostHog (free tier) o eventos a una tabla `stoic.events`.
 
-**Matemática de servilleta**: 10.000 visitas → ~10% registro (1.000) → 60% activan (600)
-→ 4% pagan (24) → 24 × $4.99 = **~$120 USD/mes por cada 10k visitas**. El negocio está en
-subir conversión con el correo diario (el hook real) y en el plan anual.
+**Matemática de servilleta**: 10.000 visitas → ~10% opt-in a los 7 días gratis (1.000 leads)
+→ 4% adquieren la Matrícula Anual (40) → 40 × $59 USD = **~$2.360 USD de facturación directa por cada 10k visitas**.
 
 ---
 
 ## 5. Costos a escala
 
-| Usuarios pagos | Vercel | Supabase | Resend | IA (DeepSeek) | Total/mes | Ingreso (4.99) |
+| Matrículas Anuales ($59) | Vercel | Supabase | Resend | IA (DeepSeek) | Total/mes | Ingreso Bruto ($59) |
 |---|---|---|---|---|---|---|
-| 10 | $0 | $0 | $0 | ~$1 | ~$1 | $50 |
-| 100 | $20 (Pro) | $25 (Pro) | $20 | ~$5 | ~$70 | $499 |
-| 1.000 | $20 | $25 | $20 | ~$40 | ~$105 | $4.990 |
+| 10 | $0 | $0 | $0 | ~$1 | ~$1 | $590 |
+| 100 | $20 (Pro) | $25 (Pro) | $20 | ~$5 | ~$70 | $5.900 |
+| 1.000 | $20 | $25 | $20 | ~$40 | ~$105 | $59.000 |
 
 Margen bruto >90% desde 100 usuarios. El costo real es tu tiempo + contenido.
 
@@ -136,8 +128,8 @@ Margen bruto >90% desde 100 usuarios. El costo real es tu tiempo + contenido.
 | 1-2 | Pagos (Lemon Squeezy o Stripe) + paywall día 15 + términos/privacidad |
 | 3 | Onboarding (track, fecha, hora de correo) + preferencias por usuario |
 | 4 | Dominio propio + correo con dominio verificado + PostHog |
-| 5-8 | Contenido TikTok/LinkedIn diario + newsletter + 20 usuarios beta pagando precio fundador |
-| 9-12 | Iterar con datos: pricing, paywall, retención. Decidir si i18n inglés |
+| 5-8 | Contenido TikTok/LinkedIn diario + newsletter + primeros usuarios adquiriendo la Matrícula Anual |
+| 9-12 | Iterar con datos: canales de conversión, retención y satisfacción |
 
-**Criterio de validación**: 20 personas pagando el precio fundador en 60 días.
+**Criterio de validación**: 20 personas adquiriendo la Matrícula Anual en 60 días.
 Si no llegan, el problema es distribución o propuesta — no construir más features.

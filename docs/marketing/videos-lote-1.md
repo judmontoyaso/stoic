@@ -145,7 +145,7 @@ Captura de la app (el día correspondiente) + voz:
 > "Los primeros siete días son gratis, uno por día en tu correo. Link en la bio."
 
 _Nota (skill marketing): el CTA en contenido frío es SIEMPRE el gancho gratis
-de 7 días, nunca "compra". La venta de fundador ocurre después, cuando ya
+de 7 días, nunca "compra". La venta de la Matrícula Anual ocurre después, cuando ya
 probaron. El cierre viejo ("noventa días, un ejercicio al día") describía el
 producto pero no daba un siguiente paso de baja fricción._
 

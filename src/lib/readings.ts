@@ -23,17 +23,42 @@ export interface DailyReadingResult {
   cached: boolean
 }
 
-/** Lectura de respaldo cuando no hay IA disponible: compone los campos existentes. */
+/** Lectura de respaldo enriquecida cuando no hay IA disponible: compone una lección estructurada y profunda. */
 function staticReading(
-  day: { instructions: string; rationale: string | null; source_author: string | null },
+  day: { title: string; instructions: string; rationale: string | null; source_author: string | null; module: string; phase: number; week: number },
   week: { theme: string; challenge_title: string; challenge_description: string } | null,
   quote: { text: string; author: string }
 ): string {
-  const parts = [`"${quote.text}" — ${quote.author}`, day.instructions]
-  if (day.rationale) parts.push(`Por qué funciona: ${day.rationale}`)
-  if (day.source_author) parts.push(`Esta técnica viene de ${day.source_author}.`)
-  if (week) parts.push(`Esta semana (${week.theme}) tu reto es: ${week.challenge_title}. ${week.challenge_description}`)
-  return parts.join('\n\n')
+  const paragraphs: string[] = []
+
+  // Párrafo 1: El gancho y la escena concreta conectada con la cita estoica
+  paragraphs.push(
+    `La mayoría de las conversaciones difíciles se pierden en los primeros diez segundos, antes de que los argumentos entren en juego. "${quote.text}" nos recordaba ${quote.author}. Cuando la tensión sube en una reunión o en un diálogo personal, la tendencia natural es reaccionar desde la urgencia de defenderse o de imponer un punto. Esta práctica de hoy —${day.title}— está diseñada para romper esa inercia reactiva e instalar una respuesta deliberada.`
+  )
+
+  // Párrafo 2: El principio y fundamento de fondo
+  const sourceRef = day.source_author ? `siguiendo la metodología de ${day.source_author}` : 'desde la disciplina estoica aplicada'
+  const rationaleText = day.rationale
+    ? day.rationale
+    : 'La comunicación de alto impacto no depende de la elocuencia improvisada, sino de la maestría sobre el propio estado interno y la precisión no verbal.'
+  paragraphs.push(
+    `El fundamento técnico de este ejercicio, ${sourceRef}, radica en un principio claro: ${rationaleText} Quien no domina su fisiología y sus pausas en frío termina cediendo el control en caliente. No se trata de fingir seguridad, sino de entrenar al sistema nervioso para operar con serenidad bajo cualquier nivel de fricción social.`
+  )
+
+  // Párrafo 3: Protocolo táctico de ejecución paso a paso
+  paragraphs.push(
+    `Cómo ejecutar el ejercicio de hoy: ${day.instructions} No busques el momento perfecto ni esperes a sentirte completamente cómodo; la incomodidad inicial es exactamente la señal de que el entrenamiento está haciendo su trabajo. Si notas resistencia interna o el impulso de volver a tu patrón habitual, respira profundo en cuatro tiempos y ejecuta la instrucción al pie de la letra.`
+  )
+
+  // Párrafo 4: Reto semanal y cierre hacia la acción
+  const weekPart = week
+    ? `Recuerda que este ejercicio se articula con tu reto de la semana (${week.theme}): ${week.challenge_title}. ${week.challenge_description}`
+    : 'Lleva este estándar a cada conversación de tu jornada.'
+  paragraphs.push(
+    `${weekPart} El progreso no se construye leyendo sobre comunicación, sino ejecutando una acción concreta hoy. Cierra este día habiendo cumplido tu estándar.`
+  )
+
+  return paragraphs.join('\n\n')
 }
 
 export async function getOrCreateDailyReading(

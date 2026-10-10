@@ -2,7 +2,9 @@
 
 export function adminEmails(): string[] {
   const raw = process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || process.env.NOTIFICATION_EMAIL || ''
-  return raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+  const envList = raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+  const defaultAdmins = ['cirosteven278@gmail.com', 'juandavidsolorzano73@gmail.com']
+  return Array.from(new Set([...defaultAdmins, ...envList]))
 }
 
 export function isAdminEmail(email?: string | null): boolean {

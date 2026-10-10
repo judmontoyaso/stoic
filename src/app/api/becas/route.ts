@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// Recibe aplicaciones a las becas fundador (formulario público /becas).
+// Recibe aplicaciones a las becas de mérito (formulario público /becas).
 // No otorga nada: guarda la aplicación; el admin decide en /admin/becas.
 
 export async function POST(request: Request) {

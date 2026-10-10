@@ -114,7 +114,7 @@ export default function CalendarPage() {
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
       <PageHeader
-        title="Calendario de 90 Días"
+        title={activeTrack ? `Calendario de ${activeTrack.duration_days || 90} Días` : 'Calendario'}
         subtitle="Fechas reales. Si pierdes un día, se marca como perdido y sigues: el calendario nunca se reorganiza."
       />
 
@@ -138,7 +138,7 @@ export default function CalendarPage() {
             <StatCard
               variant="card"
               label="Completados"
-              value={<>{completedCount}<span className="text-sm text-slate-400 font-normal"> / 90</span></>}
+              value={<>{completedCount}<span className="text-sm text-slate-400 font-normal"> / {activeTrack.duration_days || 90}</span></>}
               valueClassName="text-[var(--primary-gold)]"
             />
             <StatCard variant="card" label="Perdidos" value={missedCount} valueClassName="text-red-500" />

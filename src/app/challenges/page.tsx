@@ -42,9 +42,13 @@ export default function ChallengesPage() {
 
   useStoicSync(loadTrackData)
 
+  const totalDays = activeTrack?.duration_days || 90
+  const maxWeeks = Math.ceil(totalDays / 7)
+  const maxMonths = Math.ceil(totalDays / 30)
+
   const dayNumber = activeTrack ? currentDayNumber(activeTrack) : null
-  const currentWeek = dayNumber ? Math.min(13, Math.ceil(dayNumber / 7)) : null
-  const currentMonth = dayNumber ? Math.min(3, Math.ceil(dayNumber / 30)) : null
+  const currentWeek = dayNumber ? Math.min(maxWeeks, Math.ceil(dayNumber / 7)) : null
+  const currentMonth = dayNumber ? Math.min(maxMonths, Math.ceil(dayNumber / 30)) : null
 
   const handleToggleWeek = async (weekNumber: number) => {
     if (!activeTrack) return
@@ -75,7 +79,7 @@ export default function ChallengesPage() {
       <PageHeader
         title="Retos del Programa"
         icon={<img src="/icons/armour.png" className="w-8 h-8 object-contain" alt="Retos" />}
-        subtitle="13 retos semanales con entregable verificable y 3 hitos mensuales por track. Sin trampas: el entregable existe o no existe."
+        subtitle={`Retos semanales con entregable verificable e hitos por track. Sin trampas: el entregable existe o no existe.`}
       />
 
       <TrackSelector tracks={tracks} activeTrackId={activeTrackId} onSelect={setActiveTrackId} />

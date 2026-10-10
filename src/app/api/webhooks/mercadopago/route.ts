@@ -6,7 +6,7 @@ import { revokeAccess } from '@/lib/revoke-access'
 
 // Webhook de Mercado Pago: al aprobarse un pago, aprueba al usuario
 // (misma marca app_metadata.stoicom_approved que el código y que LS) y
-// registra el plan fundador. Segunda puerta de pago; el código y LS
+// registra el plan de matrícula anual. Segunda puerta de pago; el código y LS
 // siguen vivos en paralelo.
 //
 // Configurar en el panel de MP → Webhooks:

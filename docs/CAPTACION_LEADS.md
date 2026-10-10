@@ -2,7 +2,7 @@
 
 Embudo previo al pago. Un visitante deja su correo en la landing, confirma
 (doble opt-in) y recibe los **7 primeros días reales** del track de
-Comunicación, uno por día. El día 7 cierra con la oferta de fundador.
+Comunicación, uno por día. El día 7 cierra con la oferta de la Matrícula Anual (1 Año de Acceso Completo).
 
 ```
 /landing → POST /api/leads/subscribe → correo de confirmación
