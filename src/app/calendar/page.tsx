@@ -2,8 +2,6 @@
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
-import { Sidebar as PrimeSidebar } from 'primereact/sidebar'
-import { InputTextarea } from 'primereact/inputtextarea'
 import { Calendar as CalendarIcon, CheckCircle2, XCircle, Flame } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
@@ -14,7 +12,7 @@ import {
   dayStatus,
   currentStreak,
 } from '@/lib/program'
-import { Card, CompleteButton, EmptyState, LoadingScreen, ModuleBadge, PageHeader, StatCard, TrackSelector } from '@/components/ui'
+import { Card, CompleteButton, Drawer, EmptyState, LoadingScreen, ModuleBadge, PageHeader, StatCard, Textarea, TrackSelector } from '@/components/ui'
 import { useStoicSync } from '@/hooks/useStoicSync'
 import { useTrackSelection } from '@/hooks/useTrackSelection'
 import type { ProgramDay, ProgramWeek, DayLog, DayStatus } from '@/types'
@@ -211,15 +209,13 @@ export default function CalendarPage() {
       )}
 
       {/* Drawer de detalle */}
-      <PrimeSidebar
-        visible={drawerOpen}
-        position="right"
-        onHide={() => {
+      <Drawer
+        isOpen={drawerOpen}
+        onClose={() => {
           setDrawerOpen(false)
           setSelectedDayNumber(null)
         }}
-        style={{ width: '100%', maxWidth: '460px', background: 'var(--card-bg)', borderLeft: '1px solid var(--border-color)', padding: 0 }}
-        className="stoic-sidebar-drawer"
+        maxWidth="460px"
       >
         {selectedProgramDay && selectedInfo && activeTrack && (
           <div className="h-full flex flex-col text-[var(--foreground)]">
@@ -288,7 +284,7 @@ export default function CalendarPage() {
               {/* Notas */}
               <div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Notas del día</p>
-                <InputTextarea
+                <Textarea
                   value={notesDraft}
                   onChange={(e) => setNotesDraft(e.target.value)}
                   rows={4}
@@ -305,7 +301,7 @@ export default function CalendarPage() {
             </div>
           </div>
         )}
-      </PrimeSidebar>
+      </Drawer>
     </div>
   )
 }

@@ -49,6 +49,8 @@ next-env.d.ts
 # automatizacion de distribucion
 automation/.env
 automation/output/
+automation/.browser_profile/
+automation/*.png
 __pycache__/
 *.pyc
 

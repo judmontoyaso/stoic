@@ -12,7 +12,8 @@ import {
   Sun,
   Moon,
   BarChart3,
-  Ticket
+  Ticket,
+  LogOut
 } from 'lucide-react'
 import PushToggle from '@/components/PushToggle'
 import { TABS } from '@/components/MobileTabBar'
@@ -30,6 +31,8 @@ export default function Sidebar() {
     !pathname ||
     pathname === '/login' ||
     pathname === '/landing' ||
+    pathname === '/welcome' ||
+    pathname === '/renovar' ||
     pathname === '/becas' ||
     pathname === '/suscripcion' ||
     pathname === '/terms' ||
@@ -230,7 +233,7 @@ export default function Sidebar() {
                   onClick={handleLogout}
                   className="flex items-center justify-center gap-2 p-2 rounded-lg bg-red-950/10 dark:bg-red-950/20 text-red-700 dark:text-red-400 hover:bg-red-900/10 transition-colors w-full"
                 >
-                  <i className="pi pi-sign-out text-sm" />
+                  <LogOut className="w-4 h-4" />
                   <span className="text-xs font-medium">Cerrar Sesión</span>
                 </button>
                 <div className="text-center">
@@ -307,7 +310,7 @@ export default function Sidebar() {
             className="p-2 rounded-lg bg-red-950/10 dark:bg-red-950/20 text-red-700 dark:text-red-400 hover:bg-red-900/10 transition-colors flex items-center justify-center w-full"
             title="Cerrar sesión"
           >
-            <i className="pi pi-sign-out text-sm" />
+            <LogOut className="w-4 h-4" />
             {!collapsed && <span className="text-xs ml-2">Cerrar Sesión</span>}
           </button>
           {!collapsed && (

@@ -85,19 +85,35 @@ export function longestStreak(logs: DayLog[]): number {
 
 export function getModuleLabel(module: ProgramModule): string {
   switch (module) {
-    case 'perception': return 'Percepción'
-    case 'action': return 'Acción'
-    case 'will': return 'Voluntad'
-    case 'evaluation': return 'Evaluación'
+    case 'perception':
+    case 'percepcion':
+      return 'Percepción'
+    case 'action':
+    case 'accion':
+      return 'Acción'
+    case 'will':
+    case 'voluntad':
+      return 'Voluntad'
+    case 'evaluation':
+    case 'evaluacion':
+      return 'Evaluación'
   }
 }
 
 export function getModuleDescription(module: ProgramModule): string {
   switch (module) {
-    case 'perception': return 'Disciplina del asentimiento: claridad mental y juicio'
-    case 'action': return 'Disciplina de la acción: práctica en el mundo real'
-    case 'will': return 'Disciplina del deseo: regulación interna y aceptación'
-    case 'evaluation': return 'Cierre del ciclo: solo lectura de lo recorrido'
+    case 'perception':
+    case 'percepcion':
+      return 'Disciplina del asentimiento: claridad mental y juicio'
+    case 'action':
+    case 'accion':
+      return 'Disciplina de la acción: práctica en el mundo real'
+    case 'will':
+    case 'voluntad':
+      return 'Disciplina del deseo: regulación interna y aceptación'
+    case 'evaluation':
+    case 'evaluacion':
+      return 'Cierre del ciclo: solo lectura de lo recorrido'
   }
 }
 
@@ -105,12 +121,16 @@ export function getModuleDescription(module: ProgramModule): string {
 export function getModuleColor(module: ProgramModule): { text: string; bg: string; border: string } {
   switch (module) {
     case 'perception':
+    case 'percepcion':
       return { text: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-500/10', border: 'border-sky-500/30' }
     case 'action':
+    case 'accion':
       return { text: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30' }
     case 'will':
+    case 'voluntad':
       return { text: 'text-[var(--primary-gold)]', bg: 'bg-[var(--primary-gold)]/10', border: 'border-[var(--primary-gold)]/30' }
     case 'evaluation':
+    case 'evaluacion':
       return { text: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/30' }
   }
 }
@@ -146,6 +166,10 @@ export function buildTrackReport(
     action: { total: 0, completed: 0 },
     will: { total: 0, completed: 0 },
     evaluation: { total: 0, completed: 0 },
+    percepcion: { total: 0, completed: 0 },
+    accion: { total: 0, completed: 0 },
+    voluntad: { total: 0, completed: 0 },
+    evaluacion: { total: 0, completed: 0 },
   }
   const byWeek = new Map<number, { completed: number; elapsed: number }>()
 

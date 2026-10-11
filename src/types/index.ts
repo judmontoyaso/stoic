@@ -4,7 +4,7 @@
 // ============================================================
 
 export type ResourceType = 'book' | 'youtube' | 'course' | 'diplomado'
-export type ProgramModule = 'perception' | 'action' | 'will' | 'evaluation'
+export type ProgramModule = 'perception' | 'action' | 'will' | 'evaluation' | 'percepcion' | 'accion' | 'voluntad' | 'evaluacion'
 export type JournalEntryType = 'morning' | 'evening' | 'weekly' | 'free'
 
 export interface Resource {

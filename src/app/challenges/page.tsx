@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { InputTextarea } from 'primereact/inputtextarea'
 import { Award, Target } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
 import { currentDayNumber } from '@/lib/program'
-import { CircleCheck, LoadingScreen, PageHeader, TrackSelector } from '@/components/ui'
+import { CircleCheck, LoadingScreen, PageHeader, Textarea, TrackSelector } from '@/components/ui'
 import { useStoicSync } from '@/hooks/useStoicSync'
 import { useTrackSelection } from '@/hooks/useTrackSelection'
 import type { ProgramWeek, ProgramMonth, WeekLog, MonthLog } from '@/types'
@@ -192,7 +191,7 @@ export default function ChallengesPage() {
                     </button>
                     {isOpen && (
                       <div className="mt-2 space-y-2">
-                        <InputTextarea
+                        <Textarea
                           value={reflectionDraft[pw.week_number] || ''}
                           onChange={(e) => setReflectionDraft(prev => ({ ...prev, [pw.week_number]: e.target.value }))}
                           rows={3}

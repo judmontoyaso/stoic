@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { InputText } from 'primereact/inputtext'
+import { Input } from '@/components/ui'
 import toast from 'react-hot-toast'
 import { createClient } from '@/utils/supabase/client'
 import { track } from '@/lib/analytics'
@@ -109,14 +109,14 @@ export default function VerifyPage() {
             <label htmlFor="code" className="text-xs font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider">
               Código de acceso
             </label>
-            <InputText
+            <Input
               id="code"
               type="password"
               placeholder="••••••••"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="w-full text-sm"
               disabled={loading}
+              showPasswordToggle
               autoFocus
             />
           </div>

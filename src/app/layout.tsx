@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Inter } from "next/font/google"
+import { Inter, Cinzel } from "next/font/google"
 import "./globals.css"
 import Sidebar from "@/components/Sidebar"
 import MobileTabBar from "@/components/MobileTabBar"
@@ -12,6 +12,13 @@ import { headers } from "next/headers"
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+})
+
+const cinzel = Cinzel({
+  subsets: ["latin"],
+  variable: "--font-cinzel",
+  display: "swap",
 })
 
 export const metadata: Metadata = {
@@ -58,6 +65,8 @@ export default async function RootLayout({
   const isPublicPage =
     pathname === '/login' ||
     pathname === '/landing' ||
+    pathname === '/welcome' ||
+    pathname === '/renovar' ||
     pathname === '/becas' ||
     pathname === '/suscripcion' ||
     pathname === '/terms' ||
@@ -85,7 +94,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} antialiased bg-[var(--background)] text-[var(--foreground)] flex flex-col md:flex-row min-h-screen transition-colors duration-200`}>
+      <body className={`${inter.variable} ${cinzel.variable} antialiased bg-[var(--background)] text-[var(--foreground)] flex flex-col md:flex-row min-h-screen transition-colors duration-200`}>
         <RegisterSW />
         <Toaster 
           position="top-right"

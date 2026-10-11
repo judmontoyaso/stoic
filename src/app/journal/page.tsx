@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { InputTextarea } from 'primereact/inputtextarea'
 import { Calendar, Trash2, Search, Download } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
@@ -9,7 +8,7 @@ import { getToday, formatDate } from '@/lib/utils'
 import { JOURNAL_TEMPLATES, MOODS } from '@/lib/journal'
 import TemplateIcon from '@/components/journal/TemplateIcon'
 import DictateButton from '@/components/journal/DictateButton'
-import { Card, EmptyState, LoadingScreen, PageHeader, Pill } from '@/components/ui'
+import { Card, EmptyState, LoadingScreen, PageHeader, Pill, Textarea } from '@/components/ui'
 import { useStoicSync } from '@/hooks/useStoicSync'
 import type { JournalEntry, JournalEntryType } from '@/types'
 
@@ -172,7 +171,7 @@ export default function JournalPage() {
                     }
                   />
                 </div>
-                <InputTextarea
+                <Textarea
                   value={draft[field.key] || ''}
                   onChange={(e) => setDraft(prev => ({ ...prev, [field.key]: e.target.value }))}
                   placeholder={field.placeholder}

@@ -1,40 +1,124 @@
 @import "tailwindcss";
-@import "primeicons/primeicons.css";
-@import "primereact/resources/themes/lara-dark-amber/theme.css";
-@import "primereact/resources/primereact.min.css";
 
 @theme {
+  /* ============================================================
+     Universal Typography Families (Editorial Minimalista Estoico)
+     ============================================================ */
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: var(--font-cinzel), Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+  /* ============================================================
+     Semantic Theme Colors
+     ============================================================ */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-border: var(--border-color);
+  --color-sidebar: var(--sidebar-bg);
+  --color-input: var(--input-bg);
+  --color-gold: var(--primary-gold);
+  --color-gold-hover: var(--primary-gold-hover);
+  --color-gold-muted: var(--gold-muted);
+
+  /* ============================================================
+     Discipline Module Colors
+     ============================================================ */
+  --color-discipline-perception: var(--discipline-perception);
+  --color-discipline-action: var(--discipline-action);
+  --color-discipline-will: var(--discipline-will);
+  --color-discipline-evaluation: var(--discipline-evaluation);
+
+  --color-perception: var(--discipline-perception);
+  --color-action: var(--discipline-action);
+  --color-will: var(--discipline-will);
+  --color-evaluation: var(--discipline-evaluation);
+
+  /* ============================================================
+     Core Stoic Palette Constants
+     ============================================================ */
+  --color-obsidian: #0a0a0f;
+  --color-granite: #0d0d13;
+  --color-basalt: #1e1e28;
+  --color-bone: #fcfbfa;
+  --color-charcoal: #1c1917;
+  --color-stone: #e7e5e4;
+  --color-imperial-gold: #c9a84c;
+  --color-classical-gold: #ab841d;
+
+  /* ============================================================
+     Radii
+     ============================================================ */
+  --radius-xs: 2px;
   --radius-sm: 2px;
   --radius-md: 4px;
   --radius-lg: 6px;
   --radius-xl: 6px;
   --radius-2xl: 8px;
   --radius-3xl: 8px;
+  --radius-full: 9999px;
+
+  /* ============================================================
+     Shadows & Atmospheric Glows
+     ============================================================ */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: var(--shadow);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-card: var(--shadow);
+  --shadow-gold: 0 0 15px rgba(201, 168, 76, 0.25);
+  --shadow-gold-lg: 0 0 30px rgba(201, 168, 76, 0.35);
 }
 
 /* Base styles and theme overrides */
 :root {
+  /* Surface & Base (Warm Bone Mode) */
   --background: #fcfbfa;
   --foreground: #1c1917;
-  --primary-gold: #ab841d;
-  --primary-gold-hover: #8e6d15;
   --card-bg: #ffffff;
+  --card-border: #e7e5e4;
   --border-color: #e7e5e4;
   --sidebar-bg: #f5f5f4;
   --input-bg: #f5f5f4;
+
+  /* Primary Gold (Classical Gold for Light Mode) */
+  --primary-gold: #ab841d;
+  --primary-gold-hover: #8e6d15;
+  --gold-muted: rgba(171, 132, 29, 0.12);
+
+  /* Shadows */
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+
+  /* Discipline Modules */
+  --discipline-perception: #0284c7;
+  --discipline-action: #059669;
+  --discipline-will: #ab841d;
+  --discipline-evaluation: #7c3aed;
 }
 
 .dark {
+  /* Surface & Base (Deep Obsidian Mode) */
   --background: #0a0a0f;
   --foreground: #f8fafc;
-  --primary-gold: #c9a84c;
-  --primary-gold-hover: #b8973b;
   --card-bg: #111116;
+  --card-border: #1e1e28;
   --border-color: #1e1e28;
   --sidebar-bg: #111116;
   --input-bg: #0a0a0f;
+
+  /* Primary Gold (Imperial Gold for Dark Mode) */
+  --primary-gold: #c9a84c;
+  --primary-gold-hover: #b8973b;
+  --gold-muted: rgba(201, 168, 76, 0.15);
+
+  /* Shadows */
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+
+  /* Discipline Modules */
+  --discipline-perception: #0284c7;
+  --discipline-action: #059669;
+  --discipline-will: #c9a84c;
+  --discipline-evaluation: #7c3aed;
 }
 
 body {
@@ -43,6 +127,25 @@ body {
   font-family: var(--font-inter), sans-serif;
   overflow-x: hidden;
   transition: background-color 0.2s, color 0.2s;
+}
+
+/* ============================================================
+   Editorial Minimalista Estoico Typographic Hierarchy
+   ============================================================ */
+.font-serif,
+.font-cinzel,
+.font-editorial {
+  font-family: var(--font-cinzel), Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+.font-sans,
+.font-inter {
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+blockquote {
+  font-family: var(--font-cinzel), Georgia, Cambria, "Times New Roman", Times, serif;
+  letter-spacing: 0.02em;
 }
 
 /* Custom scrollbars */
@@ -84,143 +187,6 @@ body {
   background: var(--border-color);
 }
 
-/* PrimeReact Theme overrides to match the Gold theme */
-.p-component {
-  font-family: var(--font-inter), sans-serif !important;
-}
-
-.p-progressbar {
-  background: var(--border-color) !important;
-}
-
-.p-progressbar .p-progressbar-value {
-  background: var(--primary-gold) !important;
-}
-
-.p-tabview-nav {
-  background: transparent !important;
-  border-color: var(--border-color) !important;
-}
-
-.p-tabview-nav li .p-tabview-nav-link {
-  background: transparent !important;
-  border-color: transparent !important;
-  color: var(--tab-inactive-color, #78716c) !important;
-  padding: 1rem !important;
-  transition: all 0.2s !important;
-}
-
-.p-tabview-nav li.p-highlight .p-tabview-nav-link {
-  border-color: var(--primary-gold) !important;
-  color: var(--primary-gold) !important;
-}
-
-.p-tabview-nav li:not(.p-highlight):not(.p-disabled):hover .p-tabview-nav-link {
-  color: var(--foreground) !important;
-  border-color: rgba(201, 168, 76, 0.3) !important;
-}
-
-.p-tabview-panels {
-  background: transparent !important;
-  color: var(--foreground) !important;
-  padding: 1.5rem 0 0 0 !important;
-}
-
-/* PrimeReact Dialog override */
-.p-dialog {
-  background: var(--card-bg) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: 6px !important;
-  box-shadow: var(--shadow) !important;
-}
-
-.p-dialog-header {
-  background: transparent !important;
-  color: var(--foreground) !important;
-  border-bottom: 1px solid var(--border-color) !important;
-  padding: 1.25rem !important;
-}
-
-.p-dialog-content {
-  background: transparent !important;
-  color: var(--foreground) !important;
-  padding: 1.25rem !important;
-}
-
-.p-dialog-footer {
-  background: transparent !important;
-  border-top: 1px solid var(--border-color) !important;
-  padding: 1rem 1.25rem !important;
-}
-
-.p-dialog-header-icon {
-  color: var(--foreground) !important;
-  opacity: 0.6;
-  border-radius: 50% !important;
-  width: 2rem !important;
-  height: 2rem !important;
-  transition: all 0.2s !important;
-}
-
-.p-dialog-header-icon:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
-  color: var(--primary-gold) !important;
-  opacity: 1;
-}
-
-/* PrimeReact Dropdown override */
-.p-dropdown {
-  background: var(--input-bg) !important;
-  border: 1px solid var(--border-color) !important;
-  color: var(--foreground) !important;
-  border-radius: 4px !important;
-}
-
-.p-dropdown-label {
-  color: var(--foreground) !important;
-}
-
-.p-dropdown-panel {
-  background: var(--card-bg) !important;
-  border: 1px solid var(--border-color) !important;
-  box-shadow: var(--shadow) !important;
-}
-
-.p-dropdown-item {
-  color: var(--foreground) !important;
-  opacity: 0.8;
-  padding: 0.75rem 1rem !important;
-  transition: all 0.2s !important;
-}
-
-.p-dropdown-item.p-highlight {
-  background: rgba(201, 168, 76, 0.1) !important;
-  color: var(--primary-gold) !important;
-  opacity: 1;
-}
-
-.p-dropdown-item:not(.p-highlight):not(.p-disabled):hover {
-  background: rgba(120, 120, 120, 0.1) !important;
-  color: var(--foreground) !important;
-  opacity: 1;
-}
-
-/* Inputs override */
-.p-inputtext {
-  background: var(--input-bg) !important;
-  border: 1px solid var(--border-color) !important;
-  color: var(--foreground) !important;
-  padding: 0.75rem 1rem !important;
-  border-radius: 4px !important;
-  transition: all 0.2s !important;
-}
-
-.p-inputtext:focus {
-  border-color: var(--primary-gold) !important;
-  box-shadow: 0 0 0 1px var(--primary-gold) !important;
-  outline: none !important;
-}
-
 /* Sidebar transition classes */
 .sidebar-expanded {
   width: 240px;
@@ -248,18 +214,13 @@ button:not(:disabled),
 a[href],
 summary,
 label[for],
-select,
-.p-dropdown,
-.p-dropdown-item,
-.p-tabview-nav li .p-tabview-nav-link {
+select {
   cursor: pointer;
 }
 
 /* Deshabilitado: cursor de "no permitido" */
 button:disabled,
-[aria-disabled="true"],
-.p-disabled,
-.p-disabled * {
+[aria-disabled="true"] {
   cursor: not-allowed;
 }
 
@@ -310,4 +271,3 @@ html:not(.dark) .text-slate-450 {
 html:not(.dark) .text-slate-550 {
   color: #292524 !important;
 }
-

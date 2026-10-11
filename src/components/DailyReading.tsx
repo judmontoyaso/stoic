@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, Loader2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui'
 
 interface DailyReadingProps {
@@ -60,7 +60,7 @@ export default function DailyReading({ trackId, dayNumber, autoLoad = true }: Da
           <Skeleton className="h-3 w-11/12" />
           <Skeleton className="h-3 w-4/5" />
           <p className="text-[10px] text-slate-500 pt-1.5 flex items-center gap-1.5">
-            <i className="pi pi-spin pi-spinner text-[var(--primary-gold)]" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--primary-gold)]" />
             El mentor está escribiendo tu lección de hoy…
           </p>
         </div>

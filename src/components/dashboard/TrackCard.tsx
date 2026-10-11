@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Flame, Target, Zap, Play, BookOpen, Award, ChevronDown, ChevronUp } from 'lucide-react'
+import { Flame, Target, Zap, Play, BookOpen, Award, ChevronDown, ChevronUp, Check } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
 import { track as trackEvent } from '@/lib/analytics'
@@ -233,7 +233,7 @@ export default function TrackCard({ state, today }: TrackCardProps) {
           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
             weekLog?.completed ? 'border-emerald-500 bg-emerald-500' : 'border-slate-400 dark:border-slate-600'
           }`}>
-            {weekLog?.completed && <i className="pi pi-check text-[10px] text-white font-bold" />}
+            {weekLog?.completed && <Check className="w-3 h-3 text-white stroke-[3]" />}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-600 dark:text-emerald-400">

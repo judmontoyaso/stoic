@@ -43,7 +43,7 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
       (document.querySelector('input[type="email"]') as HTMLInputElement | null)
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      el.focus()
+      ;(el as HTMLInputElement).focus()
     }
   }
 

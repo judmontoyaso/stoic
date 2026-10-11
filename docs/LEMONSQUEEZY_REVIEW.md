@@ -72,21 +72,21 @@ Vercel y no aporta nada al cliente).
 > product and same 12-month term) — Lemon Squeezy is our international
 > rail.
 >
-> **Demo video:** link below. The product interface is in Spanish, since
-> that is our market, so here is what each part shows:
+> **Demo video link:** https://www.loom.com/share/5776251554f944f3b95eecd8e2c6438f
+>
+> The product interface is in Spanish, since that is our target market (LatAm), so here is what each part shows:
 >
 > ```
-> 0:00  Public landing page
-> 0:12  Pricing — $59 USD one-time payment, 12 months of access
-> 0:24  What happens when the year ends (grace period + free journal export)
-> 0:34  Sign in with Google
-> 0:40  Day 45 of 90 — the daily exercise and its full written lesson
-> 1:00  Marking the day as complete
-> 1:06  Evening journal (Seneca's nightly review)
-> 1:16  AI reading of the user's own journal, quoting their entries
-> 1:28  Calendar — completed and missed days stay visible
-> 1:36  Settings — email hour and timezone, set by each user
-> 1:42  One of the daily emails, as received
+> 0:03  Public landing page
+> 0:17  Pricing — $59 USD one-time payment, 12 months of access
+> 0:28  What happens when the year ends (grace period + free journal export)
+> 0:36  Sign in with Google
+> 0:44  Today — daily exercise and full written lesson ("Status sin notas")
+> 1:05  Marking the day as complete (streak increments to 25)
+> 1:10  Daily journal — morning reflection & nightly review history
+> 1:24  Progress report — module progress, mood over time, journaling stats
+> 1:41  Calendar — 90-day curriculum with completed and missed days
+> 1:49  Settings — email delivery hours and timezone set by user
 > ```
 >
 > One note on the video: our USD checkout button is currently disabled

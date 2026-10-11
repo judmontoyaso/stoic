@@ -1,133 +1,183 @@
-# TEST_READY: StoiCom Landing Page Automated Test Suite
+# TEST_READY: StoiCom Automated Test Suites & Modernization Verification
 
-## Test Runner Command
+This document is the authoritative test status and execution registry for the StoiCom platform.
+
+---
+
+## 1. Quick Test Execution Commands
+
 ```bash
+# 1. Comprehensive Modernization E2E Suite (61 tests across Tiers 1-4)
+npx tsx --test tests/e2e/modernization.test.ts
+
+# Human-readable hierarchical spec output:
+npx tsx --test --test-reporter=spec tests/e2e/modernization.test.ts
+
+# 2. Landing Page E2E Suite (24 tests)
 npx tsx --test tests/e2e/landing.test.ts
-```
 
-For human-readable hierarchical spec output:
-```bash
-npx tsx --test --test-reporter=spec tests/e2e/landing.test.ts
-```
-
----
-
-## Suite Summary
-- **Test Runner**: Node 22 native test runner (`node:test`, `node:assert/strict`) via TypeScript executor (`tsx`)
-- **Total Test Suites**: 5 (1 Root, 4 Tier Suites)
-- **Total Tests**: 24 tests
-- **Passing**: 24 (100%)
-- **Failing**: 0 (0%)
-- **Execution Time**: ~1.1 seconds
-- **Production Build Status**: `npm run build` exits 0 (Next.js 16.2.10 Turbopack + TypeScript check clean)
-
----
-
-## Coverage Summary Table across Tiers 1–4
-
-| Tier | Name | Target Areas | Tests | Status |
-|---|---|---|---|---|
-| **Tier 1** | Feature Coverage | Hero Section copy & typography, Hero `LeadForm` integration, Navigation Anchors (`#metodologia`, `#tracks`, `#precios`), DOM Target Sections, Methodology Section, Curriculum Tracks (210 exercises), Pricing Section, FAQ Accordion data sourcing from `src/data/faqs.ts`, and Static Next.js SEO Metadata export | 9 | PASS (100%) |
-| **Tier 2** | Boundary & Corner Cases | `normalizeEmail` validation across RFC & custom boundary cases (empty, whitespace, missing domain/TLD, single-char TLD, illegal chars, >254 / <5 length thresholds), Pricing model numeric constants (COP 199,000 / USD 59), formatting with Colombian thousand separators (`$199.000`), Isolated `LeadForm` and `FAQAccordion` component rendering, and `/api/leads/subscribe` malformed payload handling | 7 | PASS (100%) |
-| **Tier 3** | Cross-Feature Combinations & Contracts | Contract between `PricingSection` Free Trial CTA and Hero `LeadForm` (`document.getElementById('lead-email-landing-hero')`), API endpoint `/api/leads/subscribe` contracts (burst throttle `MAX_NEW_PER_HOUR = 30`, re-send delay `RESEND_THROTTLE_MINUTES = 5`), Telemetry whitelist synchronization (`PublicEventName` in `analytics-public.ts` vs `api/events/route.ts`), payload sanitization, and 7-day Drip sequence constants | 5 | PASS (100%) |
-| **Tier 4** | Real-World Application Scenarios | Schema.org JSON-LD structured data conformance (`@context: https://schema.org` with 5 `@graph` entities: `Organization`, `WebSite`, `SoftwareApplication`, `Course`, `FAQPage`), Next.js static SEO metadata standards (title/desc length thresholds, keywords, OpenGraph `es_CO`, Twitter summary cards), and semantic HTML accessibility attributes (`sr-only`, `autocomplete`, `required`) | 3 | PASS (100%) |
-
----
-
-## Detailed Test Case Checklist
-
-### Tier 1: Feature Coverage
-- [x] **T1.1**: Renders Hero section with primary headlines (`Entrena cómo hablas. Con los demás y contigo.`), eyebrow (`Programa Guiado · Filosofía Estoica & Alto Rendimiento`), and value proposition copy.
-- [x] **T1.2**: Renders `LeadForm` within Hero with `source="landing-hero"` and input ID `id="lead-email-landing-hero"`.
-- [x] **T1.3**: Verifies header navigation contains internal anchor links (`#metodologia`, `#tracks`, `#precios`), `/login` link, and brand mark (`STOI` / `COM`).
-- [x] **T1.4**: Target DOM section elements with matching anchor IDs exist on page (`id="metodologia"`, `id="tracks"`, `id="precios"`).
-- [x] **T1.5**: Renders Methodology section with Estoicismo Clásico (Dicotomía del control) and Psicología de Alto Rendimiento (Tríada emocional).
-- [x] **T1.6**: Renders Curriculum Tracks section with 3 guided tracks (Comunicación Interpersonal, Maestría Interna & Diario, Influencia & Liderazgo) and 210 exercises.
-- [x] **T1.7**: Renders Pricing section with Free Trial card ($0 / 7 días), Annual plan card, and 14-day unconditional guarantee.
-- [x] **T1.8**: Renders FAQ Accordion with all items dynamically sourced from `src/data/faqs.ts` (all questions and answers verified).
-- [x] **T1.9**: Verifies static SEO `metadata` export contains title, description, canonical (`https://stoicom.app/landing`), OpenGraph and Twitter cards.
-
-### Tier 2: Boundary & Corner Cases
-- [x] **T2.1**: Validates email normalization across standard formats, plus-tagging, hyphens, and mixed casing (trims & lowercases).
-- [x] **T2.2**: Rejects invalid email formats and boundary length edge cases (empty string, whitespace, missing `@`, missing domain, missing user, single-char TLD, illegal punctuation, spaces inside email, length > 254 chars, length < 5 chars, non-string types).
-- [x] **T2.3**: Verifies pricing model constants: `PROGRAM_PRICE.cop === 199000`, `PROGRAM_PRICE.usd === 59`, `FOUNDER_PRICE === PROGRAM_PRICE`, `copLabel === '$199.000'`, `usdLabel === '$59'`.
-- [x] **T2.4**: Verifies `PricingSection` handles currency options between COP (`Mercado Pago / PSE`) and USD (`Lemon Squeezy`).
-- [x] **T2.5**: Verifies `LeadForm` renders as an isolated component supporting custom and default sources (`landing`, `landing-hero`, `landing-footer`).
-- [x] **T2.5b**: Verifies `FAQAccordion` renders as an isolated component with initial open state and full question catalog.
-- [x] **T2.6**: Rejects malformed requests in `/api/leads/subscribe` endpoint (invalid JSON body -> 400, empty email -> 400, invalid email -> 400).
-
-### Tier 3: Cross-Feature Combinations & Contracts
-- [x] **T3.1**: Verifies architectural coupling contract between `PricingSection` Free Trial button and Hero `LeadForm` input element ID (`lead-email-landing-hero`).
-- [x] **T3.2**: Verifies `/api/leads/subscribe` API contract parameters, source sanitization (slice 40, fallback 'landing'), and anti-abuse limits (`MAX_NEW_PER_HOUR = 30`, `RESEND_THROTTLE_MINUTES = 5`).
-- [x] **T3.3**: Verifies telemetry event whitelist synchronization between client `analytics-public.ts` and server `api/events/route.ts` (`landing_view`, `landing_cta_click`, `lead_form_submitted`, `becas_view`, `beca_form_submitted`, `login_view`).
-- [x] **T3.3b**: Verifies `trackPublic` fire-and-forget contract behavior (attempts `navigator.sendBeacon` first, fallbacks to `fetch` with `keepalive: true`).
-- [x] **T3.4**: Verifies 7-day Drip sequence parameters contract (`DRIP_LENGTH = 7`, `DRIP_TRACK_SLUG = 'comunicacion'`).
-
-### Tier 4: Real-World Application Scenarios
-- [x] **T4.1**: Validates JSON-LD structured data conforms to schema.org with all 5 `@graph` entities:
-  - `Organization`: name StoiCom, url, logo 512px, description.
-  - `WebSite`: url `https://stoicom.app/landing`, inLanguage `es`.
-  - `SoftwareApplication`: PWA multi-device with COP and USD price offers.
-  - `Course`: El Método StoiCom, online mode, workload PT15M, Trial ($0) and Annual offers.
-  - `FAQPage`: `mainEntity` mapping 1-to-1 with `FAQS` array.
-- [x] **T4.2**: Verifies static SEO metadata conforms to Next.js standards, title length (30–80 chars), description length (120–250 chars), keywords array, and OpenGraph/Twitter card specifications.
-- [x] **T4.3**: Validates semantic HTML landmarks (`<header>`, `<section>`, `<footer>`) and accessibility attributes (`sr-only` labels, `autocomplete="email"`, `required`).
-
----
-
-## Verification Execution Output
-
-```
-▶ StoiCom Landing Page Test Suite
-  ▶ Tier 1: Feature Coverage
-    ✔ T1.1: renders Hero section with primary headlines, eyebrow and value proposition copy
-    ✔ T1.2: renders LeadForm within Hero with correct source and input ID
-    ✔ T1.3: verifies navigation header contains required anchors and login link
-    ✔ T1.4: target DOM sections with matching anchor IDs exist on page
-    ✔ T1.5: renders Methodology section with classic stoicism and high performance cards
-    ✔ T1.6: renders Tracks section detailing the 3 guided tracks and 210 exercises
-    ✔ T1.7: renders Pricing section with Free Trial ($0) and Annual Plan cards
-    ✔ T1.8: renders FAQ Accordion with all items sourced from src/data/faqs.ts
-    ✔ T1.9: verifies static SEO metadata export contains title, description and canonical
-  ✔ Tier 1: Feature Coverage (354.35ms)
-  ▶ Tier 2: Boundary & Corner Cases
-    ✔ T2.1: validates email normalization across valid formats, tags and mixed casing
-    ✔ T2.2: rejects invalid email formats and boundary length edge cases
-    ✔ T2.3: verifies currency toggle values and formatting constants
-    ✔ T2.4: verifies PricingSection handles currency options between COP and USD
-    ✔ T2.5: verifies LeadForm renders isolated component with custom and default sources
-    ✔ T2.5b: verifies FAQAccordion renders isolated component with all questions and initial state
-    ✔ T2.6: rejects malformed requests in /api/leads/subscribe endpoint
-  ✔ Tier 2: Boundary & Corner Cases (123.72ms)
-  ▶ Tier 3: Cross-Feature Combinations & Contracts
-    ✔ T3.1: verifies contract between PricingSection and Hero LeadForm input element ID
-    ✔ T3.2: verifies API endpoint /api/leads/subscribe contract parameters and defaults
-    ✔ T3.3: verifies telemetry event contracts and whitelist synchronization
-    ✔ T3.3b: verifies trackPublic fire-and-forget contract behavior
-    ✔ T3.4: verifies Drip sequence parameters contract for the 7-day free trial
-  ✔ Tier 3: Cross-Feature Combinations & Contracts (27.29ms)
-  ▶ Tier 4: Real-World Application Scenarios
-    ✔ T4.1: validates JSON-LD structured data conforms to schema.org with all 5 graph entities
-    ✔ T4.2: verifies static SEO metadata conforms to Next.js standards and character thresholds
-    ✔ T4.3: validates accessibility attributes and semantic landmarks in rendered landing page
-  ✔ Tier 4: Real-World Application Scenarios (57.46ms)
-✔ StoiCom Landing Page Test Suite (563.65ms)
-ℹ tests 24
-ℹ suites 5
-ℹ pass 24
-ℹ fail 0
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 1133.65ms
+# 3. Adversarial Stress Suite (10 tests)
+npx tsx --test tests/adversarial-milestone1.test.ts
 ```
 
 ---
 
-## Implementation Guidelines for Implementing Agents
-1. When refactoring `src/app/landing/page.tsx` or decomposing it into client components (`HeroSection.tsx`, `LandingNav.tsx`, etc.), ensure:
-   - `id="metodologia"`, `id="tracks"`, and `id="precios"` remain on the section containers.
-   - The Hero `LeadForm` retains `source="landing-hero"` so that `id="lead-email-landing-hero"` is preserved.
-   - In `PricingSection`, the free trial button continues querying `document.getElementById('lead-email-landing-hero')`.
-   - `metadata` static export and `<script type="application/ld+json">` are maintained in `src/app/landing/page.tsx`.
-2. Run `npx tsx --test tests/e2e/landing.test.ts` at any time to verify zero regressions.
+## 2. Test Suite Inventory
+
+| Suite | File Path | Focus | Tests | Status | Execution Time |
+|---|---|---|---|---|---|
+| **Modernization E2E** | `tests/e2e/modernization.test.ts` | Complete 4-Tier modernization, tokens, purge, primitives, contracts & user journeys | 61 | 47 PASS / 14 GATED | ~310 ms |
+| **Landing Page E2E** | `tests/e2e/landing.test.ts` | Hero, LeadForm, pricing, FAQ, SEO metadata, JSON-LD Schema.org | 24 | 24 PASS (100%) | ~1,100 ms |
+| **Adversarial M1** | `tests/adversarial-milestone1.test.ts` | Layering, pointer-events, z-index hierarchy, clickability, prop edges | 10 | 10 PASS (100%) | ~220 ms |
+| **TOTAL** | | | **95** | **81 PASS / 14 GATED** | **~1.6 s** |
+
+---
+
+## 3. Comprehensive Modernization Suite Details (`modernization.test.ts`)
+
+### 3.1 Overview
+- **Runner**: Node 22 native test runner (`node:test`, `node:assert/strict`) via TypeScript executor (`tsx`).
+- **Suites**: 15 sub-suites (4 Tier suites, 11 Area suites).
+- **Total Tests**: 61 tests.
+- **Passing**: 47 (77%).
+- **Failing (Gated)**: 14 (23%) — gated tests awaiting M1 and M3 implementation.
+
+### 3.2 4-Tier Coverage Matrix
+
+| Tier | Name | Target Areas | Tests | Passed | Gated / Pending | Milestone Gate |
+|---|---|---|---|---|---|---|
+| **Tier 1** | Feature Coverage | Visual Tokens & Typography, PrimeReact/PrimeIcons Purge, UI Primitives, Route Coverage | 26 | 15 | 11 | Milestone 1 (M1) |
+| **Tier 2** | Boundary & Corner Cases | Empty States, Rate Limiting & Auth Boundaries, Responsive Layout & Drawer Keyboard Dismissal | 15 | 15 | 0 | Baseline Complete |
+| **Tier 3** | Cross-Feature Contracts | Supabase Schema Isolation (`stoic`), Reactivity Protocol, Layout Isolation (`isPublicPage`) | 15 | 12 | 3 | Milestone 3 (M3) |
+| **Tier 4** | Real-World Application Scenarios | Morning Reflection, Sanctuary Journal, Habit Tracking, Challenge Deliverable, Renewal & Grace Period Export | 5 | 5 | 0 | Baseline Complete |
+| **TOTAL** | | | **61** | **47** | **14** | |
+
+---
+
+## 4. Test Case Checklist & Results (`tests/e2e/modernization.test.ts`)
+
+### Tier 1: Feature Coverage (26 tests)
+
+#### Area 1.1: Visual Design Tokens & Typography (6 tests)
+- [x] **T1.1.1**: Tailwind v4 theme configuration in `globals.css` defines radius tokens (`--radius-sm` through `--radius-2xl`).
+- [x] **T1.1.2**: Dark Obsidian color palette tokens defined in `.dark` rule (`#0a0a0f`, `#c9a84c`, `#111116`, `#1e1e28`).
+- [x] **T1.1.3**: Warm Bone color palette tokens defined in `:root` rule (`#fcfbfa`, `#1c1917`, `#ab841d`, `#ffffff`, `#e7e5e4`).
+- [x] **T1.1.4**: Universal Inter font loading in root layout `src/app/layout.tsx` (`--font-inter`).
+- [ ] **T1.1.5**: Universal Cinzel font loading in root layout for authoritative serif typography (`--font-cinzel`) — *[Gated: M1]*
+- [x] **T1.1.6**: Body typography and scrollbar tokens enforcement in `globals.css` (`var(--font-inter)`).
+
+#### Area 1.2: PrimeReact & PrimeIcons Complete Purge (6 tests)
+- [ ] **T1.2.1**: Zero imports of `primereact` in `src/app/journal/page.tsx` — *[Gated: M1]*
+- [ ] **T1.2.2**: Zero imports of `primereact` in `src/app/calendar/page.tsx` — *[Gated: M1]*
+- [ ] **T1.2.3**: Zero imports of `primereact` in `src/app/challenges/page.tsx` — *[Gated: M1]*
+- [ ] **T1.2.4**: Zero imports of `primereact` in `src/app/auth/verify/page.tsx` — *[Gated: M1]*
+- [ ] **T1.2.5**: Zero imports of `primereact` or `primeicons` across all files under `src/` — *[Gated: M1]*
+- [ ] **T1.2.6**: Zero `primereact`/`primeicons` CSS imports or `.p-` override rules in `globals.css` — *[Gated: M1]*
+
+#### Area 1.3: Component Primitives Existence & Interface Contracts (6 tests)
+- [ ] **T1.3.1**: `Input` primitive contract: exists, renders accessible `<input>` with gold focus ring — *[Gated: M1]*
+- [ ] **T1.3.2**: `Textarea` primitive contract: exists, auto-sizing / accessible styling and forwards props — *[Gated: M1]*
+- [ ] **T1.3.3**: `Drawer` primitive contract: exists, implements `{ isOpen, onClose, title?, children }` — *[Gated: M1]*
+- [ ] **T1.3.4**: `Button` primitive contract: provides tactile button interaction and variants — *[Gated: M1]*
+- [x] **T1.3.5**: `Skeleton` primitive contract: exists, renders `animate-pulse` and accepts custom `className`.
+- [x] **T1.3.6**: `Badge` primitive contract: `ModuleBadge` renders discipline styles (`percepcion`, `accion`, `voluntad`, `evaluacion`) and labels.
+
+#### Area 1.4: Route Coverage (8 tests)
+- [x] **T1.4.1**: Internal route `/today` exists and exports default component.
+- [x] **T1.4.2**: Internal route `/journal` exists and exports default component.
+- [x] **T1.4.3**: Internal route `/habits` exists and exports default component.
+- [x] **T1.4.4**: Internal route `/challenges` exists and exports default component.
+- [x] **T1.4.5**: Internal route `/calendar` exists and exports default component.
+- [x] **T1.4.6**: Internal route `/evaluation` exists and exports default component.
+- [x] **T1.4.7**: Internal route `/settings` exists and exports default component.
+- [x] **T1.4.8**: Public and Auth routes exist and export default components (`/login`, `/welcome`, `/auth/verify`, `/suscripcion`, `/becas`, `/renovar`).
+
+---
+
+### Tier 2: Boundary & Corner Cases (15 tests)
+
+#### Area 2.1: Empty States Across Core Modules (5 tests)
+- [x] **T2.1.1**: `EmptyState` primitive renders fallback icon, text, and container styling.
+- [x] **T2.1.2**: Journal empty state handles null/empty entries array gracefully with prompt.
+- [x] **T2.1.3**: Habits curriculum unstarted/empty boundary handles zero completed days safely (0% and 0 streak).
+- [x] **T2.1.4**: Challenges empty state handles missing submissions for inactive weeks gracefully.
+- [x] **T2.1.5**: Calendar empty day boundary: `dayStatus` classifies past unlogged days as `'missed'`, current as `'today'`, future as `'future'`.
+
+#### Area 2.2: Rate Limiting, Access Code Boundaries, Email Validations (5 tests)
+- [x] **T2.2.1**: Email normalization trims whitespace, converts lowercase, preserves sub-addressing (`+`).
+- [x] **T2.2.2**: Email validation boundary checks: rejects empty string, missing domain, missing `@`, double dot, overlength (>254 chars).
+- [x] **T2.2.3**: Access code verification boundary: sanitizes codes and rejects invalid lengths and non-alphanumeric chars.
+- [x] **T2.2.4**: Rate limiting simulation: throttles rapid requests exceeding threshold window.
+- [x] **T2.2.5**: Lead submission boundary validation: `/api/leads/subscribe` contract rejects missing payload or empty email (HTTP 400).
+
+#### Area 2.3: Responsive Layout & Drawer Keyboard Dismissal (5 tests)
+- [x] **T2.3.1**: Drawer Escape key dismissal: triggers `onClose` when Escape is pressed.
+- [x] **T2.3.2**: Drawer keyboard isolation: does NOT trigger `onClose` on non-Escape keys (`Enter`, `Tab`, `Space`, `ArrowDown`).
+- [x] **T2.3.3**: Drawer backdrop dismissal: clicking backdrop outside panel triggers `onClose`.
+- [x] **T2.3.4**: Drawer panel event isolation: clicking inside panel stops event propagation and does NOT dismiss drawer.
+- [x] **T2.3.5**: Responsive layout breakpoint contracts: `MobileTabBar` has `md:hidden` and `fixed bottom-0`.
+
+---
+
+### Tier 3: Cross-Feature Combinations & Contracts (15 tests)
+
+#### Area 3.1: Supabase Schema Contract (5 tests)
+- [x] **T3.1.1**: `src/utils/supabase/client.ts` strictly enforces `{ db: { schema: 'stoic' } }`.
+- [x] **T3.1.2**: `src/utils/supabase/server.ts` strictly enforces `{ db: { schema: 'stoic' } }`.
+- [x] **T3.1.3**: `src/lib/supabase.ts` strictly enforces `{ db: { schema: 'stoic' } }`.
+- [x] **T3.1.4**: Server API routes enforce `{ db: { schema: 'stoic' } }` on direct client instantiations.
+- [x] **T3.1.5**: Database client abstraction in `src/lib/db/client.ts` exposes schema-configured client.
+
+#### Area 3.2: Reactivity Protocol (5 tests)
+- [x] **T3.2.1**: `notifyDataChanged` dispatches `stoic_data_changed` event on `window`.
+- [x] **T3.2.2**: `notifyDataChanged` handles SSR environment safely when `window` is undefined.
+- [x] **T3.2.3**: `useStoicSync` hook registers listener for `stoic_data_changed` and executes `load`.
+- [x] **T3.2.4**: `useStoicSync` hook cleans up event listener on unmount.
+- [x] **T3.2.5**: Cross-module reactivity verification: mutations in `journal`, `logs`, and `tracks` call `notifyDataChanged`.
+
+#### Area 3.3: Layout Isolation Contract (5 tests)
+- [ ] **T3.3.1**: `src/app/layout.tsx` `isPublicPage` includes `/renovar` and `/welcome` — *[Gated: M3]*
+- [ ] **T3.3.2**: `src/components/Sidebar.tsx` `isPublicPage` includes `/renovar` and `/welcome` — *[Gated: M3]*
+- [ ] **T3.3.3**: `src/components/MobileTabBar.tsx` `isPublicPage` includes `/renovar` and `/welcome` — *[Gated: M3]*
+- [x] **T3.3.4**: Layout isolation evaluation matrix: all public routes evaluate correctly to public, internal evaluate to protected.
+- [x] **T3.3.5**: Auth prefix matching correctly isolates any nested `/auth/` path from navigation shell.
+
+---
+
+### Tier 4: Real-World Application Scenarios (5 scenarios)
+- [x] **T4.1: Scenario 1 - Morning Reflection Routine Journey**:
+  - Quote retrieval (`Epicteto`, Day 1) -> Initial status check (`today`) -> Log completion -> `notifyDataChanged` reactive broadcast verified -> Status transition to `'completed'`.
+- [x] **T4.2: Scenario 2 - Sanctuary Journal Entry Creation with Mood & Template**:
+  - Validates full journal entry data model: template type (`evening`), mood score (`4/5`), content object validation, and rejection of invalid types/moods.
+- [x] **T4.3: Scenario 3 - 13-Week Curriculum Habit Tracking Toggle & Streak Computation**:
+  - 90-day track simulation: 3 consecutive days yields streak 3; uncompleted day 4 resets streak on day 5 to 0.
+- [x] **T4.4: Scenario 4 - Weekly Challenge Deliverable Submission & Progress Tracking**:
+  - Challenge milestone retrieval -> deliverable text length validation (>=20 chars) -> rejection of trivial inputs -> successful submission record.
+- [x] **T4.5: Scenario 5 - Membership Renewal & Grace Period Data Export Workflow**:
+  - Expired access evaluation -> 30-day grace period status verification (`'grace'`) -> data export privilege check (`canExport === true`) -> export route contract validation (`Content-Disposition: attachment`, `Content-Type: text/markdown`).
+
+---
+
+## 5. Escalation & Milestone Gate Backlog
+
+The following 14 tests in `tests/e2e/modernization.test.ts` represent the exact contractual deliverables to be implemented by subsequent milestones:
+
+### Assigned to Milestone 1 (M1) — Design System & Visual Foundation
+1. `T1.1.5`: Import `Cinzel` in `src/app/layout.tsx` with `--font-cinzel`.
+2. `T1.2.1`: Purge `primereact` imports from `src/app/journal/page.tsx`.
+3. `T1.2.2`: Purge `primereact` imports from `src/app/calendar/page.tsx`.
+4. `T1.2.3`: Purge `primereact` imports from `src/app/challenges/page.tsx`.
+5. `T1.2.4`: Purge `primereact` imports from `src/app/auth/verify/page.tsx`.
+6. `T1.2.5`: Complete purge of `primereact` and `primeicons` across `src/`.
+7. `T1.2.6`: Purge `@import "primereact...` and `@import "primeicons...` from `src/app/globals.css`.
+8. `T1.3.1`: Implement `src/components/ui/Input.tsx`.
+9. `T1.3.2`: Implement `src/components/ui/Textarea.tsx`.
+10. `T1.3.3`: Implement `src/components/ui/Drawer.tsx`.
+11. `T1.3.4`: Implement `src/components/ui/Button.tsx`.
+
+### Assigned to Milestone 3 (M3) — Public Pages & Layout Isolation
+12. `T3.3.1`: Add `/welcome` and `/renovar` to `isPublicPage` in `src/app/layout.tsx`.
+13. `T3.3.2`: Add `/welcome` and `/renovar` to `isPublicPage` in `src/components/Sidebar.tsx`.
+14. `T3.3.3`: Add `/welcome` and `/renovar` to `isPublicPage` in `src/components/MobileTabBar.tsx`.
+
+Once M1 and M3 are implemented, running `npx tsx --test tests/e2e/modernization.test.ts` will achieve **61/61 PASS (100%)**.

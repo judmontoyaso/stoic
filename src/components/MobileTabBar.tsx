@@ -18,6 +18,8 @@ export default function MobileTabBar() {
     !pathname ||
     pathname === '/login' ||
     pathname === '/landing' ||
+    pathname === '/welcome' ||
+    pathname === '/renovar' ||
     pathname === '/becas' ||
     pathname === '/suscripcion' ||
     pathname === '/terms' ||

@@ -1,7 +1,17 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
+
+const emptySubscribe = () => () => {}
+
+function useIsMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
+}
 
 interface Particle {
   x: number
@@ -21,15 +31,11 @@ const GOLD_COLORS = [
 ]
 
 export default function MouseTrail() {
-  const [mounted, setMounted] = useState(false)
+  const isMounted = useIsMounted()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
+    if (!isMounted) return
 
     // Solo activar en dispositivos con puntero fino (mouse/trackpad)
     if (typeof window === 'undefined' || !window.matchMedia('(pointer: fine)').matches) {
@@ -179,10 +185,10 @@ export default function MouseTrail() {
       window.removeEventListener('mousemove', handleMouseMove)
       clearTimeout(idleTimer)
     }
-  }, [mounted])
+  }, [isMounted])
 
   // Montar directamente en document.body para escapar de cualquier stacking context
-  if (!mounted || typeof document === 'undefined') return null
+  if (!isMounted || typeof document === 'undefined') return null
 
   return createPortal(
     <canvas

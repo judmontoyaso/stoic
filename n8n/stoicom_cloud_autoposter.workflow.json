@@ -1,0 +1,152 @@
+{
+  "name": "StoiCom - Autoposter Cloud (Supabase -> Redes Sociales)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 12 * * *"
+            }
+          ]
+        }
+      },
+      "id": "c1000000-0000-0000-0000-000000000001",
+      "name": "Programador Diario (12:30 PM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "url": "https://rnmykblecgmbajprreau.supabase.co/storage/v1/object/public/stoicom/videos/catalog.json",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "c1000000-0000-0000-0000-000000000002",
+      "name": "1. Leer Catálogo Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Selecciona el video del día automáticamente según el calendario\nconst catalog = $input.all().map(item => item.json);\nconst list = Array.isArray(catalog[0]) ? catalog[0] : catalog;\n\n// Fecha base de inicio (puedes cambiarla según tu calendario de lanzamiento)\nconst startDate = new Date('2026-10-10');\nconst today = new Date();\nconst diffDays = Math.max(0, Math.floor((today - startDate) / (1000 * 60 * 60 * 24)));\n\n// Rota priorizando los videos dinámicos v2 (Días 11 al 20)\nconst dynamicVideos = list.filter(v => v.day >= 11 && v.day <= 20);\nconst pool = dynamicVideos.length > 0 ? dynamicVideos : list;\n\nconst index = diffDays % pool.length;\nconst selected = pool[index];\n\nreturn [\n  {\n    json: {\n      day: selected.day,\n      version: selected.version,\n      hook: selected.hook,\n      video_url: selected.video_url,\n      video_filename: selected.video_filename,\n      caption: selected.caption,\n      reddit_title: selected.reddit_title,\n      reddit_body: selected.reddit_body,\n      scheduled_date: today.toISOString().split('T')[0]\n    }\n  }\n];"
+      },
+      "id": "c1000000-0000-0000-0000-000000000003",
+      "name": "2. Seleccionar Video de Hoy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 0]
+    },
+    {
+      "parameters": {
+        "content": "=## 🏛️ StoiCom - Video Listo para Hoy\n\n**Día {{ $json.day }}**: *{{ $json.hook }}*\n\n- **Video URL (Supabase):** {{ $json.video_url }}\n- **Caption sugerido:**\n{{ $json.caption }}\n\n- **Reddit Debate:**\n**Título:** {{ $json.reddit_title }}\n**Cuerpo:** {{ $json.reddit_body }}",
+        "height": 280,
+        "width": 380
+      },
+      "id": "c1000000-0000-0000-0000-000000000004",
+      "name": "Ficha del Video",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [720, -220]
+    },
+    {
+      "parameters": {
+        "operation": "post",
+        "subreddit": "conversaciones",
+        "title": "={{ $json.reddit_title }}",
+        "kind": "self",
+        "text": "={{ $json.reddit_body }}"
+      },
+      "id": "c1000000-0000-0000-0000-000000000005",
+      "name": "3. Publicar en Reddit",
+      "type": "n8n-nodes-base.reddit",
+      "typeVersion": 1,
+      "position": [760, -40]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/ME/media",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "media_type",
+              "value": "REELS"
+            },
+            {
+              "name": "video_url",
+              "value": "={{ $json.video_url }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $json.caption }}"
+            },
+            {
+              "name": "share_to_feed",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c1000000-0000-0000-0000-000000000006",
+      "name": "4. Crear Reel en Instagram (Meta API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 160]
+    }
+  ],
+  "connections": {
+    "Programador Diario (12:30 PM)": {
+      "main": [
+        [
+          {
+            "node": "1. Leer Catálogo Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. Leer Catálogo Supabase": {
+      "main": [
+        [
+          {
+            "node": "2. Seleccionar Video de Hoy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Seleccionar Video de Hoy": {
+      "main": [
+        [
+          {
+            "node": "3. Publicar en Reddit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "4. Crear Reel en Instagram (Meta API)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,3 +1,4 @@
+import { Bookmark } from 'lucide-react'
 import type { StoicQuote } from '@/lib/quotes'
 
 /** Cita estoica del día con el estilo dorado del dashboard */
@@ -7,7 +8,7 @@ export default function QuoteCard({ quote }: { quote: StoicQuote }) {
       <div className="absolute top-0 right-0 w-32 h-32 bg-[#c9a84c]/5 rounded-full blur-3xl" />
       <div className="relative">
         <div className="flex items-center gap-2 mb-3">
-          <i className="pi pi-bookmark text-[#c9a84c]" />
+          <Bookmark className="w-3.5 h-3.5 text-[#c9a84c]" />
           <span className="text-xs uppercase tracking-widest text-[#c9a84c] font-medium">Reflexión del día</span>
         </div>
         <p className="text-slate-200 text-lg italic leading-relaxed">

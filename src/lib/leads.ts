@@ -43,6 +43,7 @@ export function normalizeEmail(raw: unknown): string | null {
   const email = String(raw ?? '').trim().toLowerCase()
   // Deliberadamente laxo: rechazar lo evidente sin pelear con RFC 5322
   if (email.length < 5 || email.length > 254) return null
+  if (email.includes('..')) return null
   if (!/^[^\s@,;]+@[^\s@,;.]+\.[^\s@,;]{2,}$/.test(email)) return null
   return email
 }

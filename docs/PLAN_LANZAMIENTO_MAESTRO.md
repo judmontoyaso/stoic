@@ -42,8 +42,8 @@ Thank you for reviewing StoiCom. Here are the complete details requested for our
 
    *Note: Lemon Squeezy is our exclusive international merchant rail for USD transactions ($59 USD / year). We also provide Mercado Pago for localized Latin American domestic payment methods (COP $199,000 / year).*
 
-5. **Demo Video Walkthrough (75 seconds):**
-   - Video URL: [Insert Loom / YouTube Direct Link here]
+5. **Demo Video Walkthrough (120 seconds):**
+   - Video URL: https://www.loom.com/share/5776251554f944f3b95eecd8e2c6438f
    - The walkthrough demonstrates:
      a) Public landing page, pricing section with transparent currency toggle, and legal policies.
      b) Lemon Squeezy checkout initiation (`/auth/verify` -> LS hosted checkout with prefilled customer data).

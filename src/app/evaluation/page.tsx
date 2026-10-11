@@ -27,6 +27,10 @@ const MODULE_BAR_COLOR: Record<ProgramModule, string> = {
   action: 'bg-emerald-500',
   will: 'bg-[var(--primary-gold)]',
   evaluation: 'bg-purple-500',
+  percepcion: 'bg-sky-500',
+  accion: 'bg-emerald-500',
+  voluntad: 'bg-[var(--primary-gold)]',
+  evaluacion: 'bg-purple-500',
 }
 
 export default function EvaluationPage() {

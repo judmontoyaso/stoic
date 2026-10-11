@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { createClient } from '@/utils/supabase/client'
 
@@ -75,7 +76,7 @@ function LoginForm() {
           className="w-full flex items-center justify-center gap-3 py-3 rounded-lg border border-[var(--border-color)] bg-[var(--background)] text-sm font-bold text-[var(--foreground)] hover:border-[var(--primary-gold)]/50 transition-all disabled:opacity-50"
         >
           {googleLoading ? (
-            <i className="pi pi-spin pi-spinner" />
+            <Loader2 className="w-4 h-4 animate-spin text-[var(--primary-gold)]" />
           ) : (
             <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/>
