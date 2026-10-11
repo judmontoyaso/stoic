@@ -29,7 +29,7 @@ with sync_playwright() as p:
     page.goto("https://www.reddit.com/appeal", wait_until="domcontentloaded")
     time.sleep(3)
 
-    textarea = page.locator("textarea").first
+    textarea = page.locator("textarea:visible, textarea[placeholder*='DESCRIPCIÓN'], textarea[name='description']").first
     if textarea.count():
         textarea.click()
         textarea.fill(appeal_text)
