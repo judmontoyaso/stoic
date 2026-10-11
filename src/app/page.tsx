@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Flame, CheckCircle2 } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Flame, CheckCircle2, LayoutDashboard } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StoicDB } from '@/lib/db'
 import { getTodayQuote, getQuoteForDay } from '@/lib/quotes'
-import { getToday } from '@/lib/utils'
+import { getToday, formatDate } from '@/lib/utils'
 import { currentDayNumber, currentStreak } from '@/lib/program'
 import { LoadingScreen, PageHeader, EmptyState } from '@/components/ui'
 import QuoteCard from '@/components/dashboard/QuoteCard'
@@ -58,21 +59,31 @@ export default function DashboardPage() {
   const bestStreak = Math.max(0, ...activeStates.map(s => currentStreak(s.track, s.dayLogs)))
 
   return (
-    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto"
+    >
       <PageHeader
         title="Panel de Control"
-        subtitle={new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        icon={
+          <div className="w-10 h-10 rounded-xl bg-[var(--primary-gold)]/10 border border-[var(--primary-gold)]/30 flex items-center justify-center text-[var(--primary-gold)] shadow-[0_0_15px_rgba(201,168,76,0.15)]">
+            <LayoutDashboard className="w-5 h-5" />
+          </div>
+        }
+        subtitle={formatDate(today)}
         actions={activeStates.length > 0 && (
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-sm bg-[var(--card-bg)] px-3 py-1.5 rounded-lg border border-[var(--border-color)]">
               <CheckCircle2 className="w-4 h-4 text-[var(--primary-gold)]" />
               <span className="text-[var(--foreground)] font-bold">{todayDone}/{todayTotal}</span>
-              <span className="text-slate-500">tracks hoy</span>
+              <span className="text-slate-400 text-xs">tracks hoy</span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-sm bg-[var(--card-bg)] px-3 py-1.5 rounded-lg border border-[var(--border-color)]">
               <Flame className="w-4 h-4 text-orange-400" />
               <span className="text-[var(--foreground)] font-bold">{bestStreak}</span>
-              <span className="text-slate-500">racha</span>
+              <span className="text-slate-400 text-xs">racha</span>
             </div>
           </div>
         )}
@@ -81,8 +92,15 @@ export default function DashboardPage() {
       <QuoteCard quote={quote} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {trackStates.map((state) => (
-          <TrackCard key={state.track.id} state={state} today={today} />
+        {trackStates.map((state, idx) => (
+          <motion.div
+            key={state.track.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 + idx * 0.05 }}
+          >
+            <TrackCard state={state} today={today} />
+          </motion.div>
         ))}
       </div>
 
@@ -91,6 +109,6 @@ export default function DashboardPage() {
           <p className="text-sm">No hay tracks configurados. Ejecuta <code className="text-[var(--primary-gold)]">supabase_v2_schema.sql</code> y los seeds en Supabase.</p>
         </EmptyState>
       )}
-    </div>
+    </motion.div>
   )
 }
