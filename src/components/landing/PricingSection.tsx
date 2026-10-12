@@ -12,17 +12,14 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
   const [currency, setCurrency] = useState<'COP' | 'USD'>('COP')
 
   useEffect(() => {
-    // COP para toda América: Mercado Pago es la única puerta que cobra
-    // hoy (el botón en USD está inactivo hasta que Lemon Squeezy
-    // verifique). Con el filtro anterior, solo Colombia veía la opción
-    // pagable y un visitante de México se quedaba sin ninguna. Su tarjeta
-    // convierte de COP sin problema.
-    let moneda: 'COP' | 'USD' = 'COP'
+    // Si la zona horaria es de Colombia (America/Bogota), priorizamos COP (Mercado Pago / PSE).
+    // Para el resto del mundo, USD (Lemon Squeezy / Tarjetas / PayPal) es la pasarela internacional.
+    let moneda: 'COP' | 'USD' = 'USD'
     try {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
-      if (!tz.startsWith('America/')) moneda = 'USD'
+      if (tz === 'America/Bogota') moneda = 'COP'
     } catch {
-      // Sin zona horaria: se queda en COP, la que sí cobra
+      // Sin zona horaria: default USD
     }
     // La zona horaria solo existe en el cliente: hay que fijarla al montar
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -31,6 +28,25 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
 
   const handleMercadoPagoCheckout = () => {
     window.location.href = '/login'
+  }
+
+  const handleLemonSqueezyCheckout = async () => {
+    const defaultUrl = 'https://stoicom.lemonsqueezy.com/checkout/buy/3bb96131-5e7d-41cd-b253-97173f19ca0a'
+    const base = process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL || defaultUrl
+    try {
+      const { createClient } = await import('@/utils/supabase/client')
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const sep = base.includes('?') ? '&' : '?'
+        const params = `checkout[custom][user_id]=${user.id}&checkout[email]=${encodeURIComponent(user.email || '')}`
+        window.location.href = `${base}${sep}${params}`
+        return
+      }
+    } catch {
+      // Fallback al enlace de checkout directo
+    }
+    window.location.href = base
   }
 
   const handleFreeTrialClick = () => {
@@ -201,11 +217,11 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
             ) : (
               <button
                 type="button"
-                disabled
-                className="w-full py-3 px-4 rounded-lg bg-slate-800 text-slate-400 border border-slate-700 text-xs font-bold uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-2"
+                onClick={handleLemonSqueezyCheckout}
+                className="w-full py-3 px-4 rounded-lg bg-[#c9a84c] text-[#0a0a0f] text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
               >
-                <CreditCard className="w-4 h-4 text-slate-600" />
-                Pago en USD Próximamente
+                <CreditCard className="w-4 h-4" />
+                Pagar {usdLabel} USD con Lemon Squeezy
               </button>
             )}
             <p className="text-[10px] text-center text-slate-400">

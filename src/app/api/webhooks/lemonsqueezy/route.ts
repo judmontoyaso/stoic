@@ -90,19 +90,60 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: `status ${status}` })
   }
 
-  const userId = payload.meta?.custom_data?.user_id
-  if (!userId) {
-    // Sin user_id no hay a quién acreditar: 200 para que LS no reintente,
-    // pero queda en los logs para resolverlo a mano.
-    console.error('Orden pagada sin user_id en custom_data:', payload.data?.attributes?.identifier)
-    return NextResponse.json({ ok: true, warning: 'orden sin user_id' })
-  }
-
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceKey) {
     return NextResponse.json({ error: 'Falta SUPABASE_SERVICE_ROLE_KEY' }, { status: 500 })
   }
   const admin = createSupabaseAdmin(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey)
+
+  let userId = payload.meta?.custom_data?.user_id
+  const userEmail = payload.data?.attributes?.user_email
+  const identifier = payload.data?.attributes?.identifier || payload.data?.id || null
+  const total = payload.data?.attributes?.total
+
+  // Si no vino userId en custom_data, intentar asociar por email en Supabase Auth
+  if (!userId && userEmail) {
+    try {
+      const { data: listData } = await admin.auth.admin.listUsers()
+      const found = listData?.users?.find(
+        (u) => u.email?.toLowerCase() === userEmail.toLowerCase()
+      )
+      if (found) {
+        userId = found.id
+      }
+    } catch (err) {
+      console.error('Error buscando usuario por email:', err)
+    }
+  }
+
+  // Si el usuario aún no tiene cuenta creada, registramos el pago en stoic.payments
+  // para que al iniciar sesión con Google quede aprobado inmediatamente.
+  if (!userId) {
+    console.log('Pago registrado sin cuenta previa de usuario; esperando primer login:', userEmail, identifier)
+    await recordPayment({
+      provider: 'lemonsqueezy',
+      providerPaymentId: identifier || `ls-${userEmail}`,
+      userId: null,
+      email: userEmail || null,
+      amount: typeof total === 'number' ? total / 100 : null,
+      currency: payload.data?.attributes?.currency || null,
+      status: 'approved',
+      plan: 'founder',
+    })
+
+    if (userEmail) {
+      const appUrl = process.env.APP_URL || 'https://stoicom.app'
+      const name = userEmail.split('@')[0]
+      try {
+        await sendEmail(userEmail, welcomeEmail({ name, appUrl }))
+      } catch (err) {
+        console.error('Error enviando correo de bienvenida al comprador:', err)
+      }
+      await markLeadConverted(userEmail)
+    }
+
+    return NextResponse.json({ ok: true, pending_login: userEmail })
+  }
 
   const { data: userData, error: getError } = await admin.auth.admin.getUserById(userId)
   if (getError || !userData?.user) {
@@ -117,7 +158,6 @@ export async function POST(request: Request) {
   // ha llegado. LS reintenta los webhooks que fallan, así que se marca
   // qué orden otorgó la vigencia: un reintento de la MISMA orden no puede
   // regalar un segundo año.
-  const identifier = payload.data?.attributes?.identifier || payload.data?.id || null
   const orderRef = `lemonsqueezy:${identifier ?? userId}`
   const yaContado = meta.stoicom_vigencia_order === orderRef
   const expiresAt = yaContado
@@ -167,7 +207,6 @@ export async function POST(request: Request) {
 
   // Registro interno del pago (idempotente; no bloquea la aprobación).
   // LS reporta el total en centavos → a unidades de la moneda.
-  const total = payload.data?.attributes?.total
   await recordPayment({
     provider: 'lemonsqueezy',
     providerPaymentId: payload.data?.attributes?.identifier || payload.data?.id || `ls-${userId}`,
