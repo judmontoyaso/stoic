@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { trackPublic } from '@/lib/analytics-public'
+import { ttqIdentify } from '@/lib/tiktok-pixel'
 
 // Formulario de aplicación a las Becas de Mérito (/becas).
 // Diseño elegante y oscuro con microcopy persuasivo, humano y directo.
@@ -37,6 +38,7 @@ export default function BecaForm() {
         setStatus('error')
         return
       }
+      ttqIdentify({ email: form.email })
       trackPublic('beca_form_submitted')
       setStatus('sent')
     } catch {

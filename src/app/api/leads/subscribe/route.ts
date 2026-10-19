@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { normalizeEmail, serviceClient, sendConfirmation, type Lead } from '@/lib/leads'
+import { sendTikTokServerEvent } from '@/lib/tiktok-events-api'
 
 // POST /api/leads/subscribe  { email, source? }
 // Alta en la lista con doble opt-in: aquí solo se guarda el correo y se
@@ -29,6 +30,7 @@ export async function POST(request: Request) {
   }
 
   const source = typeof body.source === 'string' ? body.source.slice(0, 40) : 'landing'
+  const eventId = typeof body.event_id === 'string' ? body.event_id.slice(0, 80) : undefined
   const ok = NextResponse.json({ ok: true })
 
   const supabase = serviceClient()
@@ -95,6 +97,20 @@ export async function POST(request: Request) {
     // El correo no salió: sin confirm_sent_at podrá reintentar enseguida
     console.error('Leads: Resend no aceptó la confirmación para', email)
   }
+
+  await sendTikTokServerEvent({
+    event: 'CompleteRegistration',
+    eventId,
+    request,
+    user: { email },
+    properties: {
+      content_id: 'lead-7-dias',
+      content_type: 'product',
+      content_name: '7 días gratis',
+      value: 0,
+      currency: 'USD',
+    },
+  })
 
   return ok
 }

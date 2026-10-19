@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { trackPublic } from '@/lib/analytics-public'
+import { generateEventId, ttqIdentify } from '@/lib/tiktok-pixel'
 
 // Captura de correo de la landing. Doble opt-in: aquí solo se pide el
 // correo; el acceso real llega tras confirmar desde el buzón.
@@ -33,11 +34,13 @@ export default function LeadForm({ source = 'landing' }: { source?: string }) {
     setStatus('sending')
     setError('')
 
+    const eventId = generateEventId('lead_form_submitted')
+
     try {
       const res = await fetch('/api/leads/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source: currentSource }),
+        body: JSON.stringify({ email, source: currentSource, event_id: eventId }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
@@ -45,7 +48,8 @@ export default function LeadForm({ source = 'landing' }: { source?: string }) {
         setStatus('error')
         return
       }
-      trackPublic('lead_form_submitted', { source: currentSource })
+      ttqIdentify({ email })
+      trackPublic('lead_form_submitted', { source: currentSource }, eventId)
       setStatus('sent')
     } catch {
       setError('No hay conexión. Inténtalo de nuevo.')

@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar"
 import MobileTabBar from "@/components/MobileTabBar"
 import PageTransition from "@/components/PageTransition"
 import RegisterSW from "@/components/RegisterSW"
+import TikTokPixel from "@/components/TikTokPixel"
 import { Toaster } from "react-hot-toast"
 
 import { headers } from "next/headers"
@@ -95,6 +96,7 @@ export default async function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${cinzel.variable} antialiased bg-[var(--background)] text-[var(--foreground)] flex flex-col md:flex-row min-h-screen transition-colors duration-200`}>
+        <TikTokPixel />
         <RegisterSW />
         <Toaster 
           position="top-right"

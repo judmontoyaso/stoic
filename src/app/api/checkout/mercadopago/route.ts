@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createServerSupabase } from '@/utils/supabase/server'
 import { mpConfig, createPreference } from '@/lib/mercadopago'
 import { readAccess } from '@/lib/access'
+import { sendTikTokServerEvent } from '@/lib/tiktok-events-api'
 
 // Crea la preferencia de Mercado Pago para el usuario logueado y devuelve
 // el init_point (URL de checkout). El front redirige ahí.
@@ -13,7 +14,7 @@ import { readAccess } from '@/lib/access'
 
 export const maxDuration = 30
 
-export async function POST() {
+export async function POST(request: Request) {
   const config = mpConfig()
   if (!config) {
     return NextResponse.json({ error: 'Mercado Pago no está habilitado' }, { status: 503 })
@@ -54,6 +55,23 @@ export async function POST() {
   if (!pref) {
     return NextResponse.json({ error: 'No se pudo iniciar el pago' }, { status: 502 })
   }
+
+  await sendTikTokServerEvent({
+    event: 'InitiateCheckout',
+    eventId: `mp_pref_${pref.preferenceId}`,
+    request,
+    user: {
+      email: user.email ?? null,
+      externalId: user.id,
+    },
+    properties: {
+      content_id: 'stoicom-anual',
+      content_type: 'product',
+      content_name: 'Matrícula Anual StoiCom',
+      value: config.price,
+      currency: config.currency,
+    },
+  })
 
   return NextResponse.json({ initPoint: pref.initPoint })
 }

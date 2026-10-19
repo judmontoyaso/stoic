@@ -5,7 +5,8 @@ import { Input } from '@/components/ui'
 import toast from 'react-hot-toast'
 import { createClient } from '@/utils/supabase/client'
 import { track } from '@/lib/analytics'
-import { copLabel, usdLabel } from '@/lib/pricing'
+import { PROGRAM_PRICE, copLabel, usdLabel } from '@/lib/pricing'
+import { ttqIdentify, ttqTrack } from '@/lib/tiktok-pixel'
 
 // Primera entrada con Google: hasta tres puertas, una sola vez.
 //   1. Fundador vía Mercado Pago (LatAm: tarjeta, PSE, Nequi; el webhook aprueba)
@@ -25,6 +26,19 @@ export default function VerifyPage() {
 
   const handleMercadoPago = useCallback(async () => {
     setMpLoading(true)
+    ttqTrack('InitiateCheckout', {
+      contents: [
+        {
+          content_id: 'stoicom-anual',
+          content_type: 'product',
+          content_name: 'Matrícula Anual StoiCom',
+          quantity: 1,
+          price: PROGRAM_PRICE.cop,
+        },
+      ],
+      value: PROGRAM_PRICE.cop,
+      currency: 'COP',
+    })
     try {
       const res = await fetch('/api/checkout/mercadopago', { method: 'POST' })
       const data = await res.json()
@@ -45,6 +59,7 @@ export default function VerifyPage() {
     const base = process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL || DEFAULT_LS_URL
     createClient().auth.getUser().then(({ data: { user } }) => {
       if (!user) return
+      ttqIdentify({ email: user.email, external_id: user.id })
       const sep = base.includes('?') ? '&' : '?'
       const params = `checkout[custom][user_id]=${user.id}&checkout[email]=${encodeURIComponent(user.email || '')}`
       setCheckoutUrl(`${base}${sep}${params}`)
@@ -76,6 +91,7 @@ export default function VerifyPage() {
       const data = await res.json()
       if (res.ok && data.ok) {
         track('code_approved')
+        ttqTrack('CompleteRegistration', { content_name: 'Código de acceso', status: 'approved' })
         toast.success('Correo aprobado. Bienvenido.')
         window.location.href = '/welcome'
       } else {
@@ -131,6 +147,21 @@ export default function VerifyPage() {
           {checkoutUrl && (
             <a
               href={checkoutUrl}
+              onClick={() =>
+                ttqTrack('InitiateCheckout', {
+                  contents: [
+                    {
+                      content_id: 'stoicom-anual',
+                      content_type: 'product',
+                      content_name: 'Matrícula Anual StoiCom',
+                      quantity: 1,
+                      price: PROGRAM_PRICE.usd,
+                    },
+                  ],
+                  value: PROGRAM_PRICE.usd,
+                  currency: 'USD',
+                })
+              }
               className="block w-full py-2.5 rounded-lg border border-[var(--primary-gold)]/50 text-center text-sm font-bold text-[var(--primary-gold)] hover:bg-[var(--primary-gold)]/10 transition-colors"
             >
               Pagar {usdLabel} USD (Tarjeta Internacional / PayPal)

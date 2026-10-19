@@ -6,6 +6,8 @@
 // el insert falla, se registra en el log y el flujo de acceso sigue.
 
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
+import { PROGRAM_PRICE } from '@/lib/pricing'
+import { sendTikTokServerEvent } from '@/lib/tiktok-events-api'
 
 export interface PaymentRecord {
   provider: 'mercadopago' | 'lemonsqueezy'
@@ -19,6 +21,32 @@ export interface PaymentRecord {
 }
 
 export async function recordPayment(p: PaymentRecord): Promise<void> {
+  if (p.status === 'approved') {
+    const currency = (p.currency || (p.provider === 'mercadopago' ? 'COP' : 'USD')).toUpperCase()
+    const value =
+      typeof p.amount === 'number' && p.amount > 0
+        ? p.amount
+        : currency === 'COP'
+          ? PROGRAM_PRICE.cop
+          : PROGRAM_PRICE.usd
+
+    await sendTikTokServerEvent({
+      event: 'Purchase',
+      eventId: `purchase_${p.provider}_${p.providerPaymentId}`,
+      user: {
+        email: p.email,
+        externalId: p.userId,
+      },
+      properties: {
+        content_id: 'stoicom-anual',
+        content_type: 'product',
+        content_name: 'Matrícula Anual StoiCom',
+        value,
+        currency,
+      },
+    })
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key) return

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Check, ShieldCheck, Sparkles, CreditCard, Globe, CalendarClock } from 'lucide-react'
-import { copLabel, usdLabel } from '@/lib/pricing'
+import { PROGRAM_PRICE, copLabel, usdLabel } from '@/lib/pricing'
+import { ttqIdentify, ttqTrack } from '@/lib/tiktok-pixel'
 
 interface PricingSectionProps {
   onSelectFreeTrial?: () => void
@@ -31,6 +32,19 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
   const handleMercadoPagoCheckout = async () => {
     if (mpRedirecting) return
     setMpRedirecting(true)
+    ttqTrack('InitiateCheckout', {
+      contents: [
+        {
+          content_id: 'stoicom-anual',
+          content_type: 'product',
+          content_name: 'Matrícula Anual StoiCom',
+          quantity: 1,
+          price: PROGRAM_PRICE.cop,
+        },
+      ],
+      value: PROGRAM_PRICE.cop,
+      currency: 'COP',
+    })
     try {
       const res = await fetch('/api/checkout/mercadopago', { method: 'POST' })
       if (res.ok) {
@@ -47,6 +61,19 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
   }
 
   const handleLemonSqueezyCheckout = async () => {
+    ttqTrack('InitiateCheckout', {
+      contents: [
+        {
+          content_id: 'stoicom-anual',
+          content_type: 'product',
+          content_name: 'Matrícula Anual StoiCom',
+          quantity: 1,
+          price: PROGRAM_PRICE.usd,
+        },
+      ],
+      value: PROGRAM_PRICE.usd,
+      currency: 'USD',
+    })
     const defaultUrl = 'https://stoicom.lemonsqueezy.com/checkout/buy/3bb96131-5e7d-41cd-b253-97173f19ca0a'
     const base = process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL || defaultUrl
     try {
@@ -54,6 +81,7 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
+        ttqIdentify({ email: user.email, external_id: user.id })
         const sep = base.includes('?') ? '&' : '?'
         const params = `checkout[custom][user_id]=${user.id}&checkout[email]=${encodeURIComponent(user.email || '')}`
         window.location.href = `${base}${sep}${params}`

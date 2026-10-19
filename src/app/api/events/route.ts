@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { sendTikTokServerEvent } from '@/lib/tiktok-events-api'
 
 // Eventos del embudo PÚBLICO (visitantes sin sesión). Los eventos de
 // usuarios logueados van por lib/analytics.ts directo a la tabla con RLS;
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceKey) return NextResponse.json({ ok: false }, { status: 204 })
 
-  let body: { name?: string; props?: unknown }
+  let body: { name?: string; props?: unknown; event_id?: string; url?: string }
   try {
     body = await request.json()
   } catch {
@@ -52,6 +53,20 @@ export async function POST(request: Request) {
   // user_id queda NULL: es un visitante anónimo, y esa es justo la señal
   // que faltaba para calcular conversión (visitas -> leads).
   await admin.from('events').insert({ name, props: sanitizeProps(body.props) })
+
+  if (name === 'landing_view' || name === 'becas_view') {
+    await sendTikTokServerEvent({
+      event: 'ViewContent',
+      eventId: typeof body.event_id === 'string' ? body.event_id.slice(0, 80) : undefined,
+      url: typeof body.url === 'string' ? body.url.slice(0, 500) : undefined,
+      request,
+      properties: {
+        content_id: name === 'landing_view' ? 'landing' : 'becas',
+        content_type: 'product',
+        content_name: name === 'landing_view' ? 'Landing StoiCom' : 'Becas de Mérito',
+      },
+    })
+  }
 
   return NextResponse.json({ ok: true })
 }
