@@ -1,37 +1,29 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Input } from '@/components/ui'
 import toast from 'react-hot-toast'
 import { createClient } from '@/utils/supabase/client'
 import { track } from '@/lib/analytics'
+import { copLabel, usdLabel } from '@/lib/pricing'
 
 // Primera entrada con Google: hasta tres puertas, una sola vez.
-//   1. Código de invitación (gratis, beta privada)
-//   2. Fundador vía Mercado Pago (LatAm: tarjeta, PSE, OXXO; el webhook aprueba)
-//   3. Fundador vía Lemon Squeezy (internacional/USD; el webhook aprueba)
-// Cada pasarela aparece solo si está habilitada por su env pública.
+//   1. Fundador vía Mercado Pago (LatAm: tarjeta, PSE, Nequi; el webhook aprueba)
+//   2. Fundador vía Lemon Squeezy (internacional/USD; el webhook aprueba)
+//   3. Código de invitación o beca (gratis)
 
-const MP_ENABLED = process.env.NEXT_PUBLIC_MERCADOPAGO_ENABLED === 'true'
+const DEFAULT_LS_URL =
+  'https://stoicom.lemonsqueezy.com/checkout/buy/3bb96131-5e7d-41cd-b253-97173f19ca0a'
 
 export default function VerifyPage() {
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
-  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null)
+  const [checkoutUrl, setCheckoutUrl] = useState<string>(
+    process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL || DEFAULT_LS_URL
+  )
   const [mpLoading, setMpLoading] = useState(false)
 
-  useEffect(() => {
-    const base = process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL
-    if (!base) return
-    createClient().auth.getUser().then(({ data: { user } }) => {
-      if (!user) return
-      const sep = base.includes('?') ? '&' : '?'
-      const params = `checkout[custom][user_id]=${user.id}&checkout[email]=${encodeURIComponent(user.email || '')}`
-      setCheckoutUrl(`${base}${sep}${params}`)
-    })
-  }, [])
-
-  const handleMercadoPago = async () => {
+  const handleMercadoPago = useCallback(async () => {
     setMpLoading(true)
     try {
       const res = await fetch('/api/checkout/mercadopago', { method: 'POST' })
@@ -47,7 +39,26 @@ export default function VerifyPage() {
       toast.error('No se pudo iniciar el pago')
       setMpLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    const base = process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL || DEFAULT_LS_URL
+    createClient().auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      const sep = base.includes('?') ? '&' : '?'
+      const params = `checkout[custom][user_id]=${user.id}&checkout[email]=${encodeURIComponent(user.email || '')}`
+      setCheckoutUrl(`${base}${sep}${params}`)
+    })
+
+    try {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('intent') === 'mercadopago') {
+        handleMercadoPago()
+      }
+    } catch {
+      // Ignorar si no hay window
+    }
+  }, [handleMercadoPago])
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -95,78 +106,67 @@ export default function VerifyPage() {
             className="w-20 h-20 mx-auto rounded-full object-cover border-2 border-[var(--primary-gold)]/40 shadow-sm"
           />
           <h1 className="text-xl font-black tracking-wider text-[var(--foreground)] mt-2">
-            Un paso más
+            Activa tu acceso
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-450 leading-relaxed">
-            Tu cuenta de Google inició sesión. Para entrar necesitas
-            <span className="font-bold"> una única vez</span> un código de
-            invitación, o comprando tu acceso.
+            Tu cuenta de Google inició sesión. Elige tu método de pago para activar tu
+            <span className="font-bold"> Matrícula Anual</span> o ingresa tu código de invitación.
           </p>
         </div>
 
-        <form onSubmit={handleVerify} className="space-y-4">
+        <div className="space-y-3">
+          <p className="text-[10px] text-slate-500 text-center uppercase tracking-widest font-bold">
+            Matrícula Anual · Pago único (sin suscripción)
+          </p>
+
+          <button
+            type="button"
+            onClick={handleMercadoPago}
+            disabled={mpLoading}
+            className="block w-full py-2.5 rounded-lg bg-[var(--primary-gold)] text-[#0a0a0f] text-center text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {mpLoading ? 'Abriendo Mercado Pago…' : `Pagar ${copLabel} COP (Mercado Pago / PSE)`}
+          </button>
+
+          {checkoutUrl && (
+            <a
+              href={checkoutUrl}
+              className="block w-full py-2.5 rounded-lg border border-[var(--primary-gold)]/50 text-center text-sm font-bold text-[var(--primary-gold)] hover:bg-[var(--primary-gold)]/10 transition-colors"
+            >
+              Pagar {usdLabel} USD (Tarjeta Internacional / PayPal)
+            </a>
+          )}
+
+          <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+            Un año completo (210 prácticas, 3 tracks). Garantía de 7 días. Consulta la{' '}
+            <a href="/reembolsos" className="text-[var(--primary-gold)] hover:underline">política de reembolsos</a>.
+          </p>
+        </div>
+
+        <form onSubmit={handleVerify} className="space-y-3 pt-4 border-t border-[var(--border-color)]">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="code" className="text-xs font-bold text-slate-450 dark:text-slate-400 uppercase tracking-wider">
-              Código de acceso
+              ¿Tienes código de invitación o beca?
             </label>
             <Input
               id="code"
               type="password"
-              placeholder="••••••••"
+              placeholder="Ingresa tu código"
               value={code}
               onChange={(e) => setCode(e.target.value)}
               disabled={loading}
               showPasswordToggle
-              autoFocus
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 rounded-lg bg-[var(--primary-gold)] text-[#0a0a0f] text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="w-full py-2 rounded-lg border border-[var(--border-color)] text-[var(--foreground)] text-xs font-bold hover:border-[var(--primary-gold)]/50 transition-colors disabled:opacity-50"
           >
-            {loading ? 'Verificando...' : 'Aprobar mi correo'}
+            {loading ? 'Verificando...' : 'Canjear código de acceso'}
           </button>
-
         </form>
-
-        {(MP_ENABLED || checkoutUrl) && (
-          <div className="space-y-3 pt-2 border-t border-[var(--border-color)]">
-            <p className="text-[10px] text-slate-500 text-center uppercase tracking-widest font-bold">
-              ¿Sin código? Obtén tu acceso
-            </p>
-            <p className="text-[10px] text-slate-500 text-center leading-relaxed">
-              Pago único, un año de acceso al programa completo. Sin suscripción:
-              nada se te cobra solo. Al confirmarse el pago tu cuenta entra sola
-              (recarga esta página al volver).
-            </p>
-
-            {MP_ENABLED && (
-              <button
-                type="button"
-                onClick={handleMercadoPago}
-                disabled={mpLoading}
-                className="block w-full py-2.5 rounded-lg bg-[var(--primary-gold)] text-[#0a0a0f] text-center text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                {mpLoading ? 'Abriendo pago…' : 'Pagar con Mercado Pago'}
-              </button>
-            )}
-
-            {checkoutUrl && (
-              <a
-                href={checkoutUrl}
-                className="block w-full py-2.5 rounded-lg border border-[var(--primary-gold)]/50 text-center text-sm font-bold text-[var(--primary-gold)] hover:bg-[var(--primary-gold)]/10 transition-colors"
-              >
-                {MP_ENABLED ? 'Pagar con tarjeta internacional' : 'Obtener acceso — un año'}
-              </a>
-            )}
-            <p className="text-[10px] text-slate-500 text-center leading-relaxed">
-              Garantía de 7 días. Consulta la{' '}
-              <a href="/reembolsos" className="text-[var(--primary-gold)] hover:underline">política de reembolsos</a>.
-            </p>
-          </div>
-        )}
 
         <button
           type="button"

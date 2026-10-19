@@ -26,8 +26,24 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
     setCurrency(moneda)
   }, [])
 
-  const handleMercadoPagoCheckout = () => {
-    window.location.href = '/login'
+  const [mpRedirecting, setMpRedirecting] = useState(false)
+
+  const handleMercadoPagoCheckout = async () => {
+    if (mpRedirecting) return
+    setMpRedirecting(true)
+    try {
+      const res = await fetch('/api/checkout/mercadopago', { method: 'POST' })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.initPoint) {
+          window.location.href = data.initPoint
+          return
+        }
+      }
+    } catch {
+      // Si no hay sesión activa o falla la llamada directa, continúa por login con intención de pago
+    }
+    window.location.href = '/login?intent=mercadopago'
   }
 
   const handleLemonSqueezyCheckout = async () => {

@@ -28,14 +28,18 @@ function LoginForm() {
     if (error) toast.error(OAUTH_ERRORS[error] || 'Error de autenticación')
   }, [searchParams])
 
+  const intent = searchParams.get('intent')
+
   const handleGoogleLogin = async () => {
     setGoogleLoading(true)
     try {
       const supabase = createClient()
+      const callbackUrl = new URL('/auth/callback', window.location.origin)
+      if (intent) callbackUrl.searchParams.set('intent', intent)
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: callbackUrl.toString(),
         },
       })
       if (error) {

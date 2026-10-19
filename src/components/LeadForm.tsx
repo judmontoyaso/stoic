@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { trackPublic } from '@/lib/analytics-public'
 
 // Captura de correo de la landing. Doble opt-in: aquí solo se pide el
@@ -11,8 +11,21 @@ const GOLD = '#c9a84c'
 
 export default function LeadForm({ source = 'landing' }: { source?: string }) {
   const [email, setEmail] = useState('')
+  const [currentSource, setCurrentSource] = useState(source)
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const ref = params.get('ref') || params.get('utm_source') || params.get('source')
+      if (ref) {
+        setCurrentSource(ref.slice(0, 40))
+      }
+    } catch {
+      // Fallback a la fuente por defecto
+    }
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -24,7 +37,7 @@ export default function LeadForm({ source = 'landing' }: { source?: string }) {
       const res = await fetch('/api/leads/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source }),
+        body: JSON.stringify({ email, source: currentSource }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
@@ -32,7 +45,7 @@ export default function LeadForm({ source = 'landing' }: { source?: string }) {
         setStatus('error')
         return
       }
-      trackPublic('lead_form_submitted', { source })
+      trackPublic('lead_form_submitted', { source: currentSource })
       setStatus('sent')
     } catch {
       setError('No hay conexión. Inténtalo de nuevo.')

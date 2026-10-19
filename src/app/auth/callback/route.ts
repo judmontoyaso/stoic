@@ -93,7 +93,9 @@ export async function GET(request: NextRequest) {
 
     // Sesión iniciada pero sin aprobar: pedir el código de acceso o redirigir a verificación.
     // Se sobreescribe solo el destino para conservar las cookies de sesión.
-    response.headers.set('location', `${origin}/auth/verify`)
+    const intent = searchParams.get('intent')
+    const verifyUrl = `${origin}/auth/verify${intent ? `?intent=${encodeURIComponent(intent)}` : ''}`
+    response.headers.set('location', verifyUrl)
   }
 
   return response
