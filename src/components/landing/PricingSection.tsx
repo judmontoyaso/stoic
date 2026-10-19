@@ -273,7 +273,7 @@ export default function PricingSection({ onSelectFreeTrial }: PricingSectionProp
         <div className="flex items-center gap-3">
           <ShieldCheck className="w-8 h-8 text-[#c9a84c] shrink-0" />
           <div>
-            <p className="text-xs font-bold text-slate-200">Garantía Incondicional de 14 Días</p>
+            <p className="text-xs font-bold text-slate-200">Garantía Incondicional de 7 Días</p>
             <p className="text-[11px] text-slate-300">Si no es lo que esperabas, escribes y te devolvemos todo. Sin preguntas.</p>
           </div>
         </div>

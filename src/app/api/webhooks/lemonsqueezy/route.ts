@@ -97,19 +97,25 @@ export async function POST(request: Request) {
   const admin = createSupabaseAdmin(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey)
 
   let userId = payload.meta?.custom_data?.user_id
-  const userEmail = payload.data?.attributes?.user_email
+  const userEmail = payload.data?.attributes?.user_email?.trim().toLowerCase() || undefined
   const identifier = payload.data?.attributes?.identifier || payload.data?.id || null
   const total = payload.data?.attributes?.total
 
   // Si no vino userId en custom_data, intentar asociar por email en Supabase Auth
   if (!userId && userEmail) {
     try {
-      const { data: listData } = await admin.auth.admin.listUsers()
-      const found = listData?.users?.find(
-        (u) => u.email?.toLowerCase() === userEmail.toLowerCase()
-      )
-      if (found) {
-        userId = found.id
+      for (let page = 1; page <= 20; page++) {
+        const { data: listData, error: listErr } = await admin.auth.admin.listUsers({
+          page,
+          perPage: 1000,
+        })
+        if (listErr || !listData?.users?.length) break
+        const found = listData.users.find(u => u.email?.toLowerCase() === userEmail)
+        if (found) {
+          userId = found.id
+          break
+        }
+        if (listData.users.length < 1000) break
       }
     } catch (err) {
       console.error('Error buscando usuario por email:', err)

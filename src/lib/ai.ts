@@ -244,10 +244,10 @@ Instrucciones:
 Escribe una reflexión estoica inspiradora sobre la comunicación de hoy y un consejo práctico accionable. No uses emojis.
 `
 
-  // 1. Intentar con Google Gemini (Gemini 3.8 Flash) si está configurado en .env
+  // 1. Intentar con Google Gemini (Gemini 2.5 Flash) si está configurado en .env
   const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
   if (geminiKey) {
-    const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash'
+    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
     const result = await callGemini<AIDailyReflection>(geminiKey, model, REFLECTION_SYSTEM_PROMPT, prompt)
     if (result) return result
   }
@@ -516,10 +516,10 @@ ${notes.map(n => `- ${n}`).join('\n')}
 Escribe la lección diaria completa siguiendo la estructura y reglas del sistema.
 `
 
-  // 1. Intentar con Google Gemini (Gemini 3.8 Flash) si está configurado en .env
+  // 1. Intentar con Google Gemini (Gemini 2.5 Flash) si está configurado en .env
   const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
   if (geminiKey) {
-    const model = process.env.GEMINI_READING_MODEL || 'gemini-3.8-flash'
+    const model = process.env.GEMINI_READING_MODEL || 'gemini-2.5-flash'
     const result = await callGemini<AIDailyReading>(geminiKey, model, READING_SYSTEM_PROMPT, prompt)
     if (result?.reading) return { reading: result.reading, model }
   }
@@ -629,6 +629,13 @@ ${material}
 
 Escribe el análisis del mes siguiendo la estructura y las reglas del sistema. Cita sus palabras.
 `
+
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
+  if (geminiKey) {
+    const model = process.env.GEMINI_ANALYSIS_MODEL || process.env.GEMINI_MODEL || 'gemini-2.5-flash'
+    const result = await callGemini<AIMonthlyAnalysis>(geminiKey, model, ANALYSIS_SYSTEM_PROMPT, prompt)
+    if (result?.analysis) return { analysis: result.analysis, model }
+  }
 
   const deepseekKey = process.env.DEEPSEEK_API_KEY
   if (deepseekKey) {

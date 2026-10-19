@@ -47,17 +47,17 @@ export default function TodayPage() {
       for (const track of active) {
         const dayNumber = currentDayNumber(track)!
         const weekNumber = Math.min(13, Math.ceil(dayNumber / 7))
-        const [days, weeks, logs] = await Promise.all([
-          StoicDB.getProgramDays(track.id),
-          StoicDB.getProgramWeeks(track.id),
+        const [day, week, logs] = await Promise.all([
+          StoicDB.getProgramDay(track.id, dayNumber),
+          StoicDB.getProgramWeek(track.id, weekNumber),
           StoicDB.getDayLogs(track.id),
         ])
         const todayLog: DayLog | undefined = logs.find(l => l.date === today)
         result.push({
           track,
           dayNumber,
-          day: days.find(d => d.day_number === dayNumber) || null,
-          week: weeks.find(w => w.week_number === weekNumber) || null,
+          day,
+          week,
           completedToday: !!todayLog?.completed,
           streak: currentStreak(track, logs),
         })

@@ -68,14 +68,17 @@ export async function POST(request: Request) {
   // La campaña queda como stoicom_plan: atribución visible en /admin.
   let plan: string | null = null
   const normalizedCode = code.trim().toLowerCase()
-  if (
-    normalizedCode === (accessCode ? accessCode.trim().toLowerCase() : '') ||
-    normalizedCode === 'stoicom-inicia-2026' ||
-    normalizedCode === 'stoic-ciro-2026' ||
-    isAdminEmail(user.email)
+  const expectedSharedCode = accessCode?.trim().toLowerCase() || null
+
+  if (isAdminEmail(user.email)) {
+    plan = 'code'
+  } else if (
+    normalizedCode.length > 0 &&
+    expectedSharedCode &&
+    normalizedCode === expectedSharedCode
   ) {
-    plan = 'annual'
-  } else {
+    plan = 'code'
+  } else if (normalizedCode.length > 0) {
     const campaign = await redeemCode(admin, code, { id: user.id, email: user.email })
     if (campaign) plan = campaign
   }

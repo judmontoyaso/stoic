@@ -30,7 +30,7 @@ export async function recordPayment(p: PaymentRecord): Promise<void> {
         provider: p.provider,
         provider_payment_id: p.providerPaymentId,
         user_id: p.userId,
-        email: p.email,
+        email: p.email ? p.email.trim().toLowerCase() : null,
         amount: p.amount,
         currency: p.currency,
         status: p.status,

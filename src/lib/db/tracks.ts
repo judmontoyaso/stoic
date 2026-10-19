@@ -52,6 +52,18 @@ export async function getProgramDays(trackId: string): Promise<ProgramDay[]> {
   return (data || []) as ProgramDay[]
 }
 
+export async function getProgramDay(trackId: string, dayNumber: number): Promise<ProgramDay | null> {
+  const { data, error } = await supabase
+    .from('program_days')
+    .select('*')
+    .eq('track_id', trackId)
+    .eq('day_number', dayNumber)
+    .maybeSingle()
+
+  if (error) throw error
+  return (data as ProgramDay | null) ?? null
+}
+
 export async function getProgramWeeks(trackId: string): Promise<ProgramWeek[]> {
   const { data, error } = await supabase
     .from('program_weeks')
@@ -61,6 +73,18 @@ export async function getProgramWeeks(trackId: string): Promise<ProgramWeek[]> {
 
   if (error) throw error
   return (data || []) as ProgramWeek[]
+}
+
+export async function getProgramWeek(trackId: string, weekNumber: number): Promise<ProgramWeek | null> {
+  const { data, error } = await supabase
+    .from('program_weeks')
+    .select('*')
+    .eq('track_id', trackId)
+    .eq('week_number', weekNumber)
+    .maybeSingle()
+
+  if (error) throw error
+  return (data as ProgramWeek | null) ?? null
 }
 
 export async function getProgramMonths(trackId: string): Promise<ProgramMonth[]> {

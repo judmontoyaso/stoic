@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createServerSupabase } from '@/utils/supabase/server'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { seedVeteranUser } from '@/lib/seed-veteran'
+import { isAdminEmail } from '@/lib/admin'
 
 // Endpoint seguro para poblar los datos de un usuario para grabación de demostración
 export async function GET(request: Request) {
@@ -15,20 +16,26 @@ export async function GET(request: Request) {
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
 
+  // Solo permitido para administradores autenticados o entorno local de desarrollo
+  const isDev = process.env.NODE_ENV !== 'production'
+  if (!isAdminEmail(user?.email) && !isDev) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+  }
+
   let targetUserId = user?.id
   let targetUserEmail = user?.email
 
-  // 2. Si no hay sesión o se pide explícitamente cirosteven278@gmail.com
+  // 2. En desarrollo sin sesión activa, buscar cuenta admin de demostración
   if (!targetUserId) {
     const admin = createSupabaseAdmin(supabaseUrl, serviceKey)
     const { data: usersData, error: userErr } = await admin.auth.admin.listUsers()
     if (userErr || !usersData?.users) {
       return NextResponse.json({ error: 'No se pudieron consultar los usuarios' }, { status: 500 })
     }
-    const foundUser = usersData.users.find(u => u.email?.toLowerCase() === 'cirosteven278@gmail.com')
+    const foundUser = usersData.users.find(u => isAdminEmail(u.email))
     if (!foundUser) {
       return NextResponse.json({
-        error: 'El usuario cirosteven278@gmail.com no se ha registrado aún en la base de datos. Inicia sesión una vez con Google.',
+        error: 'El usuario administrador no se ha registrado aún en la base de datos. Inicia sesión una vez con Google.',
       }, { status: 404 })
     }
     targetUserId = foundUser.id

@@ -92,8 +92,9 @@ export async function createPreference(opts: {
       headers: {
         Authorization: `Bearer ${config.accessToken}`,
         'Content-Type': 'application/json',
-        // Evita preferencias duplicadas si el usuario hace doble clic
-        'X-Idempotency-Key': `pref-${userId}`,
+        // Evita preferencias duplicadas si el usuario hace doble clic,
+        // pero permite crear una nueva si cambia el precio o al renovar
+        'X-Idempotency-Key': `pref-${userId}-${config.currency}-${config.price}-${Math.floor(Date.now() / 300000)}`,
       },
       body: JSON.stringify(body),
     })
